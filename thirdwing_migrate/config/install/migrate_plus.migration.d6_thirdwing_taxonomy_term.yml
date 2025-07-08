@@ -1,0 +1,29 @@
+id: d6_thirdwing_taxonomy_term
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+
+source:
+  plugin: d6_taxonomy_term
+
+destination:
+  plugin: 'entity:taxonomy_term'
+
+process:
+  tid: tid
+  vid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_vocabulary
+    source: vid
+  name: name
+  description: description
+  weight: weight
+  parent:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: parent
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_taxonomy_vocabulary

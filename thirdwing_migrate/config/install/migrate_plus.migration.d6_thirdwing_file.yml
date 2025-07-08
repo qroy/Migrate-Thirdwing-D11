@@ -1,0 +1,39 @@
+id: d6_thirdwing_file
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'File'
+
+source:
+  plugin: d6_file
+  constants:
+    source_base_path: 'http://www.thirdwing.nl/'
+    destination_base_path: 'public://'
+
+destination:
+  plugin: 'entity:file'
+
+process:
+  fid: fid
+  filename: filename
+  uri:
+    plugin: file_copy
+    source:
+      - filepath
+      - '@constants/source_base_path'
+      - '@constants/destination_base_path'
+  filemime: filemime
+  filesize: filesize
+  status:
+    plugin: default_value
+    default_value: 1
+  created: timestamp
+  changed: timestamp
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user

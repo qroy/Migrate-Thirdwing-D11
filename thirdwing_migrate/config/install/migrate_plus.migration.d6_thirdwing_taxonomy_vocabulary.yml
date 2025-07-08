@@ -1,0 +1,24 @@
+id: d6_thirdwing_taxonomy_vocabulary
+class: Drupal\taxonomy\Plugin\migrate\D6TaxonomyVocabulary
+field_plugin_method: null
+cck_plugin_method: null
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Configuration'
+
+source:
+  plugin: d6_taxonomy_vocabulary
+  constants:
+    vid_toegang: 4
+
+destination:
+  plugin: 'entity:taxonomy_vocabulary'
+
+process:
+  vid: vid
+  name: name
+  description: description
+  weight: weight
+
+migration_dependencies: []

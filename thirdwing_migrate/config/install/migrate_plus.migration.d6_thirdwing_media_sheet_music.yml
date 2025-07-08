@@ -1,0 +1,62 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_sheet_music.yml
+id: d6_thirdwing_media_sheet_music
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Media'
+  - 'Files'
+  - 'Sheet Music'
+
+source:
+  plugin: d6_thirdwing_sheet_music
+  constants:
+    bundle: sheet_music
+
+destination:
+  plugin: 'entity:media'
+  default_bundle: sheet_music
+
+process:
+  mid: fid
+  bundle: constants/bundle
+  name: filename
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+    no_stub: true
+  status:
+    plugin: default_value
+    default_value: 1
+  created: timestamp
+  changed: timestamp
+  
+  # Main document field - the actual sheet music PDF
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: fid
+  
+  # Sheet music specific fields
+  field_sheet_music_type: sheet_music_type
+  
+  # Related repertoire
+  field_sheet_music_repertoire:
+    plugin: migration_lookup
+    migration: d6_thirdwing_repertoire
+    source: repertoire_nid
+    no_stub: true
+  
+  # Access control - different access levels for different types
+  field_sheet_music_access:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: access_terms
+    no_stub: true
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_file
+    - d6_thirdwing_user
+    - d6_thirdwing_repertoire
+    - d6_thirdwing_taxonomy_term

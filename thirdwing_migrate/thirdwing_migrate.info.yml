@@ -1,0 +1,10 @@
+name: 'Thirdwing Migration'
+type: module
+description: 'Migration module for Thirdwing D6 to D11'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - migrate
+  - migrate_drupal
+  - migrate_plus
+  - migrate_tools

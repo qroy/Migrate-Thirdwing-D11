@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Thirdwing migration module.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function thirdwing_migrate_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.thirdwing_migrate':
+      return '<p>' . t('Migration module for Thirdwing D6 to D11.') . '</p>';
+  }
+}

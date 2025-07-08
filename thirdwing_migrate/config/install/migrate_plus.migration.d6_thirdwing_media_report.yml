@@ -1,0 +1,57 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_report.yml
+id: d6_thirdwing_media_report
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Media'
+  - 'Files'
+
+source:
+  plugin: d6_thirdwing_report
+  constants:
+    bundle: report
+
+destination:
+  plugin: 'entity:media'
+  default_bundle: report
+
+process:
+  mid: fid
+  bundle: constants/bundle
+  name: 
+    plugin: concat
+    source:
+      - 'Report - '
+      - filename
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+    no_stub: true
+  status:
+    plugin: default_value
+    default_value: 1
+  created: timestamp
+  changed: timestamp
+  
+  # Main document field
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: fid
+  
+  # Report-specific fields based on the file.inc source analysis
+  field_report_date: field_verslag_datum
+  field_report_type: field_verslag_soort
+  
+  # Access control
+  field_report_access:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: field_toegang
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_file
+    - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term

@@ -1,0 +1,7 @@
+id: thirdwing_d6
+label: 'Thirdwing D6 to D11 Migration'
+description: 'Migration from Drupal 6 Thirdwing site to Drupal 11'
+source_type: 'Drupal 6'
+migration_tags:
+  - 'Drupal 6'
+  - 'Thirdwing'

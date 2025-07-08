@@ -1,0 +1,60 @@
+id: d6_thirdwing_media_audio
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Media'
+
+source:
+  plugin: d6_thirdwing_audio
+
+destination:
+  plugin: 'entity:media'
+  default_bundle: audio
+
+process:
+  mid: nid
+  bundle:
+    plugin: default_value
+    default_value: audio
+  name: title
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+  status: status
+  created: created
+  changed: changed
+  
+  field_media_audio_file/target_id:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: field_mp3_fid
+  
+  field_media_type: field_audio_type_value
+  field_media_notes: field_audio_bijz_value
+  field_media_performer: field_audio_uitvoerende_value
+  field_media_date: field_datum_value
+  
+  field_media_activity:
+    plugin: migration_lookup
+    migration: d6_thirdwing_activity
+    source: related_activities
+  
+  field_media_repertoire:
+    plugin: migration_lookup
+    migration: d6_thirdwing_repertoire
+    source: field_repertoire_nid
+  
+  field_media_access:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: access_terms
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_file
+    - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term
+  optional:
+    - d6_thirdwing_activity
+    - d6_thirdwing_repertoire

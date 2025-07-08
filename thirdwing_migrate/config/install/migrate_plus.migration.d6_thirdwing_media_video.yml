@@ -1,0 +1,78 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_video.yml
+id: d6_thirdwing_media_video
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Media'
+  - 'Video'
+  - 'YouTube'
+
+source:
+  plugin: d6_thirdwing_video
+  constants:
+    bundle: video
+
+destination:
+  plugin: 'entity:media'
+  default_bundle: video
+
+process:
+  mid: nid
+  bundle: constants/bundle
+  name: title
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+    no_stub: true
+  status: status
+  created: created
+  changed: changed
+  
+  # Main video field - YouTube oEmbed URL
+  field_media_oembed_video: field_video_embed
+  
+  # Video metadata
+  field_media_video_title: field_video_title
+  field_media_video_description: field_video_description
+  
+  # Media type classification (same as audio)
+  field_media_type: field_audio_type_value
+  
+  # Performance details
+  field_media_performer: field_audio_uitvoerende_value
+  field_media_date: field_datum_value
+  field_media_notes:
+    plugin: concat
+    source:
+      - field_video_description
+      - ' '
+      - field_audio_bijz_value
+  
+  # Related content references
+  field_media_activity:
+    plugin: migration_lookup
+    migration: d6_thirdwing_activity
+    source: related_activities
+    no_stub: true
+  
+  field_media_repertoire:
+    plugin: migration_lookup
+    migration: d6_thirdwing_repertoire
+    source: field_repertoire_nid
+    no_stub: true
+  
+  # Access control
+  field_media_access:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: access_terms
+    no_stub: true
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term
+  optional:
+    - d6_thirdwing_activity
+    - d6_thirdwing_repertoire

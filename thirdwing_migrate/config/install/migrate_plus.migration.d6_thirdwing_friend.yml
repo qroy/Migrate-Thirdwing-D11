@@ -1,0 +1,57 @@
+id: d6_thirdwing_friend
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+
+source:
+  plugin: d6_node
+  node_type: vriend
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: friend
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: friend
+  title: title
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: basic_html
+  
+  # Friend-specific fields
+  field_friend_website/uri: field_website_url
+  field_friend_website/title: field_website_title
+  field_friend_type: field_vriend_soort_value
+  field_friend_designation: field_vriend_benaming_value
+  field_friend_since: field_vriend_vanaf_value
+  field_friend_until: field_vriend_tot_value
+  field_friend_duration: field_vriend_lengte_value
+  field_friend_city: field_woonplaats_value
+  
+  # Friend workflow states
+  field_friend_workflow:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      11: 9   # Active
+      12: 10  # Expired
+      13: 11  # Inactive
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_media_image

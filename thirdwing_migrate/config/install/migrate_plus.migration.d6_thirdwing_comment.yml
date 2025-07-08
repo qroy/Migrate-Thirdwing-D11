@@ -1,0 +1,62 @@
+id: d6_thirdwing_comment
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Comment'
+
+source:
+  plugin: d6_comment
+
+destination:
+  plugin: 'entity:comment'
+
+process:
+  cid: cid
+  comment_type:
+    plugin: default_value
+    default_value: comment
+  entity_id:
+    plugin: migration_lookup
+    migration:
+      - d6_thirdwing_activity
+      - d6_thirdwing_news
+      - d6_thirdwing_page
+    source: nid
+  entity_type:
+    plugin: default_value
+    default_value: node
+  field_name:
+    plugin: default_value
+    default_value: comment
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+  pid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_comment
+    source: pid
+  subject: subject
+  comment_body/value: comment
+  comment_body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  status: status
+  created: timestamp
+  changed: timestamp
+  hostname: hostname
+  name: name
+  mail: mail
+  homepage: homepage
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_activity
+    - d6_thirdwing_news
+    - d6_thirdwing_page

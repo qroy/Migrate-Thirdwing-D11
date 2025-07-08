@@ -1,0 +1,38 @@
+id: d6_thirdwing_media_document
+migration_group: thirdwing_d6
+migration_tags:
+  - 'Drupal 6'
+  - 'Media'
+
+source:
+  plugin: d6_file
+  constants:
+    bundle: document
+  type: document
+
+destination:
+  plugin: 'entity:media'
+  default_bundle: document
+
+process:
+  mid: fid
+  bundle: constants/bundle
+  name: filename
+  uid:
+    plugin: migration_lookup
+    migration: d6_thirdwing_user
+    source: uid
+  status:
+    plugin: default_value
+    default_value: 1
+  created: timestamp
+  changed: timestamp
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: fid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_file
+    - d6_thirdwing_user

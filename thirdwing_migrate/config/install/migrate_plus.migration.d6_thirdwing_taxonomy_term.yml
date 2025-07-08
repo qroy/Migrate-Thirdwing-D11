@@ -1,5 +1,5 @@
 id: d6_thirdwing_taxonomy_term
-label: 'Taxonomy Terms'
+label: 'D6 Taxonomy Terms'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
@@ -19,10 +19,7 @@ process:
     migration: d6_thirdwing_taxonomy_vocabulary
     source: vid
   name: name
-  description:
-    plugin: skip_on_empty
-    source: description
-    method: process
+  description: description
   weight: weight
   parent:
     plugin: migration_lookup

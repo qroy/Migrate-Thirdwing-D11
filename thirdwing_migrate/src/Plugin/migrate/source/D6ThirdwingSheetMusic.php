@@ -42,6 +42,31 @@ class D6ThirdwingSheetMusic extends SqlBase {
   /**
    * {@inheritdoc}
    */
+  public function fields() {
+    return [
+      'fid' => $this->t('File ID'),
+      'uid' => $this->t('User ID'),
+      'filename' => $this->t('Filename'),
+      'filepath' => $this->t('File path'),
+      'filemime' => $this->t('File MIME type'),
+      'filesize' => $this->t('File size'),
+      'status' => $this->t('Status'),
+      'timestamp' => $this->t('Timestamp'),
+      'bnid' => $this->t('Band sheet music node ID'),
+      'knid' => $this->t('Choir sheet music node ID'),
+      'tnid' => $this->t('Text sheet music node ID'),
+      'field_partij_band_data' => $this->t('Band sheet music data'),
+      'field_partij_koor_l_data' => $this->t('Choir sheet music data'),
+      'field_partij_tekst_data' => $this->t('Text sheet music data'),
+      'sheet_music_type' => $this->t('Sheet music type'),
+      'repertoire_nid' => $this->t('Repertoire node ID'),
+      'access_terms' => $this->t('Access terms'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIds() {
     return [
       'fid' => [
@@ -84,6 +109,28 @@ class D6ThirdwingSheetMusic extends SqlBase {
       $type = 14;
     } else {
       $type = 10;
+    }
+
+    $row->setSourceProperty('sheet_music_type', $type);
+    $row->setSourceProperty('repertoire_nid', $repertoire_nid);
+    $row->setSourceProperty('access_terms', [217, 86, 28, 85]);
+  }
+
+  protected function processChoirSheetMusic(Row $row) {
+    $data = $row->getSourceProperty('field_partij_koor_l_data');
+    $repertoire_nid = $row->getSourceProperty('knid');
+
+    // Determine choir sheet music type based on data
+    if (strpos($data, 'Sopraan') !== false) {
+      $type = 1;
+    } elseif (strpos($data, 'Alt') !== false) {
+      $type = 2;
+    } elseif (strpos($data, 'Tenor') !== false) {
+      $type = 3;
+    } elseif (strpos($data, 'Bas') !== false) {
+      $type = 4;
+    } else {
+      $type = 1; // Default to Sopraan
     }
 
     $row->setSourceProperty('sheet_music_type', $type);

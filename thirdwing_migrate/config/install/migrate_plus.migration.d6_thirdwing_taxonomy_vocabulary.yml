@@ -1,7 +1,5 @@
 id: d6_thirdwing_taxonomy_vocabulary
-class: Drupal\taxonomy\Plugin\migrate\D6TaxonomyVocabulary
-field_plugin_method: null
-cck_plugin_method: null
+label: 'Taxonomy Vocabularies'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
@@ -9,8 +7,7 @@ migration_tags:
 
 source:
   plugin: d6_taxonomy_vocabulary
-  constants:
-    vid_toegang: 4
+  key: migrate
 
 destination:
   plugin: 'entity:taxonomy_vocabulary'
@@ -18,7 +15,10 @@ destination:
 process:
   vid: vid
   name: name
-  description: description
+  description:
+    plugin: skip_on_empty
+    source: description
+    method: process
   weight: weight
 
 migration_dependencies: []

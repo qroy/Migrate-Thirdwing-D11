@@ -23,7 +23,7 @@ class D6ThirdwingReport extends SqlBase {
     $query = $this->select('node', 'n')
       ->fields('n')
       ->condition('n.type', 'verslag')
-      ->orderBy($this->newOnly ? 'f.fid' : 'f.timestamp');
+      ->orderBy('f.timestamp');  // Fixed: removed undefined $this->newOnly
 
     $query->innerJoin('content_field_files', 'a', 'a.nid = n.nid AND a.vid = n.vid');
     $query->leftJoin('files', 'f', 'f.fid = a.field_files_fid');

@@ -1,4 +1,5 @@
 id: d6_thirdwing_page
+label: 'Pages'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
@@ -37,17 +38,15 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Page workflow states
+  # Page workflow states with null protection
   field_page_workflow:
     plugin: static_map
     source: workflow_stateid
     map:
       22: 19  # Published
       23: 20  # Recommended
+    default_value: 19
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_taxonomy_term
-    - d6_thirdwing_media_image
-    - d6_thirdwing_media_document

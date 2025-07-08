@@ -48,6 +48,29 @@ class D6ThirdwingVideo extends SqlBase {
   /**
    * {@inheritdoc}
    */
+  public function fields() {
+    return [
+      'nid' => $this->t('Node ID'),
+      'title' => $this->t('Title'),
+      'uid' => $this->t('User ID'),
+      'status' => $this->t('Status'),
+      'created' => $this->t('Created'),
+      'changed' => $this->t('Changed'),
+      'field_video_embed' => $this->t('Video embed URL'),
+      'field_video_title' => $this->t('Video title'),
+      'field_video_description' => $this->t('Video description'),
+      'field_audio_type_value' => $this->t('Media type'),
+      'field_audio_uitvoerende_value' => $this->t('Performer'),
+      'field_datum_value' => $this->t('Date'),
+      'field_repertoire_nid' => $this->t('Repertoire reference'),
+      'access_terms' => $this->t('Access terms'),
+      'related_activities' => $this->t('Related activities'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIds() {
     return [
       'nid' => [

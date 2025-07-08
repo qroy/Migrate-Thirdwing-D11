@@ -1,12 +1,12 @@
 id: d6_thirdwing_location
+label: 'Locations'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Content'
 
 source:
-  plugin: d6_node
-  node_type: locatie
+  plugin: d6_thirdwing_location
 
 destination:
   plugin: 'entity:node'
@@ -39,14 +39,20 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Location-specific fields from content_type_locatie table
+  # Location-specific fields
   field_location_address: field_l_adres_value
   field_location_postal_code: field_l_postcode_value
   field_location_city: field_l_plaats_value
   
-  # Route link field from content_field_l_routelink
-  field_location_route/uri: field_l_routelink_url
-  field_location_route/title: field_l_routelink_title
+  # Route link field with null protection
+  field_location_route/uri:
+    plugin: skip_on_empty
+    source: field_l_routelink_url
+    method: process
+  field_location_route/title:
+    plugin: skip_on_empty
+    source: field_l_routelink_title
+    method: process
 
 migration_dependencies:
   required:

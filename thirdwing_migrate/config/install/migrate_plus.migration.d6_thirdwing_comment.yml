@@ -1,4 +1,5 @@
 id: d6_thirdwing_comment
+label: 'Comments'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
@@ -36,7 +37,10 @@ process:
     plugin: migration_lookup
     migration: d6_thirdwing_comment
     source: pid
-  subject: subject
+  subject:
+    plugin: skip_on_empty
+    source: subject
+    method: process
   comment_body/value: comment
   comment_body/format:
     plugin: static_map
@@ -50,9 +54,18 @@ process:
   created: timestamp
   changed: timestamp
   hostname: hostname
-  name: name
-  mail: mail
-  homepage: homepage
+  name:
+    plugin: skip_on_empty
+    source: name
+    method: process
+  mail:
+    plugin: skip_on_empty
+    source: mail
+    method: process
+  homepage:
+    plugin: skip_on_empty
+    source: homepage
+    method: process
 
 migration_dependencies:
   required:

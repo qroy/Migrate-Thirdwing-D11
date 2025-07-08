@@ -49,6 +49,32 @@ class D6ThirdwingAudio extends SqlBase {
   /**
    * {@inheritdoc}
    */
+  public function fields() {
+    return [
+      'nid' => $this->t('Node ID'),
+      'title' => $this->t('Title'),
+      'uid' => $this->t('User ID'),
+      'status' => $this->t('Status'),
+      'created' => $this->t('Created'),
+      'changed' => $this->t('Changed'),
+      'field_mp3_fid' => $this->t('MP3 file ID'),
+      'field_audio_bijz_value' => $this->t('Audio notes'),
+      'filename' => $this->t('Filename'),
+      'filepath' => $this->t('File path'),
+      'filemime' => $this->t('File MIME type'),
+      'filesize' => $this->t('File size'),
+      'field_audio_type_value' => $this->t('Audio type'),
+      'field_audio_uitvoerende_value' => $this->t('Performer'),
+      'field_datum_value' => $this->t('Date'),
+      'field_repertoire_nid' => $this->t('Repertoire reference'),
+      'access_terms' => $this->t('Access terms'),
+      'related_activities' => $this->t('Related activities'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIds() {
     return [
       'nid' => [

@@ -1,0 +1,165 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Thirdwing Migration module.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\migrate\Plugin\MigrationInterface;
+
+/**
+ * Implements hook_uninstall().
+ */
+function thirdwing_migrate_uninstall() {
+  $config_factory = \Drupal::configFactory();
+  $migration_manager = \Drupal::service('plugin.manager.migration');
+  $database = \Drupal::database();
+  
+  // List of all Thirdwing migration IDs
+  $migration_ids = [
+    'd6_thirdwing_taxonomy_vocabulary',
+    'd6_thirdwing_taxonomy_term',
+    'd6_thirdwing_user',
+    'd6_thirdwing_file',
+    'd6_thirdwing_media_image',
+    'd6_thirdwing_media_document',
+    'd6_thirdwing_media_audio',
+    'd6_thirdwing_media_video',
+    'd6_thirdwing_media_sheet_music',
+    'd6_thirdwing_media_report',
+    'd6_thirdwing_location',
+    'd6_thirdwing_repertoire',
+    'd6_thirdwing_program',
+    'd6_thirdwing_activity',
+    'd6_thirdwing_news',
+    'd6_thirdwing_page',
+    'd6_thirdwing_album',
+    'd6_thirdwing_friend',
+    'd6_thirdwing_newsletter',
+    'd6_thirdwing_comment',
+  ];
+
+  \Drupal::logger('thirdwing_migrate')->info('Starting cleanup of Thirdwing migration configurations and data.');
+
+  // 1. Reset migration status and clean up migration data
+  foreach ($migration_ids as $migration_id) {
+    try {
+      // Load the migration if it exists
+      $migration = $migration_manager->createInstance($migration_id);
+      if ($migration) {
+        // Reset the migration status
+        $migration->setStatus(MigrationInterface::STATUS_IDLE);
+        
+        // Clear the migration map and message tables
+        $id_map = $migration->getIdMap();
+        if ($id_map) {
+          $id_map->destroy();
+          \Drupal::logger('thirdwing_migrate')->info('Cleared migration map for @migration', ['@migration' => $migration_id]);
+        }
+      }
+    } catch (Exception $e) {
+      \Drupal::logger('thirdwing_migrate')->warning('Could not reset migration @migration: @error', [
+        '@migration' => $migration_id,
+        '@error' => $e->getMessage()
+      ]);
+    }
+  }
+
+  // 2. Delete migration configuration entities
+  foreach ($migration_ids as $migration_id) {
+    $config_name = "migrate_plus.migration.{$migration_id}";
+    $config = $config_factory->getEditable($config_name);
+    if (!$config->isNew()) {
+      $config->delete();
+      \Drupal::logger('thirdwing_migrate')->info('Deleted migration configuration: @config', ['@config' => $config_name]);
+    }
+  }
+
+  // 3. Delete migration group configuration
+  $group_config = $config_factory->getEditable('migrate_plus.migration_group.thirdwing_d6');
+  if (!$group_config->isNew()) {
+    $group_config->delete();
+    \Drupal::logger('thirdwing_migrate')->info('Deleted migration group configuration: migrate_plus.migration_group.thirdwing_d6');
+  }
+
+  // 4. Clean up any remaining migration map and message tables
+  $table_prefixes = [
+    'migrate_map_d6_thirdwing',
+    'migrate_message_d6_thirdwing'
+  ];
+
+  foreach ($table_prefixes as $prefix) {
+    try {
+      // Get all tables with this prefix
+      $tables = $database->schema()->findTables($prefix . '%');
+      
+      foreach ($tables as $table) {
+        if ($database->schema()->tableExists($table)) {
+          $database->schema()->dropTable($table);
+          \Drupal::logger('thirdwing_migrate')->info('Dropped migration table: @table', ['@table' => $table]);
+        }
+      }
+    } catch (Exception $e) {
+      \Drupal::logger('thirdwing_migrate')->warning('Error dropping tables with prefix @prefix: @error', [
+        '@prefix' => $prefix,
+        '@error' => $e->getMessage()
+      ]);
+    }
+  }
+
+  // 5. Clear relevant caches
+  drupal_flush_all_caches();
+
+  \Drupal::logger('thirdwing_migrate')->info('Thirdwing migration module uninstall cleanup completed.');
+  
+  // Display a message to the user
+  \Drupal::messenger()->addStatus(t('Thirdwing migration configurations and data have been cleaned up.'));
+}
+
+/**
+ * Implements hook_install().
+ */
+function thirdwing_migrate_install() {
+  \Drupal::messenger()->addStatus(t('Thirdwing Migration module installed. Run the migration setup script to configure your migrations.'));
+  \Drupal::logger('thirdwing_migrate')->info('Thirdwing migration module installed.');
+}
+
+/**
+ * Helper function to check if migrate database connection is configured.
+ */
+function _thirdwing_migrate_check_database_connection() {
+  try {
+    $migrate_db = Database::getConnection('default', 'migrate');
+    // Try a simple query to test the connection
+    $migrate_db->select('node', 'n')->countQuery()->execute()->fetchField();
+    return TRUE;
+  } catch (Exception $e) {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function thirdwing_migrate_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    $requirements['thirdwing_migrate_database'] = [
+      'title' => t('Thirdwing Migration Database'),
+      'value' => t('Not configured'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+
+    if (_thirdwing_migrate_check_database_connection()) {
+      $requirements['thirdwing_migrate_database']['value'] = t('Connected');
+      $requirements['thirdwing_migrate_database']['severity'] = REQUIREMENT_OK;
+      $requirements['thirdwing_migrate_database']['description'] = t('Migration database connection is working properly.');
+    } else {
+      $requirements['thirdwing_migrate_database']['description'] = t('The migration database connection is not configured or not accessible. Please configure the "migrate" database connection in your settings.php file.');
+    }
+  }
+
+  return $requirements;
+}

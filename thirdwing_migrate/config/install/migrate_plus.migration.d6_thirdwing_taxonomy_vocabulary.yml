@@ -1,12 +1,12 @@
 id: d6_thirdwing_taxonomy_vocabulary
-label: 'D6 Taxonomy Vocabularies'
+label: 'Taxonomy Vocabularies'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Configuration'
 
 source:
-  plugin: d6_taxonomy_vocabulary
+  plugin: d6_thirdwing_taxonomy_vocabulary
   key: migrate
 
 destination:
@@ -15,7 +15,10 @@ destination:
 process:
   vid: vid
   name: name
-  description: description
+  description:
+    plugin: skip_on_empty
+    source: description
+    method: process
   weight: weight
 
 migration_dependencies: []

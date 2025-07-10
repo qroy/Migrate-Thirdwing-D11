@@ -30,9 +30,10 @@ process:
     plugin: default_value
     default_value: comment
   uid:
-    plugin: migration_lookup
+    plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
+    fallback_uid: 1
   pid:
     plugin: migration_lookup
     migration: d6_thirdwing_comment

@@ -20,9 +20,10 @@ process:
     default_value: pagina
   title: title
   uid:
-    plugin: migration_lookup
+    plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
+    fallback_uid: 1
   status: status
   created: created
   changed: changed

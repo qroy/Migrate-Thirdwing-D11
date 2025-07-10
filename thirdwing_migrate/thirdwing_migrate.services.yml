@@ -1,0 +1,7 @@
+services:
+
+  thirdwing_migrate.migration_author_fix_subscriber:
+    class: Drupal\thirdwing_migrate\EventSubscriber\MigrationAuthorFixSubscriber
+    arguments: ['@entity_type.manager', '@logger.factory']
+    tags:
+      - { name: event_subscriber }

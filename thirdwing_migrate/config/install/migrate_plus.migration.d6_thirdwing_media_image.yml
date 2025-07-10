@@ -19,9 +19,10 @@ process:
   bundle: constants/bundle
   name: filename
   uid:
-    plugin: migration_lookup
+    plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
+    fallback_uid: 1
   status:
     plugin: default_value
     default_value: 1

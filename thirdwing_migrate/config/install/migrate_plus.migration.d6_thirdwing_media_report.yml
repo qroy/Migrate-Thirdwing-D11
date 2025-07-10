@@ -22,9 +22,10 @@ process:
     callable: basename
     source: filename
   uid:
-    plugin: migration_lookup
+    plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
+    fallback_uid: 1
     no_stub: true
   status:
     plugin: default_value

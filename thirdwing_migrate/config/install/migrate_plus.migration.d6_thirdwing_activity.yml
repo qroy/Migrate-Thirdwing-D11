@@ -37,39 +37,70 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Activity-specific fields - using exact D6 field names
-  field_datum: field_datum
+  # CORRECTED: Using actual D6 field names with proper _value suffix
+  field_datum: field_datum_value
   field_tijd_aanwezig: field_tijd_aanwezig_value
+  
+  # Instrument availability fields (actual D6 fields)
   field_keyboard: field_keyboard_value
   field_gitaar: field_gitaar_value
   field_basgitaar: field_basgitaar_value
   field_drums: field_drums_value
+  
+  # Logistics fields (actual D6 fields)
   field_vervoer: field_vervoer_value
   field_sleepgroep: field_sleepgroep_value
   field_sleepgroep_aanwezig: field_sleepgroep_aanwezig_value
+  field_sleepgroep_terug: field_sleepgroep_terug_value
   field_kledingcode: field_kledingcode_value
+  
+  # Location and details (actual D6 fields)
   field_l_bijzonderheden: field_l_bijzonderheden_value
   field_bijzonderheden: field_bijzonderheden_value
   
-  # Location reference - targeting Dutch content type
+  # REMOVED: field_ledeninfo - does not exist in D6
+  
+  # Location reference (actual D6 field)
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
   
-  # Member info with format
-  field_ledeninfo/value: field_ledeninfo_value
-  field_ledeninfo/format:
-    plugin: static_map
-    source: field_ledeninfo_format
-    map:
-      1: basic_html
-      3: full_html
-      6: basic_html
-    default_value: basic_html
+  # Program references (actual D6 field)
+  field_programma2:
+    plugin: migration_lookup
+    migration: d6_thirdwing_repertoire
+    source: field_programma2_nid
+  
+  # Images (actual D6 field)
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+  
+  # Background image (actual D6 field)
+  field_background:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: field_background_fid
+  
+  # Files (actual D6 field)
+  field_files:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_files_fid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
     - d6_thirdwing_location
-    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_repertoire
+    - d6_thirdwing_file

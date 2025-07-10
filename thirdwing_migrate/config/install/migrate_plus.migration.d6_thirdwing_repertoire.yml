@@ -37,34 +37,60 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Repertoire-specific fields - using exact D6 field names
-  field_componist: field_rep_componist_value
-  field_arrangeur: field_rep_arr_value
-  field_toonsoort: field_rep_toonsoort_value
-  field_tempo: field_rep_tempo_value
-  field_moeilijkheidsgraad: field_rep_moeilijkheid_value
+  # CORRECTED: Using actual D6 field names
+  field_rep_componist: field_rep_componist_value
+  field_rep_componist_jaar: field_rep_componist_jaar_value
+  field_rep_arr: field_rep_arr_value
+  field_rep_arr_jaar: field_rep_arr_jaar_value
+  field_rep_uitv: field_rep_uitv_value
+  field_rep_uitv_jaar: field_rep_uitv_jaar_value
+  field_rep_genre: field_rep_genre_value
+  field_rep_sinds: field_rep_sinds_value
   
-  # Audio and sheet music files
-  field_audio:
+  # Audio cataloging fields (actual D6 fields)
+  field_audio_nummer: field_audio_nummer_value
+  field_audio_seizoen: field_audio_seizoen_value
+  field_klapper: field_klapper_value
+  
+  # Sheet music files (using actual D6 field names)
+  field_partij_band:
     plugin: sub_process
-    source: audio_files
+    source: partij_band_files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_media_audio
-        source: audio_fid
+        migration: d6_thirdwing_file
+        source: field_partij_band_fid
   
-  field_partituur:
+  field_partij_koor_l:
     plugin: sub_process
-    source: sheet_music_files
+    source: partij_koor_files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_media_sheet_music
-        source: partituur_fid
+        migration: d6_thirdwing_file
+        source: field_partij_koor_l_fid
+  
+  field_partij_tekst:
+    plugin: sub_process
+    source: partij_tekst_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_partij_tekst_fid
+  
+  # MP3 audio files (using actual D6 field name)
+  field_mp3:
+    plugin: sub_process
+    source: mp3_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_mp3_fid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_media_audio
-    - d6_thirdwing_media_sheet_music
+    - d6_thirdwing_file

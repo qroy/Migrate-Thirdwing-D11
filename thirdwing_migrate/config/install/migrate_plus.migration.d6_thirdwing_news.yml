@@ -10,14 +10,14 @@ source:
 
 destination:
   plugin: 'entity:node'
-  default_bundle: news
+  default_bundle: nieuws
 
 process:
   nid: nid
   vid: vid
   type:
     plugin: default_value
-    default_value: news
+    default_value: nieuws
   title: title
   
   uid:
@@ -40,22 +40,33 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Workflow state (needs custom handling for news-specific states)
-  field_news_workflow:
-    plugin: static_map
-    source: workflow_stateid
-    map:
-      2: 13  # Concept
-      3: 14  # Published
-      9: 15  # Recommended
-      4: 16  # Archive
-      8: 17  # Trash
+  # CORRECTED: Using actual D6 field - field_datum (not field_news_datum)
+  field_datum: field_datum_value
   
-  # Access, images, and files handled by additional process plugins
+  # REMOVED: field_news_workflow - does not exist in D6
+  # Note: Workflow states should be handled in source plugin via workflow_stateid
+  
+  # Images (actual D6 field)
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+  
+  # Files (actual D6 field)
+  field_files:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_files_fid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_taxonomy_term
-    - d6_thirdwing_media_image
-    - d6_thirdwing_media_document
+    - d6_thirdwing_file

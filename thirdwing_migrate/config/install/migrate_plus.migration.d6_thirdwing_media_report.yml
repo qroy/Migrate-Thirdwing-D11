@@ -8,11 +8,11 @@ migration_tags:
 source:
   plugin: d6_thirdwing_report
   constants:
-    bundle: report
+    bundle: document
 
 destination:
   plugin: 'entity:media'
-  default_bundle: report
+  default_bundle: document
 
 process:
   mid: fid
@@ -39,18 +39,24 @@ process:
     migration: d6_thirdwing_file
     source: fid
   
-  # Report-specific fields
-  field_report_date: field_verslag_datum
-  field_report_type: field_verslag_soort
+  # CORRECTED: Using actual D6 field - field_datum (not field_verslag_datum)
+  field_media_date: field_datum_value
   
-  # Access control
-  field_report_access:
-    plugin: migration_lookup
-    migration: d6_thirdwing_taxonomy_term
-    source: field_toegang
+  # REMOVED: field_verslag_soort - does not exist in D6
+  # Note: Report types should be handled via taxonomy or source plugin logic
+  
+  # REMOVED: field_toegang - does not exist in D6
+  # Note: Access control should be handled via actual taxonomy term relationships
+  
+  # If access control is needed, use actual taxonomy term relationships
+  # field_media_access:
+  #   plugin: migration_lookup
+  #   migration: d6_thirdwing_taxonomy_term
+  #   source: access_term_ids
 
 migration_dependencies:
   required:
     - d6_thirdwing_file
     - d6_thirdwing_user
+  optional:
     - d6_thirdwing_taxonomy_term

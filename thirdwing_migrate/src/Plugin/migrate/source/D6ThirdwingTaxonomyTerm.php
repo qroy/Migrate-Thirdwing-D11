@@ -65,13 +65,32 @@ class D6ThirdwingTaxonomyTerm extends SqlBase {
       return FALSE;
     }
 
-    // Clean up null/empty values to prevent Html::escape() errors
-    $this->cleanNullValues($row, ['name', 'description']);
-
-    // Handle parent hierarchy - if parent is 0, set to NULL for proper hierarchy
+    // Convert numeric string fields to actual integers
+    $numeric_fields = ['tid', 'vid', 'weight'];
+    foreach ($numeric_fields as $field) {
+      $value = $row->getSourceProperty($field);
+      if ($value !== null) {
+        $row->setSourceProperty($field, (int) $value);
+      } else {
+        $row->setSourceProperty($field, 0);
+      }
+    }
+    
+    // Handle parent field specially - convert to int or NULL
     $parent = $row->getSourceProperty('parent');
-    if ($parent == 0) {
+    if ($parent === null || $parent === '' || $parent === '0' || $parent == 0) {
       $row->setSourceProperty('parent', NULL);
+    } else {
+      $row->setSourceProperty('parent', (int) $parent);
+    }
+
+    // Clean string fields
+    $string_fields = ['name', 'description'];
+    foreach ($string_fields as $field) {
+      $value = $row->getSourceProperty($field);
+      if ($value === null) {
+        $row->setSourceProperty($field, '');
+      }
     }
 
     return TRUE;

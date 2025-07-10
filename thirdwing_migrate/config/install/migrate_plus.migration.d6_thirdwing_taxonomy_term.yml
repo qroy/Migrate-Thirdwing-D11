@@ -20,10 +20,13 @@ process:
     source: vid
   name: name
   description:
-    plugin: skip_on_empty
+    plugin: default_value
     source: description
-    method: process
-  weight: weight
+    default_value: ""
+  weight:
+    plugin: default_value
+    source: weight
+    default_value: 0
   parent:
     plugin: migration_lookup
     migration: d6_thirdwing_taxonomy_term

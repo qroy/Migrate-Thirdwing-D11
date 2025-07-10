@@ -65,8 +65,25 @@ class D6ThirdwingTaxonomyVocabulary extends SqlBase {
       return FALSE;
     }
 
-    // Clean up null/empty values to prevent Html::escape() errors
-    $this->cleanNullValues($row, ['name', 'description', 'help', 'module']);
+    // Convert all numeric string fields to actual integers
+    $numeric_fields = ['vid', 'weight', 'hierarchy', 'multiple', 'required', 'relations', 'tags'];
+    foreach ($numeric_fields as $field) {
+      $value = $row->getSourceProperty($field);
+      if ($value !== null) {
+        $row->setSourceProperty($field, (int) $value);
+      } else {
+        $row->setSourceProperty($field, 0);
+      }
+    }
+    
+    // Clean string fields
+    $string_fields = ['name', 'description', 'help', 'module'];
+    foreach ($string_fields as $field) {
+      $value = $row->getSourceProperty($field);
+      if ($value === null) {
+        $row->setSourceProperty($field, '');
+      }
+    }
 
     return TRUE;
   }

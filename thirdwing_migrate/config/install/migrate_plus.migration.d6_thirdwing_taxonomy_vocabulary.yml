@@ -16,9 +16,12 @@ process:
   vid: vid
   name: name
   description:
-    plugin: skip_on_empty
+    plugin: default_value
     source: description
-    method: process
-  weight: weight
+    default_value: ""
+  weight:
+    plugin: default_value
+    source: weight
+    default_value: 0
 
 migration_dependencies: []

@@ -27,7 +27,55 @@ trait MigrationHelperTrait {
   }
 
   /**
-   * Clean up all string fields in a row.
+   * Clean and validate numeric fields.
+   *
+   * @param \Drupal\migrate\Row $row
+   *   The migration row.
+   * @param array $fields
+   *   Array of field names that should be numeric.
+   */
+  protected function cleanNumericFields(Row $row, array $fields) {
+    foreach ($fields as $field) {
+      $value = $row->getSourceProperty($field);
+      
+      if ($value === null || $value === '') {
+        $row->setSourceProperty($field, 0);
+      } elseif (!is_numeric($value)) {
+        // Try to extract numbers from string
+        $numeric_value = preg_replace('/[^0-9.-]/', '', $value);
+        if (is_numeric($numeric_value)) {
+          $row->setSourceProperty($field, (int) $numeric_value);
+        } else {
+          $row->setSourceProperty($field, 0);
+        }
+      } else {
+        $row->setSourceProperty($field, (int) $value);
+      }
+    }
+  }
+
+  /**
+   * Clean and validate ID fields (should be positive integers).
+   *
+   * @param \Drupal\migrate\Row $row
+   *   The migration row.
+   * @param array $fields
+   *   Array of field names that should be positive integers.
+   */
+  protected function cleanIdFields(Row $row, array $fields) {
+    foreach ($fields as $field) {
+      $value = $row->getSourceProperty($field);
+      
+      if ($value === null || $value === '' || !is_numeric($value) || $value <= 0) {
+        $row->setSourceProperty($field, NULL);
+      } else {
+        $row->setSourceProperty($field, (int) $value);
+      }
+    }
+  }
+
+  /**
+   * Clean all string fields in a row.
    *
    * @param \Drupal\migrate\Row $row
    *   The migration row.
@@ -69,6 +117,32 @@ trait MigrationHelperTrait {
   }
 
   /**
+   * Check if a field is likely to be a numeric field.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return bool
+   *   TRUE if the field is likely a numeric field.
+   */
+  protected function isNumericField($field_name) {
+    $numeric_patterns = [
+      'nid', 'vid', 'tid', 'uid', 'fid', 'gid', 'weight', 'status',
+      'created', 'changed', 'access', 'login', 'timestamp', 'filesize',
+      '_id', '_count', '_number', '_year', '_delta', 'hierarchy',
+      'multiple', 'required', 'relations', 'tags'
+    ];
+
+    foreach ($numeric_patterns as $pattern) {
+      if (strpos($field_name, $pattern) !== FALSE) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Transform boolean-like values to proper boolean.
    *
    * @param \Drupal\migrate\Row $row
@@ -100,5 +174,36 @@ trait MigrationHelperTrait {
         $row->setSourceProperty($field, NULL);
       }
     }
+  }
+
+  /**
+   * Clean all fields in a row automatically.
+   *
+   * @param \Drupal\migrate\Row $row
+   *   The migration row.
+   */
+  protected function cleanAllFields(Row $row) {
+    $source = $row->getSource();
+    $string_fields = [];
+    $numeric_fields = [];
+    $id_fields = [];
+    
+    foreach ($source as $key => $value) {
+      if ($this->isStringField($key)) {
+        $string_fields[] = $key;
+      } elseif ($this->isNumericField($key)) {
+        if (strpos($key, 'id') !== FALSE || strpos($key, 'nid') !== FALSE || 
+            strpos($key, 'vid') !== FALSE || strpos($key, 'tid') !== FALSE || 
+            strpos($key, 'uid') !== FALSE || strpos($key, 'fid') !== FALSE) {
+          $id_fields[] = $key;
+        } else {
+          $numeric_fields[] = $key;
+        }
+      }
+    }
+    
+    $this->cleanNullValues($row, $string_fields);
+    $this->cleanNumericFields($row, $numeric_fields);
+    $this->cleanIdFields($row, $id_fields);
   }
 }

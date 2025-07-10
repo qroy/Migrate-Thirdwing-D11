@@ -16,9 +16,9 @@ The Thirdwing project consists of **two major components** designed for migratin
 - **Dutch Language Support**: Multi-lingual content handling for NL/EN content
 
 ### Target Content
-- **Music Content**: Repertoire, sheet music, audio files, concert programs
-- **Community Content**: News, activities, member profiles, photo albums
-- **Organizational Content**: Locations, venues, friends/partners, newsletters
+- **Muziek Content**: Repertoire, partituren, audiobestanden, concertprogramma's
+- **Gemeenschap Content**: Nieuws, activiteiten, ledenprofielen, fotoalbums  
+- **Organisatie Content**: Locaties, uitvoeringsplaatsen, vrienden/partners
 
 ---
 
@@ -33,9 +33,13 @@ The Thirdwing project consists of **two major components** designed for migratin
 - **Progress Tracking**: Batch processing with configurable feedback intervals
 
 #### Taxonomy & Structure Migrations
-- **Vocabularies**: `d6_thirdwing_taxonomy_vocabulary`
-- **Terms**: `d6_thirdwing_taxonomy_term` with hierarchical relationships
+- **Vocabularies**: `d6_thirdwing_taxonomy_vocabulary` (excluding Activiteiten & Verslagen)
+- **Terms**: `d6_thirdwing_taxonomy_term` (excluding Activiteiten & Verslagen)
 - **Users**: `d6_thirdwing_user` with role mapping and fallback handling
+
+**Taxonomy to Field Conversions**:
+- **Activiteiten vocabulary** → `field_activity_type` (list field)
+- **Verslagen vocabulary** → `field_report_type` (list field)
 
 #### File System Migrations
 - **Basic Files**: `d6_thirdwing_file` with URL rewriting (`http://www.thirdwing.nl/` → `public://`)
@@ -43,15 +47,14 @@ The Thirdwing project consists of **two major components** designed for migratin
 - **Path Mapping**: Proper file system integration
 
 #### Content Type Migrations
-- **News**: `d6_thirdwing_news` (nieuws → news)
-- **Activities**: `d6_thirdwing_activity` (activiteit → activity) 
-- **Pages**: `d6_thirdwing_page` (pagina → page)
-- **Repertoire**: `d6_thirdwing_repertoire` (musical pieces)
-- **Locations**: `d6_thirdwing_location` (venues/locations)
-- **Albums**: `d6_thirdwing_album` (photo albums)
-- **Friends**: `d6_thirdwing_friend` (partner organizations)
-- **Newsletters**: `d6_thirdwing_newsletter`
-- **Programs**: `d6_thirdwing_program` (concert programs)
+- **Nieuws**: `d6_thirdwing_news` (nieuws → nieuws)
+- **Activiteit**: `d6_thirdwing_activity` (activiteit → activiteit) 
+- **Pagina**: `d6_thirdwing_page` (pagina → pagina)
+- **Repertoire**: `d6_thirdwing_repertoire` (repertoire → repertoire)
+- **Locatie**: `d6_thirdwing_location` (locatie → locatie)
+- **Foto**: `d6_thirdwing_album` (foto → foto)
+- **Vriend**: `d6_thirdwing_friend` (vriend → vriend)
+- **Programma**: `d6_thirdwing_program` (programma → programma)
 - **Comments**: `d6_thirdwing_comment` with entity relationships
 
 #### Custom Process Plugins
@@ -66,83 +69,215 @@ The Thirdwing project consists of **two major components** designed for migratin
 - **Text Format Migration**: Proper format mapping (basic_html, full_html)
 - **Entity Reference Resolution**: Complex relationship preservation
 
-### **🚧 PARTIALLY IMPLEMENTED**
+### **✅ ENHANCED MEDIA MIGRATION SYSTEM**
 
-#### Media System (Advanced Architecture Planned)
-**Current Status**: Basic file migration implemented
-**Planned Enhancement**: Comprehensive media entity system
+#### Architecture Overview
+**Status**: Complete architecture designed and implemented
 
-**Bundle Architecture Design**:
-- **Core Bundles**: image, audio, video, document (using Drupal core)
-- **Custom Bundles**: 
-  - `sheet_music` - Musical scores and sheet music
-  - `report` - Reports and official documents
+The migration system implements a **dual-strategy approach** for media handling:
 
-**Advanced Media Features (Designed but Not Built)**:
-- **Context-Based Bundle Assignment**: Files categorized by original field context
-- **Priority Logic**: Intelligent bundle selection for multi-context files
-- **Metadata Preservation**: JSON context tracking for original field usage
-- **Incremental Updates**: Support for ongoing synchronization while old site remains active
+1. **Node-to-Media Conversion**: Complete content types converted to media entities
+2. **File Field-to-Media Migration**: File fields converted to media reference fields
 
-### **📋 UNIMPLEMENTED IDEAS & FUTURE FEATURES**
+#### Core Media Bundle Strategy
+**Bundle Architecture**: Core Drupal bundles with custom fields
+- **document**: Sheet music, reports, and generic documents
+- **audio**: Audio recordings and performances
+- **video**: Video content and oEmbed resources
+- **image**: Images and photographs
 
-#### 1. Advanced Media Migration System
-**Status**: Detailed specification exists, implementation pending
-
-**Key Features**:
+#### Custom Media Fields
+All media bundles enhanced with specialized fields:
 ```yaml
-Bundle Priority Logic:
-1. sheet_music (field_partij_*)  # Highest priority
-2. audio (field_mp3)
-3. image (imagefield)
-4. document (generic filefield)  # Fallback
+Universal Media Fields:
+- field_media_type: Classification (sheet_music|report|performance|etc)
+- field_media_context: JSON field storing original field context
+- field_media_access: Entity reference to taxonomy terms
+- field_media_date: Date field for content dating
+- field_media_repertoire: Entity reference to repertoire nodes
+- field_media_activity: Entity reference to activity nodes
+- field_media_performer: Text field for performer information
+- field_media_notes: Long text for additional information
+
+Document-Specific Fields:
+- field_document_type: sheet_music|report|generic
+- field_sheet_music_type: soprano|alto|tenor|bass|piano|etc
+- field_report_type: bestuursvergadering|muziekcommissie|commissie_pr|etc (converted from Verslagen vocabulary)
+
+Audio-Specific Fields:
+- field_audio_type: uitvoering|repetitie|oefenbestand|origineel|uitzending|overig (converted from Audio types)
+
+Video-Specific Fields:
+- field_video_type: performance|rehearsal|etc
+
+Image-Specific Fields:
+- field_image_type: activity|news|profile|etc
 ```
 
-**Context Preservation**:
+### **📋 MIGRATION PHASES**
+
+#### Phase 1: Node-to-Media Conversion
+**Complete content type elimination and conversion**:
+- **`verslag` (Reports) → `document` media entities**
+  - Original nodes completely replaced by media
+  - PDF documents become media with report metadata
+  - Access control and taxonomy preserved
+  
+- **`audio` (Audio) → `audio` media entities**
+  - Audio nodes converted to media entities
+  - MP3 files and metadata preserved
+  - Performance and repertoire relationships maintained
+  
+- **`video` (Video) → `video` media entities**
+  - Video nodes converted to oEmbed media
+  - YouTube/Vimeo URLs preserved
+  - Performance metadata migrated
+
+#### Phase 2: File Field-to-Media Migration
+**File fields converted to media reference fields**:
+```yaml
+Field Conversions:
+- field_afbeeldingen (file/image) → field_images (entity_reference:media)
+- field_files (file) → field_documents (entity_reference:media)
+- field_mp3 (file) → field_audio (entity_reference:media)
+- field_partij_* (file) → field_sheet_music (entity_reference:media)
+```
+
+#### Phase 3: Reference Migration (Option A - Clean Conversion)
+**Entity references updated to point to media entities**:
+```yaml
+Reference Conversions:
+- field_ref_verslag (entity_reference:node) → field_ref_media (entity_reference:media)
+- field_ref_audio (entity_reference:node) → field_ref_media (entity_reference:media)
+- field_ref_video (entity_reference:node) → field_ref_media (entity_reference:media)
+```
+
+**Migration Example**:
+```yaml
+Before Migration:
+  activiteit node:
+    field_ref_verslag: [verslag_node_123, verslag_node_456]
+    field_ref_audio: [audio_node_789]
+    field_afbeeldingen: [file_123.jpg, file_456.png]
+
+After Migration:
+  activiteit node:
+    field_ref_media: [media_document_123, media_document_456, media_audio_789]
+    field_images: [media_image_123, media_image_456]
+```
+
+### **🔄 MIGRATION EXECUTION ORDER**
+
+#### Dependency-Based Migration Sequence
+```yaml
+1. Core Data:
+   - d6_thirdwing_taxonomy_vocabulary (excluding Activiteiten & Verslagen)
+   - d6_thirdwing_taxonomy_term (excluding Activiteiten & Verslagen)
+   - d6_thirdwing_user
+
+2. File System:
+   - d6_thirdwing_file
+
+3. Media Entities:
+   - d6_thirdwing_media_document
+   - d6_thirdwing_media_audio
+   - d6_thirdwing_media_video
+   - d6_thirdwing_media_image
+
+4. Referenced Content:
+   - d6_thirdwing_locatie
+   - d6_thirdwing_repertoire
+   - d6_thirdwing_programma
+
+5. Main Content (with media references):
+   - d6_thirdwing_nieuws
+   - d6_thirdwing_activiteit
+   - d6_thirdwing_pagina
+   - d6_thirdwing_foto
+   - d6_thirdwing_vriend
+
+6. Relationships:
+   - d6_thirdwing_comment
+```
+
+### **🎯 ADVANCED FEATURES**
+
+#### Context-Based Bundle Assignment
+**Intelligent file categorization**:
+```yaml
+Bundle Priority Logic:
+1. sheet_music (field_partij_*) # Highest priority
+2. audio (field_mp3, audio nodes)
+3. video (video nodes)
+4. document (verslag nodes, generic files) # Fallback
+5. image (image files from any context)
+```
+
+#### Context Preservation
+**Original field context stored as JSON**:
 ```json
 {
   "primary_field": "field_partij_band",
   "all_fields": ["field_partij_band", "field_partij_koor_l"],
-  "bundle_decision": "sheet_music",
-  "original_content_types": ["repertoire"]
+  "bundle_decision": "document",
+  "document_type": "sheet_music",
+  "original_content_types": ["repertoire"],
+  "access_level": "members_only",
+  "converted_taxonomy": {
+    "vocabulary": "verslagen",
+    "term_name": "Bestuursvergadering",
+    "converted_to": "field_report_type"
+  }
 }
 ```
 
-#### 2. Sheet Music Management System
-**Status**: Specification complete, needs implementation
+#### Enhanced Source Plugins
+- **D6ThirdwingMediaDetector**: Context-aware file processing
+- **D6ThirdwingNodeToMedia**: Node-to-media conversion logic
+- **D6ThirdwingSheetMusic**: Specialized sheet music processing
+- **D6ThirdwingReport**: Report document processing with Verslagen vocabulary conversion
+- **D6ThirdwingAudio**: Audio content conversion with Audio type conversion
+- **D6ThirdwingVideo**: Video content processing
+- **D6ThirdwingTaxonomyConverter**: Converts specific vocabularies to list fields
 
-**Features**:
-- **Part Type Classification**: Soprano, Alto, Tenor, Bass, Piano, Guitar, etc.
-- **Instrument Mapping**: Band vs. Choir parts with specific instrument assignments
-- **Legacy Type Conversion**: Mapping from D6 numeric IDs to descriptive labels
-- **Repertoire Linking**: Direct connections between sheet music and song repertoire
+#### Custom Process Plugins
+- **MediaBundleDetector**: Determines bundle based on file context
+- **NodeToMediaMapper**: Maps old node IDs to new media IDs
+- **ReferenceConverter**: Converts entity references to media references
+- **ContextPreserver**: Stores original field context as JSON
+- **TaxonomyToFieldConverter**: Converts taxonomy terms to list field values
 
-#### 3. Incremental Migration Updates
-**Status**: Architecture designed, not implemented
+### **📊 POST-MIGRATION STRUCTURE**
 
-**Capabilities**:
-- **Change Detection**: Timestamp-based detection of content changes
-- **Context Recalculation**: Dynamic field context updates
-- **Bundle Preservation**: Stable media bundle assignments
-- **Rollback Support**: Safe migration reversal procedures
+#### Content Type Changes
+**Removed Content Types**:
+- `verslag` (converted to document media)
+- `audio` (converted to audio media)
+- `video` (converted to video media)
 
-#### 4. Performance Optimization
-**Status**: Design concepts identified
+**Excluded from Migration**:
+- `nieuwsbrief` (newsletters not migrated)
 
-**Areas for Enhancement**:
-- **Batch Size Optimization**: Dynamic batch sizing based on content complexity
-- **Memory Management**: Efficient processing for large file sets
-- **Connection Pooling**: Optimized database connections
-- **Progress Reporting**: Enhanced progress tracking with ETA calculations
+**Updated Content Types**:
+- All remaining content types use media reference fields
+- No direct file fields remain
+- Clean entity reference structure
 
-#### 5. Advanced Error Handling
-**Status**: Basic framework exists, advanced features planned
+#### Media Organization
+**Bundle-Based Organization**:
+- `/admin/content/media/document` - All documents (sheet music, reports, files)
+- `/admin/content/media/audio` - All audio files
+- `/admin/content/media/video` - All video content
+- `/admin/content/media/image` - All images
 
-**Future Features**:
-- **Migration Validation**: Pre-migration content analysis and validation
-- **Conflict Resolution**: Automated resolution of data conflicts
-- **Recovery Procedures**: Automated recovery from failed migrations
-- **Data Quality Reports**: Comprehensive post-migration analysis
+**Filtering within bundles**:
+- Documents: Filter by `field_document_type` (sheet_music|report|generic)
+- Audio: Filter by `field_audio_type` (uitvoering|repetitie|oefenbestand|etc)
+- Images: Filter by `field_image_type` (activity|news|etc)
+
+**Content Type Filtering**:
+- Activities: Filter by `field_activity_type` (converted from Activiteiten vocabulary)
+- Reports: Filter by `field_report_type` (bestuursvergadering|muziekcommissie|etc)
 
 ---
 
@@ -150,179 +285,94 @@ Bundle Priority Logic:
 
 ### **✅ IMPLEMENTED FEATURES**
 
-#### Modern Design Architecture
-- **CSS Grid Layout**: Flexible, responsive grid system
-- **Component-Based CSS**: Modular architecture with clear separation
-- **CSS Custom Properties**: Modern theming with CSS variables
-- **Progressive Enhancement**: Works without JavaScript, enhanced with it
+#### Modern Responsive Design
+- **Mobile-First**: Optimized for all device sizes
+- **Accessibility**: WCAG 2.1 AA compliant
+- **Performance**: Optimized CSS and JavaScript
+- **Typography**: Modern font stack with fallbacks
 
-#### Responsive Design
-- **Mobile-First Approach**: Optimized for mobile devices
-- **Breakpoint System**: 
-  - Mobile: up to 767px
-  - Tablet: 768px to 1023px
-  - Desktop: 1024px and above
-  - Wide: 1200px and above
+#### Music Organization Features
+- **Concert Program Display**: Specialized layouts for programs
+- **Sheet Music Integration**: Download and display features
+- **Audio Player Integration**: HTML5 audio with playlists
+- **Photo Gallery**: Responsive image galleries
+- **Event Calendar**: Activity and concert scheduling
 
-#### Accessibility Features (WCAG 2.1 AA Compliant)
-- **Keyboard Navigation**: Full keyboard support throughout interface
-- **Screen Reader Optimization**: Proper ARIA labels and semantic markup
-- **High Contrast Support**: Automatic adaptation for accessibility preferences
-- **Focus Management**: Clear focus indicators and logical tab order
-- **Skip Links**: Built-in accessibility navigation
+#### Theme Components
+- **Base Theme**: Custom theme extending Stable9
+- **Component Architecture**: Modular CSS and JavaScript
+- **Template System**: Twig templates for all content types
+- **Asset Management**: Optimized CSS/JS delivery
 
-#### Navigation System
-- **Multi-Level Menus**: Support for dropdown submenus
-- **Mobile Navigation**: Collapsible hamburger menu
-- **Breadcrumb System**: Contextual navigation aids
-- **Menu Depth Classes**: CSS classes for styling different menu levels
+### **🔧 TECHNICAL IMPLEMENTATION**
 
-#### Performance Optimization
-- **Critical CSS**: Above-the-fold styling inlined for faster rendering
-- **Asset Optimization**: Minified CSS and JavaScript with smart loading
-- **Lazy Loading**: Below-the-fold content optimization
-- **WebP Support**: Modern image format support
+#### File Structure
+```
+thirdwing/
+├── css/
+│   ├── base/
+│   ├── components/
+│   ├── layout/
+│   └── theme/
+├── js/
+│   ├── components/
+│   └── theme/
+├── templates/
+│   ├── content/
+│   ├── field/
+│   ├── media/
+│   └── navigation/
+└── images/
+```
 
-#### Developer Experience
-- **Twig Templates**: Clean, maintainable template structure
-- **Theme Hook Suggestions**: Automatic template suggestions for content types
-- **Preprocessing Functions**: Comprehensive data preparation for templates
-- **Library Management**: Organized CSS/JS libraries with proper dependencies
+#### CSS Architecture
+- **Custom Properties**: CSS variables for theming
+- **Grid Layout**: Modern CSS Grid and Flexbox
+- **Responsive Design**: Mobile-first breakpoints
+- **Component-Based**: Modular and maintainable
 
-#### Content Type Support
-**Optimized for Migrated Content**:
-- **nieuws** (news) → Styled news article layouts
-- **activiteit** (activities) → Event and activity displays
-- **pagina** (pages) → Static page layouts
-- **repertoire** (repertoire) → Musical repertoire displays
-- **profiel** (profiles) → Member profile layouts
-
-#### Theme Regions
-- **Flexible Layout**: 12 regions for maximum layout flexibility
-- **Header System**: Topbar, header, and navigation regions
-- **Content Areas**: Main content with dual sidebar support
-- **Footer System**: Three-column footer for organization info
-
-### **🚧 PARTIALLY IMPLEMENTED**
-
-#### PWA (Progressive Web App) Features
-**Current Status**: Basic structure in place
-**Missing**: Full service worker implementation, manifest optimization
-
-#### Advanced Animations
-**Current Status**: Basic CSS transitions
-**Planned**: Micro-animations, scroll-based animations, loading states
-
-### **📋 UNIMPLEMENTED IDEAS & FUTURE FEATURES**
-
-#### 1. Advanced Media Display
-**Status**: Framework exists, specialized displays needed
-
-**Features for Music Organization**:
-- **Sheet Music Viewer**: Integrated PDF viewer for musical scores
-- **Audio Player Integration**: Custom audio player for MP3 files
-- **Concert Program Display**: Specialized layouts for program information
-- **Photo Gallery Enhancements**: Lightbox integration, album management
-
-#### 2. Enhanced User Experience
-**Status**: Basic framework, advanced features planned
-
-**Interactive Features**:
-- **Search Enhancement**: Auto-suggestions, faceted search
-- **Social Sharing**: Integrated sharing for events and news
-- **Calendar Integration**: Event calendar with iCal export
-- **Newsletter Signup**: Enhanced subscription management
-
-#### 3. Performance Enhancements
-**Status**: Basic optimization complete, advanced features planned
-
-**Advanced Features**:
-- **Image Optimization**: Automatic WebP conversion, responsive images
-- **Caching Strategy**: Advanced caching for performance
-- **CDN Integration**: Content delivery network support
-- **Bundle Optimization**: Advanced JavaScript and CSS bundling
-
-#### 4. Accessibility Enhancements
-**Status**: WCAG 2.1 AA compliant, AAA features planned
-
-**Advanced Accessibility**:
-- **Voice Navigation**: Voice control integration
-- **Screen Reader Enhancements**: Advanced ARIA patterns
-- **Motor Impairment Support**: Enhanced keyboard navigation
-- **Cognitive Accessibility**: Simplified interface options
-
-#### 5. Content Editor Experience
-**Status**: Basic Drupal admin integration
-
-**Enhanced CMS Features**:
-- **Drag-and-Drop Layout**: Visual layout builder integration
-- **Media Management**: Enhanced media library integration
-- **Content Scheduling**: Advanced publication scheduling
-- **SEO Optimization**: Integrated SEO tools and meta management
+#### JavaScript Features
+- **Progressive Enhancement**: Works without JavaScript
+- **Modern ES6+**: Compiled for browser compatibility
+- **Accessibility**: Keyboard navigation and screen reader support
 
 ---
 
-## 🗂️ Project File Structure
+## 🛠️ Installation & Setup
 
-### Migration Module Structure
-```
-modules/custom/thirdwing_migrate/
-├── config/install/           # Migration configurations (YAML)
-├── src/Plugin/migrate/
-│   ├── source/              # Custom source plugins
-│   └── process/             # Custom process plugins
-├── scripts/                 # Installation and execution scripts
-├── thirdwing_migrate.info.yml
-├── thirdwing_migrate.module
-└── thirdwing_migrate.install
-```
+### Prerequisites
+- **Drupal 11**: Fresh installation
+- **PHP 8.2+**: With required extensions
+- **Database**: MySQL 8.0+ or PostgreSQL 13+
+- **Migration Database**: Read-only access to D6 database
 
-### Theme Structure
-```
-themes/custom/thirdwing/
-├── assets/
-│   ├── css/                 # Organized CSS files
-│   │   ├── base/           # Typography, normalize
-│   │   ├── layout/         # Grid, layout systems
-│   │   ├── components/     # UI components
-│   │   ├── theme/          # Colors, print styles
-│   │   └── responsive/     # Breakpoint-specific styles
-│   ├── js/                 # JavaScript files
-│   ├── images/             # Theme assets
-│   └── manifest.json       # PWA manifest
-├── templates/              # Twig templates
-├── thirdwing.info.yml
-├── thirdwing.libraries.yml
-├── thirdwing.theme
-└── thirdwing.breakpoints.yml
-```
-
----
-
-## 🚀 Installation & Deployment
-
-### Prerequisites for Clean Drupal 11 Installation
-- Fresh Drupal 11 site
-- Access to original Drupal 6 database
-- Composer for dependency management
-- File system access to D6 files directory
-
-### Installation Process
-
-#### 1. Migration Module Installation
+### Migration Setup
 ```bash
-# Install dependencies
-composer require drupal/migrate_plus drupal/migrate_tools
+# 1. Install migration module
+drush en thirdwing_migrate
 
-# Enable modules
-drush en migrate migrate_drupal migrate_plus migrate_tools thirdwing_migrate -y
+# 2. Configure database connection in settings.php
+$databases['migrate']['default'] = [
+  'database' => 'drupal6_database',
+  'username' => 'db_user',
+  'password' => 'db_password',
+  'host' => 'localhost',
+  'port' => '3306',
+  'driver' => 'mysql',
+  'prefix' => '',
+];
 
-# Configure database connection in settings.php
-# Run migrations
-drush migrate:import --group=thirdwing_d6
+# 3. Create content types and fields
+drush php:script create-content-types-and-fields.php
+
+# 4. Setup media types and fields
+drush php:script create-media-fields.php
+
+# 5. Execute migration
+./migrate-execute.sh
 ```
 
-#### 2. Theme Installation
+### Theme Installation
 ```bash
 # Enable theme
 drush theme:enable thirdwing
@@ -335,60 +385,74 @@ drush cache:rebuild
 ### Migration Execution Strategy
 **Three-Phase Approach**:
 1. **Phase 1**: Core data (taxonomy, users, files)
-2. **Phase 2**: Media entities and relationships
-3. **Phase 3**: Content nodes and comments
+2. **Phase 2**: Media entities and node-to-media conversion
+3. **Phase 3**: Content nodes with media references and relationships
 
 ---
 
 ## 📊 Content Analysis
 
 ### Source Content Types (Drupal 6)
-- **activiteit** (activities) → **activity**
-- **repertoire** (musical pieces) → **repertoire**
-- **nieuws** (news) → **news**
-- **pagina** (pages) → **page**
-- **foto** (photo albums) → **album**
-- **locatie** (locations) → **location**
-- **vriend** (friends/partners) → **friend**
-- **nieuwsbrief** (newsletters) → **newsletter**
+**Content Types Migrated to D11 Nodes**:
+- **activiteit** (activiteiten) → **activiteit**
+- **repertoire** (muzikale repertoire items) → **repertoire**
+- **nieuws** (nieuwsartikelen) → **nieuws**
+- **pagina** (pagina's) → **pagina**
+- **foto** (fotoalbums) → **foto**
+- **locatie** (uitvoerings- en repetitielocaties) → **locatie**
+- **vriend** (vrienden en partners van het koor) → **vriend**
+
+**Content Types Converted to Media Entities**:
+- **verslag** (vergaderverslagen) → **document** media
+- **audio** (audio opnames) → **audio** media
+- **video** (video opnames) → **video** media
+
+**Content Types Excluded from Migration**:
+- **nieuwsbrief** (nieuwsbrieven) - Not migrated
 
 ### Field Mapping Analysis
-**Image Fields**: `field_afbeeldingen`, `field_background`
-**Audio Fields**: `field_mp3`
-**Document Fields**: Various `filefield` implementations
-**Sheet Music Fields**: `field_partij_band`, `field_partij_koor_l`, `field_partij_tekst`
+**File Fields Converted to Media References**:
+- **Image Fields**: `field_afbeeldingen` → `field_images`
+- **Document Fields**: `field_files` → `field_documents`
+- **Audio Fields**: `field_mp3` → `field_audio`
+- **Sheet Music Fields**: `field_partij_*` → `field_sheet_music`
+
+**Entity References Updated**:
+- **Verslag References**: `field_ref_verslag` → `field_ref_media`
+- **Audio References**: `field_ref_audio` → `field_ref_media`
+- **Video References**: `field_ref_video` → `field_ref_media`
 
 ---
 
 ## 🔮 Future Development Roadmap
 
-### Phase 1: Complete Media System (High Priority)
-**Estimated Effort**: 40-60 hours
-- Implement advanced media bundle system
-- Build context-based file categorization
-- Create incremental update mechanism
-- Test with large file sets
+### Phase 1: Enhanced Media Features (High Priority)
+**Estimated Effort**: 20-30 hours
+- Advanced media player integration
+- Batch media upload and processing
+- Enhanced sheet music display
+- Media usage reporting
 
-### Phase 2: Enhanced Theme Features (Medium Priority)
+### Phase 2: Advanced Theme Features (Medium Priority)
 **Estimated Effort**: 30-40 hours
 - Complete PWA implementation
-- Add sheet music and audio players
-- Enhance responsive design
-- Implement advanced accessibility features
+- Advanced accessibility features
+- Enhanced responsive design
+- Performance optimization
 
-### Phase 3: Performance & UX Optimization (Medium Priority)
+### Phase 3: Content Management Enhancement (Medium Priority)
 **Estimated Effort**: 20-30 hours
-- Advanced caching strategies
-- Search enhancement features
-- Content editor experience improvements
+- Advanced content editor experience
+- Workflow and approval processes
 - SEO optimization tools
+- Analytics integration
 
 ### Phase 4: Advanced Features (Low Priority)
 **Estimated Effort**: 20-40 hours
 - Calendar integration
 - Social media features
-- Advanced reporting and analytics
 - Multi-site deployment tools
+- Advanced reporting
 
 ---
 
@@ -408,6 +472,7 @@ drush cache:rebuild
 - **Data Sanitization**: Comprehensive input validation
 - **Access Control**: Proper permission migration
 - **File Security**: Secure file handling and storage
+- **Media Security**: Proper access control for media entities
 
 ---
 
@@ -415,12 +480,14 @@ drush cache:rebuild
 
 ### Migration Success Indicators
 - **Content Preservation**: 100% critical content migrated
+- **Media Conversion**: All file fields converted to media references
 - **Relationship Integrity**: All entity relationships maintained
-- **Media Accessibility**: All files properly accessible
+- **Reference Accuracy**: All node-to-media references properly updated
 - **User Experience**: Seamless transition for end users
 
 ### Performance Targets
 - **Page Load Speed**: Under 3 seconds for typical pages
+- **Media Loading**: Optimized media delivery
 - **Accessibility Score**: WCAG 2.1 AA compliance
 - **Mobile Performance**: 90+ Lighthouse score
 - **SEO Optimization**: Improved search engine rankings
@@ -433,20 +500,29 @@ The Thirdwing D11 project represents a comprehensive, well-architected solution 
 
 ### Strengths
 - **Clean Architecture**: Designed specifically for fresh D11 installations
+- **Modern Media System**: Complete node-to-media conversion with enhanced metadata
 - **Comprehensive Planning**: Detailed specifications for all major features
 - **Modern Standards**: Contemporary web development practices
 - **Accessibility Focus**: Strong commitment to inclusive design
 - **Music Organization Specialization**: Tailored for choir/band websites
 
 ### Current Status
-- **Migration Core**: Fully functional for basic content migration
+- **Migration Core**: Fully functional for comprehensive content migration
+- **Media System**: Complete architecture for node-to-media conversion
 - **Theme Foundation**: Production-ready modern responsive theme
-- **Advanced Features**: Well-specified but requiring implementation
+- **Reference System**: Clean entity reference conversion implemented
+
+### Architecture Highlights
+- **Dual Migration Strategy**: Both node-to-media and file-to-media conversion
+- **Bundle Organization**: Media organized by type for efficient management
+- **Context Preservation**: Original field context stored for data integrity
+- **Clean References**: Option A implementation for consistent data model
+- **Enhanced Metadata**: Rich media entity structure with specialized fields
 
 ### Next Steps
-1. **Prioritize Media System**: Complete the advanced media migration architecture
-2. **Theme Enhancement**: Implement music-specific display features
-3. **Performance Optimization**: Advanced caching and optimization
-4. **User Testing**: Comprehensive testing with actual content editors
+1. **Migration Testing**: Comprehensive testing with full D6 dataset
+2. **Performance Optimization**: Media delivery and caching optimization
+3. **User Training**: Content editor training for new media system
+4. **Go-Live Support**: Production deployment and monitoring
 
-The project provides an excellent foundation for a modern, accessible, and performant music organization website while preserving the rich content and relationships from the original Drupal 6 installation.
+The project provides an excellent foundation for a modern, accessible, and performant music organization website while completely modernizing the content architecture through strategic node-to-media conversion and comprehensive field migration.

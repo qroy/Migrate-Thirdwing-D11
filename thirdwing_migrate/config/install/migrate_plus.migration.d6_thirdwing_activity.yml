@@ -9,14 +9,14 @@ source:
 
 destination:
   plugin: 'entity:node'
-  default_bundle: activity
+  default_bundle: activiteit
 
 process:
   nid: nid
   vid: vid
   type:
     plugin: default_value
-    default_value: activity
+    default_value: activiteit
   title: title
   uid:
     plugin: migration_lookup
@@ -36,30 +36,29 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Activity-specific fields
-  field_activity_date: field_datum
-  field_activity_coordinator_time: field_tijd_aanwezig_value
-  field_activity_keyboard: field_keyboard_value
-  field_activity_guitar: field_gitaar_value
-  field_activity_bass: field_basgitaar_value
-  field_activity_drums: field_drums_value
-  field_activity_transport: field_vervoer_value
-  field_activity_sleep_group: field_sleepgroep_value
-  field_activity_sleep_attendance: field_sleepgroep_aanwezig_value
-  field_activity_dress_code: field_kledingcode_value
-  field_activity_location_notes: field_l_bijzonderheden_value
-  field_activity_notes: field_bijzonderheden_value
-  field_activity_workflow: workflow_stateid
+  # Activity-specific fields - using exact D6 field names
+  field_datum: field_datum
+  field_tijd_aanwezig: field_tijd_aanwezig_value
+  field_keyboard: field_keyboard_value
+  field_gitaar: field_gitaar_value
+  field_basgitaar: field_basgitaar_value
+  field_drums: field_drums_value
+  field_vervoer: field_vervoer_value
+  field_sleepgroep: field_sleepgroep_value
+  field_sleepgroep_aanwezig: field_sleepgroep_aanwezig_value
+  field_kledingcode: field_kledingcode_value
+  field_l_bijzonderheden: field_l_bijzonderheden_value
+  field_bijzonderheden: field_bijzonderheden_value
   
-  # Location reference
-  field_activity_location:
+  # Location reference - targeting Dutch content type
+  field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
   
   # Member info with format
-  field_activity_member_info/value: field_ledeninfo_value
-  field_activity_member_info/format:
+  field_ledeninfo/value: field_ledeninfo_value
+  field_ledeninfo/format:
     plugin: static_map
     source: field_ledeninfo_format
     map:
@@ -67,53 +66,9 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
-  
-  # Program references
-  field_activity_program:
-    plugin: migration_lookup
-    migration: 
-      - d6_thirdwing_repertoire
-      - d6_thirdwing_program
-    source: program_items
-  
-  # Images
-  field_activity_images:
-    plugin: sub_process
-    source: images
-    process:
-      target_id:
-        plugin: migration_lookup
-        migration: d6_thirdwing_media_image
-        source: field_afbeeldingen_fid
-  
-  # Background image
-  field_activity_background:
-    plugin: migration_lookup
-    migration: d6_thirdwing_media_image
-    source: background_image
-  
-  # Files
-  field_activity_files:
-    plugin: sub_process
-    source: files
-    process:
-      target_id:
-        plugin: migration_lookup
-        migration: d6_thirdwing_media_document
-        source: field_files_fid
-  
-  # Access terms
-  field_activity_access:
-    plugin: migration_lookup
-    migration: d6_thirdwing_taxonomy_term
-    source: access_terms
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
     - d6_thirdwing_location
-    - d6_thirdwing_repertoire
-    - d6_thirdwing_program
     - d6_thirdwing_taxonomy_term
-    - d6_thirdwing_media_image
-    - d6_thirdwing_media_document

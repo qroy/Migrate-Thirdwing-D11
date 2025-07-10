@@ -19,24 +19,24 @@ process:
   login: login
   status: status
   
-  # Profile fields
-  field_user_first_name: field_voornaam_value
-  field_user_last_name: field_achternaam_value
-  field_user_name_prefix: field_achternaam_voorvoegsel_value
-  field_user_birth_date: field_geboortedatum_value
-  field_user_gender: field_geslacht_value
-  field_user_car_driver: field_karrijder_value
-  field_user_member_since: field_lidsinds_value
-  field_user_member_until: field_uitkoor_value
-  field_user_address: field_adres_value
-  field_user_postal_code: field_postcode_value
-  field_user_city: field_woonplaats
-  field_user_phone: field_telefoon_value
-  field_user_mobile: field_mobiel_value
-  field_user_sleep_group: field_sleepgroep_1_value
-  field_user_choir_function: field_koor_value
-  field_user_notes/value: field_notes_value
-  field_user_notes/format:
+  # Profile fields - using Dutch field names matching D6
+  field_voornaam: field_voornaam_value
+  field_achternaam: field_achternaam_value
+  field_tussenvoegsel: field_achternaam_voorvoegsel_value
+  field_geboortedatum: field_geboortedatum_value
+  field_geslacht: field_geslacht_value
+  field_karrijder: field_karrijder_value
+  field_lidsinds: field_lidsinds_value
+  field_uitkoor: field_uitkoor_value
+  field_adres: field_adres_value
+  field_postcode: field_postcode_value
+  field_woonplaats: field_woonplaats
+  field_telefoon: field_telefoon_value
+  field_mobiel: field_mobiel_value
+  field_sleepgroep: field_sleepgroep_1_value
+  field_koor: field_koor_value
+  field_notes/value: field_notes_value
+  field_notes/format:
     plugin: static_map
     source: field_notes_format
     map:
@@ -44,12 +44,16 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
-  field_user_board_function: field_functie_bestuur_value
-  field_user_music_committee: field_functie_mc_value
-  field_user_concert_committee: field_functie_concert_value
-  field_user_party_committee: field_functie_feest_value
-  field_user_choir_direction: field_functie_regie_value
-  field_user_internal_relations: field_functie_ir_value
-  field_user_public_relations: field_functie_pr_value
+  field_functie_bestuur: field_functie_bestuur_value
+  field_functie_mc: field_functie_mc_value
+  field_functie_concert: field_functie_concert_value
+  field_functie_feest: field_functie_feest_value
+  field_functie_regie: field_functie_regie_value
+  field_functie_ir: field_functie_ir_value
+  field_functie_pr: field_functie_pr_value
+  field_functie_tec: field_functie_tec_value
+  field_positie: field_positie_value
+  field_functie_lw: field_functie_lw_value
+  field_functie_fl: field_functie_fl_value
 
 migration_dependencies: []

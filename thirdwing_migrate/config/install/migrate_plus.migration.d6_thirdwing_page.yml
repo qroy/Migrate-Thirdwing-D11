@@ -1,5 +1,4 @@
 id: d6_thirdwing_page
-label: 'Pages'
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
@@ -11,14 +10,14 @@ source:
 
 destination:
   plugin: 'entity:node'
-  default_bundle: page
+  default_bundle: pagina
 
 process:
   nid: nid
   vid: vid
   type:
     plugin: default_value
-    default_value: page
+    default_value: pagina
   title: title
   uid:
     plugin: migration_lookup
@@ -37,15 +36,6 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
-  
-  # Page workflow states with null protection
-  field_page_workflow:
-    plugin: static_map
-    source: workflow_stateid
-    map:
-      22: 19  # Published
-      23: 20  # Recommended
-    default_value: 19
 
 migration_dependencies:
   required:

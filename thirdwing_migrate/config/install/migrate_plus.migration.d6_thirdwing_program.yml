@@ -10,14 +10,14 @@ source:
 
 destination:
   plugin: 'entity:node'
-  default_bundle: repertoire
+  default_bundle: programma
 
 process:
   nid: nid
   vid: vid
   type:
     plugin: default_value
-    default_value: repertoire
+    default_value: programma
   title: title
   uid:
     plugin: migration_lookup
@@ -29,15 +29,45 @@ process:
   
   body/value: body
   body/format:
-    plugin: default_value
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
     default_value: basic_html
   
-  # Map program type to season field
-  field_repertoire_season: field_prog_type_value
-  field_repertoire_number:
-    plugin: default_value
-    default_value: '0'
+  # Program-specific fields
+  field_datum: field_datum_value
+  
+  # Location reference - targeting Dutch content type
+  field_locatie:
+    plugin: migration_lookup
+    migration: d6_thirdwing_location
+    source: field_locatie_nid
+  
+  # Repertoire references
+  field_repertoire:
+    plugin: sub_process
+    source: repertoire_items
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_repertoire
+        source: field_repertoire_nid
+  
+  # Additional program items
+  field_programma2:
+    plugin: sub_process
+    source: program_items
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_repertoire
+        source: field_programma2_nid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_location
+    - d6_thirdwing_repertoire

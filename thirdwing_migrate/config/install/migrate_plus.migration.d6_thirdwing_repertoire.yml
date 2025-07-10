@@ -28,21 +28,42 @@ process:
   
   body/value: body
   body/format:
-    plugin: default_value
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
     default_value: basic_html
   
-  # Repertoire-specific fields
-  field_repertoire_number: field_audio_nummer_value
-  field_repertoire_season: field_audio_seizoen_value
-  field_repertoire_genre: field_rep_genre_value
-  field_repertoire_active: field_klapper_value
-  field_repertoire_performer: field_rep_uitv_value
-  field_repertoire_performer_year: field_rep_uitv_jaar_value
-  field_repertoire_composer: field_rep_componist_value
-  field_repertoire_composer_year: field_rep_componist_jaar_value
-  field_repertoire_arranger: field_rep_arr_value
-  field_repertoire_arranger_year: field_rep_arr_jaar_value
+  # Repertoire-specific fields - using exact D6 field names
+  field_componist: field_rep_componist_value
+  field_arrangeur: field_rep_arr_value
+  field_toonsoort: field_rep_toonsoort_value
+  field_tempo: field_rep_tempo_value
+  field_moeilijkheidsgraad: field_rep_moeilijkheid_value
+  
+  # Audio and sheet music files
+  field_audio:
+    plugin: sub_process
+    source: audio_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_audio
+        source: audio_fid
+  
+  field_partituur:
+    plugin: sub_process
+    source: sheet_music_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_sheet_music
+        source: partituur_fid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_media_audio
+    - d6_thirdwing_media_sheet_music

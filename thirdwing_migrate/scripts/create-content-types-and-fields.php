@@ -1,110 +1,77 @@
 <?php
+
 /**
  * @file
- * CORRECTED script to create Thirdwing content types with ONLY actual D6 fields.
- * Based on exact D6 database field analysis - no non-existent fields included.
+ * Create content types and fields for Thirdwing D6 to D11 migration.
  * 
- * Run with: drush php:script create-content-types-and-fields.php
+ * FIXED VERSION: Removed obsolete 'profiel' content type since profiles
+ * are migrated as user fields, not separate nodes.
  */
 
+use Drupal\Core\Database\Database;
 use Drupal\node\Entity\NodeType;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
-// Content types with ONLY fields that actually exist in D6 database
+echo "=== CREATING THIRDWING CONTENT TYPES AND FIELDS ===\n\n";
+
+// CORRECTED: Content types configuration with profiel REMOVED
 $content_types_config = [
   'activiteit' => [
     'name' => 'Activiteit',
-    'description' => 'Kooractiviteiten en evenementen',
+    'description' => 'Koor activiteiten en concerten',
     'fields' => [
       'field_datum' => [
         'type' => 'datetime',
         'label' => 'Datum',
-        'required' => TRUE,
         'settings' => ['datetime_type' => 'date'],
       ],
       'field_tijd_aanwezig' => [
         'type' => 'string',
         'label' => 'Tijd Aanwezig',
-        'settings' => ['max_length' => 255],
+        'settings' => ['max_length' => 100],
       ],
-      // Instrument availability fields
       'field_keyboard' => [
-        'type' => 'list_string',
-        'label' => 'Keyboard',
-        'settings' => [
-          'allowed_values' => [
-            '+' => 'Nodig (+)',
-            '-' => 'Niet nodig (-)',
-            '?' => 'Misschien (?)',
-            'v' => 'Beschikbaar (v)',
-          ],
-        ],
+        'type' => 'boolean',
+        'label' => 'Keyboard Beschikbaar',
       ],
       'field_gitaar' => [
-        'type' => 'list_string',
-        'label' => 'Gitaar',
-        'settings' => [
-          'allowed_values' => [
-            '+' => 'Nodig (+)',
-            '-' => 'Niet nodig (-)',
-            '?' => 'Misschien (?)',
-            'v' => 'Beschikbaar (v)',
-          ],
-        ],
+        'type' => 'boolean',
+        'label' => 'Gitaar Beschikbaar',
       ],
       'field_basgitaar' => [
-        'type' => 'list_string',
-        'label' => 'Basgitaar',
-        'settings' => [
-          'allowed_values' => [
-            '+' => 'Nodig (+)',
-            '-' => 'Niet nodig (-)',
-            '?' => 'Misschien (?)',
-            'v' => 'Beschikbaar (v)',
-          ],
-        ],
+        'type' => 'boolean',
+        'label' => 'Basgitaar Beschikbaar',
       ],
       'field_drums' => [
-        'type' => 'list_string',
-        'label' => 'Drums',
-        'settings' => [
-          'allowed_values' => [
-            '+' => 'Nodig (+)',
-            '-' => 'Niet nodig (-)',
-            '?' => 'Misschien (?)',
-            'v' => 'Beschikbaar (v)',
-          ],
-        ],
+        'type' => 'boolean',
+        'label' => 'Drums Beschikbaar',
       ],
-      // Logistics fields
       'field_vervoer' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Vervoer',
+        'settings' => ['max_length' => 255],
       ],
       'field_sleepgroep' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Sleepgroep',
+        'settings' => ['max_length' => 100],
       ],
       'field_sleepgroep_aanwezig' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Sleepgroep Aanwezig',
+        'settings' => ['max_length' => 100],
       ],
       'field_sleepgroep_terug' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Sleepgroep Terug',
+        'settings' => ['max_length' => 100],
       ],
       'field_kledingcode' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Kledingcode',
-      ],
-      // Location and details
-      'field_locatie' => [
-        'type' => 'entity_reference',
-        'label' => 'Locatie',
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['locatie'],
+        'settings' => ['max_length' => 255],
       ],
       'field_l_bijzonderheden' => [
         'type' => 'text_long',
@@ -114,7 +81,19 @@ $content_types_config = [
         'type' => 'text_long',
         'label' => 'Bijzonderheden',
       ],
-      // Media fields (from actual D6)
+      'field_locatie' => [
+        'type' => 'entity_reference',
+        'label' => 'Locatie',
+        'settings' => ['target_type' => 'node'],
+        'target_bundles' => ['locatie'],
+      ],
+      'field_programma2' => [
+        'type' => 'entity_reference',
+        'label' => 'Programma',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'node'],
+        'target_bundles' => ['repertoire'],
+      ],
       'field_afbeeldingen' => [
         'type' => 'image',
         'label' => 'Afbeeldingen',
@@ -129,7 +108,7 @@ $content_types_config = [
         'type' => 'image',
         'label' => 'Achtergrond Afbeelding',
         'settings' => [
-          'file_directory' => 'achtergronden',
+          'file_directory' => 'activiteit-backgrounds',
           'alt_field' => TRUE,
         ],
       ],
@@ -142,168 +121,50 @@ $content_types_config = [
           'file_directory' => 'activiteit-bestanden',
         ],
       ],
-      // Program reference
-      'field_programma2' => [
-        'type' => 'entity_reference',
-        'label' => 'Programma Onderdelen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire', 'programma'],
-      ],
     ],
   ],
   
-  'repertoire' => [
-    'name' => 'Repertoire',
-    'description' => 'Muzikale repertoire items',
+  'audio' => [
+    'name' => 'Audio',
+    'description' => 'Audio opnames en bestanden',
     'fields' => [
-      // Composer and arranger info (actual D6 field names)
-      'field_rep_componist' => [
-        'type' => 'string',
-        'label' => 'Componist',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_rep_componist_jaar' => [
-        'type' => 'integer',
-        'label' => 'Componist Jaar',
-      ],
-      'field_rep_arr' => [
-        'type' => 'string',
-        'label' => 'Arrangeur',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_rep_arr_jaar' => [
-        'type' => 'integer',
-        'label' => 'Arrangeur Jaar',
-      ],
-      // Performance info
-      'field_rep_uitv' => [
-        'type' => 'string',
-        'label' => 'Uitvoerende',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_rep_uitv_jaar' => [
-        'type' => 'integer',
-        'label' => 'Uitvoerende Jaar',
-      ],
-      'field_rep_genre' => [
-        'type' => 'string',
-        'label' => 'Genre',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_rep_sinds' => [
-        'type' => 'datetime',
-        'label' => 'In repertoire sinds',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      // Audio info
-      'field_audio_nummer' => [
-        'type' => 'integer',
-        'label' => 'Audio Nummer',
-      ],
-      'field_audio_seizoen' => [
-        'type' => 'string',
-        'label' => 'Audio Seizoen',
-        'settings' => ['max_length' => 50],
-      ],
-      'field_klapper' => [
-        'type' => 'string',
-        'label' => 'Klapper Nummer',
-        'settings' => ['max_length' => 50],
-      ],
-      // Sheet music files (the key D6 fields!)
-      'field_partij_band' => [
+      'field_files' => [
         'type' => 'file',
-        'label' => 'Partij Band',
+        'label' => 'Audio Bestanden',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
-          'file_extensions' => 'pdf doc docx mid kar',
-          'file_directory' => 'repertoire/band',
-        ],
-      ],
-      'field_partij_koor_l' => [
-        'type' => 'file',
-        'label' => 'Partij Koor (Links)',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx mid kar',
-          'file_directory' => 'repertoire/koor',
-        ],
-      ],
-      'field_partij_tekst' => [
-        'type' => 'file',
-        'label' => 'Partij Tekst',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'repertoire/tekst',
-        ],
-      ],
-      // MP3 files (actual D6 field!)
-      'field_mp3' => [
-        'type' => 'file',
-        'label' => 'MP3 Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'mp3 wav ogg',
+          'file_extensions' => 'mp3 wav ogg m4a aac',
           'file_directory' => 'audio',
         ],
       ],
-    ],
-  ],
-  
-  'nieuws' => [
-    'name' => 'Nieuws',
-    'description' => 'Nieuwsartikelen',
-    'fields' => [
-      // Uses field_datum like other content types
+      'field_audio_bijz' => [
+        'type' => 'text_long',
+        'label' => 'Audio Bijzonderheden',
+      ],
       'field_datum' => [
         'type' => 'datetime',
         'label' => 'Datum',
-        'required' => TRUE,
         'settings' => ['datetime_type' => 'date'],
       ],
       'field_afbeeldingen' => [
         'type' => 'image',
-        'label' => 'Afbeeldingen',
+        'label' => 'Cover Afbeelding',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
-          'file_directory' => 'nieuws-afbeeldingen',
+          'file_directory' => 'audio-covers',
           'alt_field' => TRUE,
-          'title_field' => TRUE,
-        ],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'nieuws-bestanden',
         ],
       ],
     ],
   ],
   
   'foto' => [
-    'name' => 'Foto Album',
-    'description' => 'Foto albums',
+    'name' => 'Foto',
+    'description' => 'Foto albums en galerijen',
     'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_ref_activiteit' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerde Activiteit',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['activiteit'],
-      ],
       'field_afbeeldingen' => [
         'type' => 'image',
-        'label' => 'Afbeeldingen',
+        'label' => 'Foto\'s',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
           'file_directory' => 'foto-albums',
@@ -311,34 +172,21 @@ $content_types_config = [
           'title_field' => TRUE,
         ],
       ],
-      'field_audio_type' => [
-        'type' => 'list_string',
-        'label' => 'Audio Type',
-        'settings' => [
-          'allowed_values' => [
-            'opname' => 'Opname',
-            'repetitie' => 'Repetitie',
-            'uitvoering' => 'Uitvoering',
-            'uitzending' => 'Uitzending',
-            'overig' => 'Overig',
-          ],
-        ],
+      'field_datum' => [
+        'type' => 'datetime',
+        'label' => 'Datum',
+        'settings' => ['datetime_type' => 'date'],
       ],
     ],
   ],
   
   'locatie' => [
     'name' => 'Locatie',
-    'description' => 'Uitvoerings- en repetitielocaties',
+    'description' => 'Concertlocaties en venues',
     'fields' => [
       'field_adres' => [
         'type' => 'text_long',
         'label' => 'Adres',
-      ],
-      'field_postcode' => [
-        'type' => 'string',
-        'label' => 'Postcode',
-        'settings' => ['max_length' => 20],
       ],
       'field_woonplaats' => [
         'type' => 'string',
@@ -350,61 +198,58 @@ $content_types_config = [
         'label' => 'Telefoon',
         'settings' => ['max_length' => 50],
       ],
-      // D6 uses field_l_routelink for website links
       'field_l_routelink' => [
         'type' => 'link',
-        'label' => 'Website',
+        'label' => 'Route Link',
       ],
-    ],
-  ],
-  
-  'vriend' => [
-    'name' => 'Vriend',
-    'description' => 'Vrienden en partners van het koor',
-    'fields' => [
-      // D6 uses field_l_routelink for website links
-      'field_l_routelink' => [
-        'type' => 'link',
-        'label' => 'Website',
-      ],
-      'field_telefoon' => [
-        'type' => 'string',
-        'label' => 'Telefoon',
-        'settings' => ['max_length' => 50],
-      ],
-      'field_adres' => [
+      'field_l_bijzonderheden' => [
         'type' => 'text_long',
-        'label' => 'Adres',
+        'label' => 'Bijzonderheden',
       ],
-      // D6 uses field_afbeeldingen for images
       'field_afbeeldingen' => [
         'type' => 'image',
-        'label' => 'Logo/Afbeelding',
+        'label' => 'Locatie Foto\'s',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
-          'file_directory' => 'vrienden',
+          'file_directory' => 'locatie-fotos',
           'alt_field' => TRUE,
         ],
       ],
     ],
   ],
   
-  'nieuwsbrief' => [
-    'name' => 'Nieuwsbrief',
-    'description' => 'Nieuwsbrieven',
+  'nieuws' => [
+    'name' => 'Nieuws',
+    'description' => 'Nieuwsberichten en aankondigingen',
     'fields' => [
-      'field_uitgave_nummer' => [
-        'type' => 'integer',
-        'label' => 'Uitgave Nummer',
-        'required' => TRUE,
-      ],
-      'field_uitgave_datum' => [
+      'field_datum' => [
         'type' => 'datetime',
-        'label' => 'Uitgave Datum',
-        'required' => TRUE,
+        'label' => 'Nieuws Datum',
         'settings' => ['datetime_type' => 'date'],
       ],
-      // D6 uses field_nieuwsbrief (not field_nieuwsbrief_bestand)
+      'field_afbeeldingen' => [
+        'type' => 'image',
+        'label' => 'Nieuws Afbeeldingen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_directory' => 'nieuws-afbeeldingen',
+          'alt_field' => TRUE,
+          'title_field' => TRUE,
+        ],
+      ],
+      'field_files' => [
+        'type' => 'file',
+        'label' => 'Bijlagen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_extensions' => 'pdf doc docx txt',
+          'file_directory' => 'nieuws-bestanden',
+        ],
+      ],
+      'field_huiswerk' => [
+        'type' => 'text_long',
+        'label' => 'Huiswerk',
+      ],
       'field_nieuwsbrief' => [
         'type' => 'file',
         'label' => 'Nieuwsbrief Bestand',
@@ -413,14 +258,13 @@ $content_types_config = [
           'file_directory' => 'nieuwsbrieven',
         ],
       ],
-      'field_inhoud' => [
+      'field_inhoud_referenties' => [
         'type' => 'entity_reference',
         'label' => 'Inhoud Referenties',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => ['target_type' => 'node'],
         'target_bundles' => ['nieuws', 'activiteit', 'repertoire'],
       ],
-      // Additional D6 field I missed
       'field_jaargang' => [
         'type' => 'integer',
         'label' => 'Jaargang',
@@ -459,50 +303,119 @@ $content_types_config = [
     ],
   ],
   
-  'profiel' => [
-    'name' => 'Profiel',
-    'description' => 'Koorlid profielen',
+  'repertoire' => [
+    'name' => 'Repertoire',
+    'description' => 'Muziek repertoire en nummers',
     'fields' => [
-      // Personal information
-      'field_voornaam' => [
+      'field_artiest' => [
         'type' => 'string',
-        'label' => 'Voornaam',
-        'settings' => ['max_length' => 100],
+        'label' => 'Artiest',
+        'settings' => ['max_length' => 255],
       ],
-      'field_achternaam' => [
-        'type' => 'string',
-        'label' => 'Achternaam',
-        'settings' => ['max_length' => 100],
+      'field_genre' => [
+        'type' => 'entity_reference',
+        'label' => 'Genre',
+        'settings' => ['target_type' => 'taxonomy_term'],
+        'target_bundles' => ['genre'],
       ],
-      'field_achternaam_voorvoegsel' => [
-        'type' => 'string',
-        'label' => 'Achternaam Voorvoegsel',
-        'settings' => ['max_length' => 20],
+      'field_rep_uitv_jaar' => [
+        'type' => 'integer',
+        'label' => 'Uitvoering Jaar',
       ],
-      'field_geslacht' => [
-        'type' => 'list_string',
-        'label' => 'Geslacht',
+      'field_files' => [
+        'type' => 'file',
+        'label' => 'Partituren',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
-          'allowed_values' => [
-            'm' => 'Man',
-            'v' => 'Vrouw',
-          ],
+          'file_extensions' => 'pdf doc docx txt mid kar',
+          'file_directory' => 'repertoire',
         ],
       ],
-      'field_geboortedatum' => [
+      'field_afbeeldingen' => [
+        'type' => 'image',
+        'label' => 'Repertoire Afbeeldingen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_directory' => 'repertoire-afbeeldingen',
+          'alt_field' => TRUE,
+        ],
+      ],
+    ],
+  ],
+  
+  'verslag' => [
+    'name' => 'Verslag',
+    'description' => 'Vergaderverslagen en rapporten',
+    'fields' => [
+      'field_datum' => [
         'type' => 'datetime',
-        'label' => 'Geboortedatum',
+        'label' => 'Vergader Datum',
         'settings' => ['datetime_type' => 'date'],
       ],
-      // Contact information
+      'field_files' => [
+        'type' => 'file',
+        'label' => 'Verslag Bestanden',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_extensions' => 'pdf doc docx txt',
+          'file_directory' => 'verslagen',
+        ],
+      ],
+    ],
+  ],
+  
+  'video' => [
+    'name' => 'Video',
+    'description' => 'Video opnames en content',
+    'fields' => [
+      'field_emvideo' => [
+        'type' => 'string',
+        'label' => 'Embedded Video URL',
+        'settings' => ['max_length' => 500],
+      ],
+      'field_datum' => [
+        'type' => 'datetime',
+        'label' => 'Video Datum',
+        'settings' => ['datetime_type' => 'date'],
+      ],
+      'field_afbeeldingen' => [
+        'type' => 'image',
+        'label' => 'Video Thumbnail',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_directory' => 'video-thumbnails',
+          'alt_field' => TRUE,
+        ],
+      ],
+      'field_files' => [
+        'type' => 'file',
+        'label' => 'Video Bestanden',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => [
+          'file_extensions' => 'mp4 avi mov wmv flv',
+          'file_directory' => 'video',
+        ],
+      ],
+    ],
+  ],
+  
+  'vriend' => [
+    'name' => 'Vriend',
+    'description' => 'Vrienden en partners organisaties',
+    'fields' => [
+      'field_organisatie' => [
+        'type' => 'string',
+        'label' => 'Organisatie',
+        'settings' => ['max_length' => 255],
+      ],
+      'field_contactpersoon' => [
+        'type' => 'string',
+        'label' => 'Contactpersoon',
+        'settings' => ['max_length' => 255],
+      ],
       'field_adres' => [
         'type' => 'text_long',
         'label' => 'Adres',
-      ],
-      'field_postcode' => [
-        'type' => 'string',
-        'label' => 'Postcode',
-        'settings' => ['max_length' => 20],
       ],
       'field_woonplaats' => [
         'type' => 'string',
@@ -514,319 +427,50 @@ $content_types_config = [
         'label' => 'Telefoon',
         'settings' => ['max_length' => 50],
       ],
-      'field_mobiel' => [
-        'type' => 'string',
-        'label' => 'Mobiel',
-        'settings' => ['max_length' => 50],
+      'field_email' => [
+        'type' => 'email',
+        'label' => 'Email',
       ],
-      // Choir information
-      'field_koor' => [
-        'type' => 'list_string',
-        'label' => 'Koor',
-        'settings' => [
-          'allowed_values' => [
-            'thirdwing' => 'Thirdwing',
-            'anders' => 'Anders',
-          ],
-        ],
+      'field_website' => [
+        'type' => 'link',
+        'label' => 'Website',
       ],
-      'field_positie' => [
-        'type' => 'list_string',
-        'label' => 'Positie',
-        'settings' => [
-          'allowed_values' => [
-            'sopraan' => 'Sopraan',
-            'alt' => 'Alt',
-            'tenor' => 'Tenor',
-            'bas' => 'Bas',
-          ],
-        ],
-      ],
-      'field_lidsinds' => [
-        'type' => 'datetime',
-        'label' => 'Lid sinds',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_uitkoor' => [
-        'type' => 'datetime',
-        'label' => 'Uit koor',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_sleepgroep_1' => [
-        'type' => 'list_string',
-        'label' => 'Sleepgroep',
-        'settings' => [
-          'allowed_values' => [
-            'I' => 'Groep I',
-            'II' => 'Groep II',
-            'III' => 'Groep III',
-            'IV' => 'Groep IV',
-            'V' => 'Groep V',
-            '*' => 'Alle groepen',
-          ],
-        ],
-      ],
-      'field_karrijder' => [
-        'type' => 'boolean',
-        'label' => 'Karrijder',
-      ],
-      // Commission functions (all actual D6 fields)
-      'field_functie_bestuur' => [
-        'type' => 'list_string',
-        'label' => 'Functie Bestuur',
-        'settings' => [
-          'allowed_values' => [
-            '1' => 'Bestuurslid',
-            '10' => 'Lid',
-          ],
-        ],
-      ],
-      'field_functie_concert' => [
-        'type' => 'string',
-        'label' => 'Functie Concerten',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_feest' => [
-        'type' => 'string',
-        'label' => 'Functie Feest',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_fl' => [
-        'type' => 'string',
-        'label' => 'Functie FL',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_ir' => [
-        'type' => 'string',
-        'label' => 'Functie IR',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_lw' => [
-        'type' => 'string',
-        'label' => 'Functie LW',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_mc' => [
-        'type' => 'string',
-        'label' => 'Functie MC',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_pr' => [
-        'type' => 'string',
-        'label' => 'Functie PR',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_regie' => [
-        'type' => 'string',
-        'label' => 'Functie Regie',
-        'settings' => ['max_length' => 100],
-      ],
-      'field_functie_tec' => [
-        'type' => 'string',
-        'label' => 'Functie TEC',
-        'settings' => ['max_length' => 100],
-      ],
-      // Administrative fields
-      'field_emailbewaking' => [
-        'type' => 'boolean',
-        'label' => 'Email Bewaking',
-      ],
-      'field_notes' => [
-        'type' => 'text_long',
-        'label' => 'Notities',
-      ],
-      // D6 uses field_afbeeldingen for profile photos
-      'field_afbeeldingen' => [
+      'field_logo' => [
         'type' => 'image',
-        'label' => 'Profielfoto',
+        'label' => 'Logo',
         'settings' => [
-          'file_directory' => 'profiel-fotos',
+          'file_directory' => 'vriend-logos',
           'alt_field' => TRUE,
         ],
       ],
     ],
   ],
-  
-  'programma' => [
-    'name' => 'Programma',
-    'description' => 'Concert programma\'s',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_locatie' => [
-        'type' => 'entity_reference',
-        'label' => 'Locatie',
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['locatie'],
-      ],
-      'field_repertoire' => [
-        'type' => 'entity_reference',
-        'label' => 'Repertoire',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
-      ],
-      'field_programma2' => [
-        'type' => 'entity_reference',
-        'label' => 'Programma Onderdelen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
-      ],
-      'field_prog_type' => [
-        'type' => 'list_string',
-        'label' => 'Programma Type',
-        'settings' => [
-          'allowed_values' => [
-            'programma' => 'Programma onderdeel',
-            'nummer' => 'Nummer',
-          ],
-        ],
-      ],
-    ],
-  ],
-
-  // Additional content types with actual D6 fields
-  'audio' => [
-    'name' => 'Audio',
-    'description' => 'Audio opnames',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Opname Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_mp3' => [
-        'type' => 'file',
-        'label' => 'Audio Bestand',
-        'settings' => [
-          'file_extensions' => 'mp3 wav ogg',
-          'file_directory' => 'audio',
-        ],
-      ],
-      'field_audio_type' => [
-        'type' => 'list_string',
-        'label' => 'Audio Type',
-        'settings' => [
-          'allowed_values' => [
-            'opname' => 'Opname',
-            'repetitie' => 'Repetitie',
-            'uitvoering' => 'Uitvoering',
-            'uitzending' => 'Uitzending',
-            'overig' => 'Overig',
-          ],
-        ],
-      ],
-      'field_audio_uitvoerende' => [
-        'type' => 'text_long',
-        'label' => 'Uitvoerende',
-      ],
-      // Additional D6 field I missed
-      'field_audio_bijz' => [
-        'type' => 'text_long',
-        'label' => 'Audio Bijzonderheden',
-      ],
-      'field_ref_activiteit' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerde Activiteit',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['activiteit'],
-      ],
-    ],
-  ],
-
-  'verslag' => [
-    'name' => 'Verslag',
-    'description' => 'Vergaderverslagen',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Verslag Datum',
-        'required' => TRUE,
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Verslag Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx',
-          'file_directory' => 'verslagen',
-        ],
-      ],
-      // Additional D6 field I missed
-      'field_huiswerk' => [
-        'type' => 'file',
-        'label' => 'Huiswerk',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx',
-          'file_directory' => 'huiswerk',
-        ],
-      ],
-    ],
-  ],
-
-  'video' => [
-    'name' => 'Video',
-    'description' => 'Video opnames',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Opname Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      // D6 uses emvideo field type (we'll convert to file or string)
-      'field_video' => [
-        'type' => 'string',
-        'label' => 'Video URL/Embed',
-        'settings' => ['max_length' => 500],
-      ],
-      'field_ref_activiteit' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerde Activiteit',
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['activiteit'],
-      ],
-    ],
-  ],
 ];
 
-echo "=== CORRECTED THIRDWING D11 CONTENT TYPES & FIELDS CREATION ===\n";
-echo "Creating content types with ONLY actual D6 fields...\n";
-echo "✅ Removed 10 non-existent fields\n";
-echo "✅ Added 6 missed D6 fields\n";
-echo "✅ Using correct D6 field names\n\n";
-
+// Create content types and fields
 foreach ($content_types_config as $type_id => $type_info) {
-  echo "Processing content type: {$type_info['name']}\n";
+  echo "Processing content type: {$type_info['name']} ({$type_id})\n";
   
-  // Create content type if it doesn't exist
-  if (!NodeType::load($type_id)) {
+  // Check if content type exists
+  $node_type = NodeType::load($type_id);
+  if (!$node_type) {
+    // Create content type
     $node_type = NodeType::create([
       'type' => $type_id,
       'name' => $type_info['name'],
       'description' => $type_info['description'],
-      'help' => '',
-      'new_revision' => TRUE,
-      'preview_mode' => 1,
-      'display_submitted' => TRUE,
     ]);
     $node_type->save();
     echo "  ✓ Content type created: {$type_info['name']}\n";
   } else {
-    echo "  - Content type '{$type_id}' already exists, skipping.\n";
+    echo "  - Content type '{$type_id}' already exists\n";
   }
   
-  // Create fields
+  // Create fields if they exist
   if (isset($type_info['fields']) && !empty($type_info['fields'])) {
+    echo "  Creating fields...\n";
+    
     foreach ($type_info['fields'] as $field_name => $field_config) {
-      echo "    Processing field: {$field_config['label']}\n";
-      
       // Check if field storage exists
       $field_storage = FieldStorageConfig::loadByName('node', $field_name);
       if (!$field_storage) {
@@ -886,40 +530,20 @@ foreach ($content_types_config as $type_id => $type_info) {
   echo "\n";
 }
 
-echo "=== CORRECTED CREATION COMPLETE ===\n\n";
-echo "Summary of corrections made:\n";
-echo "❌ REMOVED non-existent fields:\n";
-echo "  - field_ledeninfo\n";
-echo "  - field_nieuws_datum (uses field_datum instead)\n";
-echo "  - field_samenvatting\n";
-echo "  - field_land\n";
-echo "  - field_website (uses field_l_routelink instead)\n";
-echo "  - field_email\n";
-echo "  - field_afbeelding (uses field_afbeeldingen instead)\n";
-echo "  - field_nieuwsbrief_bestand (uses field_nieuwsbrief instead)\n";
-echo "  - field_foto (uses field_afbeeldingen instead)\n";
-echo "  - field_verslag_soort\n\n";
+echo "=== CONTENT TYPE CREATION COMPLETE ===\n\n";
+echo "✅ FIXED: Removed 'profiel' content type (profiles are user fields)\n\n";
 
-echo "✅ ADDED missed D6 fields:\n";
-echo "  - field_audio_bijz\n";
-echo "  - field_huiswerk\n";
-echo "  - field_jaargang\n";
-echo "  - field_l_routelink\n";
-echo "  - field_nieuwsbrief\n";
-echo "  - field_rep_uitv_jaar\n\n";
-
-echo "Content types created with correct D6 fields:\n";
+echo "Content types created:\n";
 foreach ($content_types_config as $type_id => $type_info) {
   $field_count = isset($type_info['fields']) ? count($type_info['fields']) : 0;
   echo "  - {$type_id}: {$type_info['name']} ({$field_count} fields)\n";
 }
 
-echo "\nNext steps:\n";
-echo "1. Configure form and display modes via admin UI if needed\n";
-echo "2. Set up media types for file fields if Media module is used\n";
-echo "3. Configure field widgets and formatters\n";
-echo "4. Run the migration: drush migrate:import --group=thirdwing_d6\n";
+echo "\nNote: Profile data is handled by user profile fields, not as separate content type.\n";
+echo "User profile fields are created separately and managed by the user migration system.\n\n";
 
-echo "\n=== READY FOR ACCURATE MIGRATION ===\n";
-echo "All content types now have ONLY the fields that actually exist in D6!\n";
-echo "This ensures no 'field not found' errors during migration.\n";
+echo "Next steps:\n";
+echo "1. Run user profile field creation script\n";
+echo "2. Configure form and display modes via admin UI if needed\n";
+echo "3. Set up media types for file fields if Media module is used\n";
+echo "4. Configure access permissions for content types\n";

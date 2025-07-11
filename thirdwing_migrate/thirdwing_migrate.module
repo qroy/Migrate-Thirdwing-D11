@@ -95,71 +95,6 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
 }
 
 /**
- * Implements hook_install().
- */
-function thirdwing_migrate_install() {
-  // Test database connection on install
-  try {
-    $connection = Database::getConnection('default', 'migrate');
-    $result = $connection->query("SELECT COUNT(*) FROM {users}")->fetchField();
-    \Drupal::messenger()->addMessage(t('Migration database connection successful. Found @count users.', ['@count' => $result]));
-  } catch (\Exception $e) {
-    \Drupal::messenger()->addError(t('Migration database connection failed: @error', ['@error' => $e->getMessage()]));
-  }
-}
-
-/**
- * Implements hook_requirements().
- */
-function thirdwing_migrate_requirements($phase) {
-  $requirements = [];
-  
-  if ($phase == 'runtime') {
-    // Check migration database connection
-    try {
-      $connection = Database::getConnection('default', 'migrate');
-      $user_count = $connection->query("SELECT COUNT(*) FROM {users}")->fetchField();
-      $node_count = $connection->query("SELECT COUNT(*) FROM {node}")->fetchField();
-      
-      $requirements['thirdwing_migrate_db'] = [
-        'title' => t('Thirdwing Migration Database'),
-        'value' => t('Connected (@users users, @nodes nodes)', [
-          '@users' => $user_count,
-          '@nodes' => $node_count
-        ]),
-        'severity' => REQUIREMENT_OK,
-      ];
-    } catch (\Exception $e) {
-      $requirements['thirdwing_migrate_db'] = [
-        'title' => t('Thirdwing Migration Database'),
-        'value' => t('Connection failed'),
-        'description' => t('Error: @error', ['@error' => $e->getMessage()]),
-        'severity' => REQUIREMENT_ERROR,
-      ];
-    }
-    
-    // Check required modules
-    $required_modules = [
-      'permissions_by_term' => 'Permissions by Term',
-      'workflows' => 'Workflows',
-      'content_moderation' => 'Content Moderation',
-    ];
-    
-    foreach ($required_modules as $module => $label) {
-      if (!\Drupal::moduleHandler()->moduleExists($module)) {
-        $requirements['thirdwing_migrate_' . $module] = [
-          'title' => t('Thirdwing Migration: @module', ['@module' => $label]),
-          'value' => t('Not installed'),
-          'description' => t('The @module module is required for full migration functionality.', ['@module' => $label]),
-          'severity' => REQUIREMENT_WARNING,
-        ];
-      }
-    }
-  }
-  
-  return $requirements;
-}
-/**
  * Get the last incremental sync timestamp.
  *
  * @return int
@@ -220,7 +155,7 @@ function thirdwing_migrate_add_sync_history($entry) {
  */
 function thirdwing_migrate_check_source_database() {
   try {
-    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $database = Database::getConnection('default', 'migrate');
     $user_count = $database->query('SELECT COUNT(*) FROM {users}')->fetchField();
     return is_numeric($user_count) && $user_count > 0;
   } catch (\Exception $e) {
@@ -242,7 +177,7 @@ function thirdwing_migrate_check_source_database() {
  */
 function thirdwing_migrate_get_change_statistics($since_timestamp = NULL, array $content_types = []) {
   try {
-    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $database = Database::getConnection('default', 'migrate');
     $stats = [];
     
     // Default content types if none specified
@@ -280,7 +215,7 @@ function thirdwing_migrate_get_change_statistics($since_timestamp = NULL, array 
  */
 function thirdwing_migrate_get_user_activity_statistics($since_timestamp = NULL) {
   try {
-    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $database = Database::getConnection('default', 'migrate');
     $stats = [];
     
     // Users who logged in since timestamp

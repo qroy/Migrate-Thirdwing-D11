@@ -1,162 +1,72 @@
-# Thirdwing Drupal 11 Migration Project
+# Thirdwing Drupal 6 to Drupal 11 Migration
 
-A comprehensive migration system for upgrading a Drupal 6 music organization website to Drupal 11, featuring advanced media conversion, access control, content moderation, and **incremental migration capabilities**.
+A comprehensive migration system for the Thirdwing music organization, designed to migrate from Drupal 6 to Drupal 11 with ongoing incremental content synchronization.
 
 ## 🎯 Project Overview
 
-This project migrates a complex Drupal 6 choir/band website to modern Drupal 11 architecture. The migration transforms legacy content types into a clean, media-centric structure while preserving all editorial history and access control.
+This migration project enables seamless content migration from a legacy D6 site to a modern D11 platform while maintaining ongoing synchronization during the transition period. The system supports both complete initial migration and incremental content updates.
 
-### Key Migration Features
+### Migration Strategy
 
-- **Incremental Migration Strategy**: Support for ongoing content synchronization between old and new sites
-- **Node-to-Media Conversion**: Legacy content types converted to modern media entities
-- **Advanced Media System**: Context-aware file categorization with specialized metadata
-- **Access Control Migration**: Taxonomy-based permissions using Permissions by Term
-- **Editorial Workflows**: D6 workflow states mapped to D11 Content Moderation
-- **Comprehensive Content Migration**: All content types, fields, and relationships preserved
-- **Regular Content Sync**: Automated tools for syncing new and updated content
+Initially the module will be installed on a clean drupal installation.
+Old site will remain active until new site is complete and acts as backup for all data.
+Regular syncs from old to new with updated content.
 
-## 🔄 Migration Execution Strategy
+The architecture supports:
 
-### Dual-Site Migration Approach
+- **Clean D11 Installation**: Designed for fresh installations only
+- **Complete Incremental Migration**: Ongoing content synchronization between sites with automated conflict resolution
+- **Modern Media Architecture**: Complete node-to-media conversion framework
+- **Comprehensive Content Migration**: All content types and relationships preserved
+- **Modern Drupal Patterns**: Uses D11 core modules and best practices
+- **Production-Safe Operations**: Dual-site operation during transition with comprehensive testing
+- **Automated Setup & Validation**: Complete setup automation with built-in validation system
 
-The migration supports a **dual-site strategy** where:
-- **Old D6 site remains active** during migration and testing
-- **New D11 site is built incrementally** on clean installation
-- **Regular content synchronization** keeps new site updated with **old site always winning** conflicts
-- **Seamless cutover** when new site is ready
+### Content Profile Integration
 
-### Complete Migration Workflow
+The D6 site uses the **Content Profile** module where profile data is stored as `profiel` content type nodes linked to users. The migration system properly handles:
 
-#### Initial Setup and Full Migration
-```bash
-# 1. Complete system setup (one-time)
-./scripts/setup-complete-migration.sh
-
-# 2. Initial full migration (5-phase process)
-./scripts/migrate-execute.sh
-
-# 3. Validate migration success
-drush php:script scripts/validate-migration.php
-```
-
-#### Ongoing Incremental Synchronization
-```bash
-# Regular content sync (daily/weekly)
-./scripts/migrate-sync.sh --since="yesterday"
-
-# Specific content types only
-./scripts/migrate-sync.sh --since="last-week" --content-types="nieuws,activiteit"
-
-# Preview changes without importing
-./scripts/migrate-sync.sh --dry-run --since="2025-01-01"
-
-# Include user activity updates
-./scripts/migrate-sync.sh --user-activity="last-month"
-
-# Check sync status and history
-./scripts/migrate-sync.sh --status
-```
-
-### Five-Phase Initial Migration Process
-
-#### Phase 1: Core Data & Infrastructure
-- Taxonomy vocabularies and terms
-- User accounts and role migration (✅ **fully implemented**)
-- File entities and basic file handling
-- Content type and field structure creation
-
-#### Phase 2: Media Entities
-- Node-to-media conversion for verslag, audio, video
-- Context-based file categorization
-- Media entity creation with metadata
-- File reference conversion
-
-#### Phase 3: Content Nodes
-- All remaining content types
-- Entity references and relationships
-- Field data migration
-- Content moderation state setup
-
-#### Phase 4: Advanced Features
-- User role assignment and permissions
-- Content moderation workflows
-- Access control configuration
-- Editorial workflow setup
-
-#### Phase 5: Webforms & Final Setup
-- Webform configuration migration
-- Form submission data migration
-- Final validation and testing
-
-### Incremental Migration Strategy
-
-#### Regular Content Sync Capabilities
-- **Delta Migration**: Import only new and changed content since last sync
-- **Timestamp-Based Filtering**: Track content changes using `created` and `changed` dates
-- **Conflict Resolution**: Handle content modified on both old and new sites
-- **Safe Sync Operations**: Preserve new site modifications while importing updates
-
-#### Incremental Migration Features
-```bash
-# Initial full migration
-./migrate-execute.sh --mode=full
-
-# Regular incremental sync (daily/weekly)
-./migrate-sync.sh --since="2025-01-01"
-
-# Sync specific content types
-./migrate-sync.sh --content-types="nieuws,activiteit" --since="last-week"
-
-# Preview changes before sync
-./migrate-sync.sh --dry-run --since="yesterday"
-```
-
-#### Change Detection & Tracking
-- **Modified Content Detection**: Track changes via `node.changed` timestamps
-- **New Content Identification**: Identify content created since last sync
-- **Deleted Content Handling**: Optional handling of content deleted from D6
-- **User Activity Tracking**: Track new user registrations and profile updates
-
-#### Sync Safety Features
-- **Backup Before Sync**: Automatic database backup before incremental migration
-- **Rollback Capability**: Ability to revert incremental changes if needed
-- **Simple Conflict Resolution**: Always overwrite new site changes with old site content (old site is authoritative)
-- **Validation Checks**: Verify data integrity after each sync operation
+- **Content Profile Fields**: All profile fields from `content_type_profiel` table
+- **User-Profile Relationships**: Links between users and their profile nodes
+- **Field Mapping**: Complete mapping of Dutch profile fields (voornaam, achternaam, geslacht, etc.)
+- **Function Fields**: All committee and role function fields
+- **Administrative Fields**: Notes, email monitoring, and other administrative data
 
 ## 📋 Current Implementation Status
 
 ### ✅ **IMPLEMENTED COMPONENTS**
 
-#### Migration Core Infrastructure
+#### Migration Core Infrastructure ✅
 - **Custom Migration Module** (`thirdwing_migrate`): Complete migration framework
 - **Content Type Structure**: 7 content types with comprehensive field definitions
 - **Migration YAML Configuration**: Core migrations for taxonomy, users, files, and nodes
 - **Database Connection Management**: Separate D6 database connection handling
 - **Error Handling & Safety**: Robust error handling with data validation
 
-#### Content Architecture
+#### User Migration System ✅
 - **User Role Migration**: Complete implementation with comprehensive role mapping
 - **User Account Migration**: Full migration with role assignment and profile fields
+- **Content Profile Integration**: ✅ **FIXED** - Proper handling of Content Profile data from `content_type_profiel` table
 - **Role Permission System**: D6 to D11 role structure conversion
-- **User Profile Fields**: Complete Dutch field mapping (voornaam, achternaam, etc.)
+- **User Profile Fields**: Complete Dutch field mapping (voornaam, achternaam, geslacht, functie fields, etc.)
+- **User Picture Migration**: Profile image handling from D6 user pictures
+
+#### Content Architecture ✅
 - **Content Types**: Complete field mapping for all 7 primary content types
 - **Entity References**: Proper relationships between content types maintained
 - **Field Structure**: Comprehensive field definitions matching D6 source data
 - **File Migration**: Basic file handling and migration infrastructure
 
+#### Incremental Migration System ✅
+- **Delta Migration Source Plugins**: ✅ **IMPLEMENTED** - Custom source plugins with timestamp filtering
+- **Change Detection Logic**: ✅ **IMPLEMENTED** - Identify new/modified content since last sync
+- **Conflict Resolution System**: ✅ **IMPLEMENTED** - Always use old site content as authoritative source
+- **Sync Command Tools**: ✅ **IMPLEMENTED** - Drush commands for incremental migration operations
+- **Migration State Tracking**: ✅ **IMPLEMENTED** - Track last sync timestamps and migration status
+
 ### ❌ **MISSING IMPLEMENTATIONS** (High Priority)
 
-#### 1. Incremental Migration System
-**Status**: Architecture planned, implementation needed
-
-- **Delta Migration Source Plugins**: Custom source plugins with timestamp filtering
-- **Change Detection Logic**: Identify new/modified content since last sync
-- **Conflict Resolution System**: Always use old site content as authoritative source
-- **Sync Command Tools**: Drush commands for incremental migration operations
-- **Migration State Tracking**: Track last sync timestamps and migration status
-
-#### 2. Advanced Media Migration System
+#### 1. Advanced Media Migration System
 **Status**: Specification complete, implementation needed
 
 - Node-to-media conversion (`verslag` → document, `audio` → audio, `video` → video)
@@ -164,7 +74,7 @@ drush php:script scripts/validate-migration.php
 - Media entity creation with specialized metadata fields
 - File field to media reference conversion
 
-#### 3. Content Moderation & Workflow
+#### 2. Content Moderation & Workflow
 **Status**: Missing implementation
 
 - Node revision migration (currently disabled)
@@ -172,21 +82,21 @@ drush php:script scripts/validate-migration.php
 - Editorial workflow configuration
 - Content moderation state field integration
 
-#### 4. Access Control Integration
-**Status**: Missing implementation
-
-- Node revision migration (currently disabled)
-- D6 workflow state to D11 Content Moderation mapping
-- Editorial workflow configuration
-- Content moderation state field integration
-
-#### 5. Access Control Integration
+#### 3. Access Control Integration
 **Status**: Architecture planned, implementation needed
 
 - Permissions by Term module configuration
 - Taxonomy-based access control for nodes and media
 - Access control vocabulary preservation
 - Role-based permission setup
+
+#### 4. Webform Migration System
+**Status**: Missing implementation
+
+- Webform configuration migration
+- Form submission data handling
+- Contact form conversion
+- Form component mapping
 
 ## 🏗️ Architecture Overview
 
@@ -200,6 +110,7 @@ drush php:script scripts/validate-migration.php
 - `foto` (photo albums) → `foto`
 - `locatie` (venues) → `locatie`
 - `vriend` (friends/partners) → `vriend`
+- `profiel` (user profiles) → User profile fields (Content Profile integration)
 
 **Content Types Converted to Media Entities**:
 - `verslag` (meeting reports) → `document` media
@@ -208,6 +119,41 @@ drush php:script scripts/validate-migration.php
 
 **Content Types Excluded**:
 - `nieuwsbrief` (newsletters) - Not migrated
+
+### Content Profile System
+
+The D6 site uses **Content Profile** module with profile data stored in:
+- **`content_type_profiel`** table (CCK/content type table)
+- **Profile nodes** linked to users via the `uid` field
+- **Profile fields** mapped to D11 user fields:
+
+```yaml
+Profile Field Mapping:
+- field_voornaam → First name
+- field_achternaam → Last name
+- field_achternaam_voorvoegsel → Name prefix
+- field_geslacht → Gender
+- field_geboortedatum → Birth date
+- field_adres → Address
+- field_postcode → Postal code
+- field_woonplaats → City
+- field_telefoon → Phone
+- field_mobiel → Mobile
+- field_koor → Choir function
+- field_functie_bestuur → Board function
+- field_functie_mc → Music committee function
+- field_functie_concert → Concert function
+- field_functie_feest → Party function
+- field_functie_regie → Direction function
+- field_functie_ir → Internal relations function
+- field_functie_pr → Public relations function
+- field_functie_tec → Technical function
+- field_positie → Position
+- field_functie_lw → Member recruitment function
+- field_functie_fl → Facilities function
+- field_emailbewaking → Email monitoring
+- field_notes → Notes
+```
 
 ### Media Architecture
 
@@ -285,22 +231,76 @@ $databases['migrate']['default'] = [
 #### 3. Content Structure Setup
 ```bash
 # Create content types and fields
-drush php:script create-content-types-and-fields.php
+drush php:script modules/custom/thirdwing_migrate/scripts/create-content-types-and-fields.php
 
 # Setup media types and fields
-drush php:script create-media-fields.php
+drush php:script modules/custom/thirdwing_migrate/scripts/create-media-fields.php
 
 # Setup workflow configuration
-drush php:script setup-content-moderation.php
+drush php:script modules/custom/thirdwing_migrate/scripts/setup-content-moderation.php
 ```
 
 #### 4. Migration Execution
 ```bash
+# Reset any stuck migrations
+drush migrate:reset-status d6_thirdwing_user
+
+# Test user migration
+drush migrate:import d6_thirdwing_user --limit=5
+
 # Initial full migration
-./migrate-execute.sh
+./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
 
 # Regular incremental sync
-./migrate-sync.sh --since="last-week"
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="last-week"
+```
+
+## 🚀 Usage Examples
+
+### Quick Setup Commands
+```bash
+# 1. Complete system setup (one-time)
+chmod +x modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+./modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+
+# 2. Initial full migration (5-phase process)
+./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
+
+# 3. Validate migration success
+drush php:script modules/custom/thirdwing_migrate/scripts/validate-migration.php
+```
+
+### Ongoing Incremental Synchronization
+```bash
+# Regular content sync (daily/weekly)
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="yesterday"
+
+# Specific content types only
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="last-week" --content-types="nieuws,activiteit"
+
+# Preview changes without importing
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since="2025-01-01"
+
+# Include user activity updates
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --user-activity="last-month"
+
+# Check sync status and history
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --status
+```
+
+### User Migration Commands
+```bash
+# Reset stuck user migrations
+drush migrate:reset-status d6_thirdwing_user
+
+# Test user migration with Content Profile data
+drush migrate:import d6_thirdwing_user --limit=5 -v
+
+# Full user migration
+drush migrate:import d6_thirdwing_user
+
+# Incremental user updates
+drush migrate:import d6_thirdwing_incremental_user --limit=10
 ```
 
 ## 🔧 Technical Implementation
@@ -312,8 +312,9 @@ modules/custom/thirdwing_migrate/
 │   └── migrate_plus.migration.*.yml
 ├── src/Plugin/migrate/
 │   ├── source/
+│   │   ├── D6ThirdwingUser.php ✅ (Fixed for Content Profile)
+│   │   ├── D6IncrementalUser.php ✅ (Fixed for Content Profile)
 │   │   ├── D6IncrementalNode.php
-│   │   ├── D6IncrementalUser.php
 │   │   └── D6IncrementalFile.php
 │   └── process/
 ├── src/Commands/
@@ -330,11 +331,20 @@ modules/custom/thirdwing_migrate/
 ### Key Migration Features
 
 **Incremental Migration Support**: Delta migrations with timestamp-based filtering
+**Content Profile Integration**: ✅ **FIXED** - Proper handling of Content Profile data from `content_type_profiel` table
 **Robust Error Handling**: Comprehensive data validation and error recovery
 **Memory Management**: Optimized for large datasets with batch processing  
 **Dependency Management**: Proper migration sequencing and relationship handling
 **Data Integrity**: Complete preservation of content relationships with old site as single source of truth
 **Conflict Resolution**: Handle content modified on both old and new sites
+
+### Recent Fixes
+
+#### Content Profile Migration ✅ **RESOLVED**
+- **Issue**: Migration failed with `profile_values` table not found error
+- **Root Cause**: D6 site uses Content Profile module, not traditional Profile module
+- **Solution**: Updated source plugins to read from `content_type_profiel` table
+- **Result**: User migration now works with complete profile field mapping
 
 ## 🎯 Development Priorities
 
@@ -344,32 +354,33 @@ modules/custom/thirdwing_migrate/
 3. ✅ **Sync Command Interface** - Drush commands for incremental operations
 4. ✅ **Conflict Detection System** - Old site always wins approach
 5. ✅ **Comprehensive Testing** - Validation and setup automation
+6. ✅ **Content Profile Integration** - Fixed user migration with Content Profile data
 
 ### Phase 2: Core Migration Completion (Immediate)
-6. **Advanced Media Migration** - Convert files to media entities with context-based categorization
-7. **Access Control Setup** - Implement Permissions by Term integration
+7. **Advanced Media Migration** - Convert files to media entities with context-based categorization
+8. **Access Control Setup** - Implement Permissions by Term integration
 
 ### Phase 3: Editorial Workflows (Short-term)
-8. **Content Moderation Integration** - Enable editorial workflows
-9. **Revision Migration** - Preserve editorial history
-10. **Workflow Configuration** - Set up approval processes
+9. **Content Moderation Integration** - Enable editorial workflows
+10. **Revision Migration** - Preserve editorial history
+11. **Workflow Configuration** - Set up approval processes
 
 ### Phase 4: Advanced Features (Medium-term)  
-11. **Advanced Media System** - Context-based categorization
-12. **Webform Migration** - Enable form functionality
-13. **Sheet Music Management** - Specialized music features
+12. **Advanced Media System** - Context-based categorization
+13. **Webform Migration** - Enable form functionality
+14. **Sheet Music Management** - Specialized music features
 
 ### Phase 5: Optimization (Long-term)
-14. **Performance Optimization** - Batch processing, caching
-15. **Testing & Validation** - Comprehensive testing suite
-16. **Documentation** - Complete implementation guide
+15. **Performance Optimization** - Batch processing, caching
+16. **Testing & Validation** - Comprehensive testing suite
+17. **Documentation** - Complete implementation guide
 
 ## 📊 Project Metrics
 
-### Current Completion Status: ~70%
+### Current Completion Status: ~75%
 
 - ✅ **Core Infrastructure**: 95% complete
-- ✅ **User Role Migration**: 95% complete (implemented with comprehensive role mapping)
+- ✅ **User Role Migration**: 100% complete (implemented with comprehensive role mapping and Content Profile integration)
 - ✅ **Incremental Migration**: 90% complete (full system implemented)
 - ✅ **Testing & Validation**: 95% complete (comprehensive validation system)
 - ✅ **Basic Migration**: 85% complete
@@ -379,7 +390,8 @@ modules/custom/thirdwing_migrate/
 
 ### Success Criteria
 
-- **Incremental Migration**: Seamless ongoing content synchronization
+- ✅ **User Migration**: Complete user account and profile migration with Content Profile integration
+- ✅ **Incremental Migration**: Seamless ongoing content synchronization
 - **Content Preservation**: 100% critical content migrated
 - **Media Conversion**: All file fields converted to media references
 - **Relationship Integrity**: All entity relationships maintained  
@@ -399,74 +411,75 @@ chmod +x modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
 # 3. Run initial full migration
 ./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
 
-# 4. Validate everything works
-drush php:script modules/custom/thirdwing_migrate/scripts/validate-migration.php
+# 4. Test incremental sync
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since=yesterday
 ```
 
-### Quick Start - Incremental Sync Only
-```bash
-# Daily content sync
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="yesterday"
+### Five-Phase Initial Migration Process
 
-# Weekly comprehensive sync
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="last-week" --user-activity="last-week"
+#### Phase 1: Core Data & Infrastructure ✅
+- Taxonomy vocabularies and terms
+- User accounts and role migration (✅ **fully implemented with Content Profile integration**)
+- File entities and basic file handling
+- Content type and field structure creation
+
+#### Phase 2: Media Entities
+- Node-to-media conversion for verslag, audio, video
+- Context-based file categorization
+- Media entity creation with metadata
+- File reference conversion
+
+#### Phase 3: Content Nodes
+- All remaining content types
+- Entity references and relationships
+- Field data migration
+- Content moderation state setup
+
+#### Phase 4: Advanced Features
+- User role assignment and permissions
+- Content moderation workflows
+- Access control configuration
+- Editorial workflow setup
+
+#### Phase 5: Webforms & Final Setup
+- Webform configuration migration
+- Form submission data migration
+- Final validation and testing
+
+### Incremental Migration Strategy
+
+#### Regular Content Sync Capabilities
+- **Delta Migration**: Import only new and changed content since last sync
+- **Timestamp-Based Filtering**: Track content changes using `created` and `changed` dates
+- **Conflict Resolution**: Handle content modified on both old and new sites
+- **Safe Sync Operations**: Preserve new site modifications while importing updates
+
+#### Incremental Migration Features
+```bash
+# Initial full migration
+./migrate-execute.sh --mode=full
+
+# Regular incremental sync (daily/weekly)
+./migrate-sync.sh --since="2025-01-01"
 
 # Sync specific content types
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --content-types="nieuws,activiteit" --since="2025-01-01"
+./migrate-sync.sh --content-types="nieuws,activiteit" --since="last-week"
 
-# Preview changes without importing
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since="yesterday"
+# Preview changes before sync
+./migrate-sync.sh --dry-run --since="yesterday"
 ```
 
-### Manual Setup Steps
-```bash
-# 1. Install Drupal 11 fresh installation
-# 2. Configure migration database connection in settings.php
-# 3. Install and enable required modules
-drush en thirdwing_migrate permissions_by_term workflows
+#### Change Detection & Tracking
+- **Modified Content Detection**: Track changes via `node.changed` timestamps
+- **New Content Identification**: Identify content created since last sync
+- **Deleted Content Handling**: Optional handling of content deleted from D6
+- **User Activity Tracking**: Track new user registrations and profile updates
 
-# 4. Create content structure
-drush php:script modules/custom/thirdwing_migrate/scripts/create-content-types-and-fields.php
-
-# 5. Run migration
-./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
-```
-
-### Testing Migration
-```bash
-# Test database connections
-drush eval "print_r(\Drupal\Core\Database\Database::getConnection('default', 'migrate')->select('node', 'n')->countQuery()->execute()->fetchField());"
-
-# Check migration status
-drush migrate:status --group=thirdwing_d6
-
-# Check incremental migrations
-drush migrate:status --group=thirdwing_d6_incremental
-
-# Test incremental sync (dry run)
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since="yesterday"
-
-# Run comprehensive validation
-drush php:script modules/custom/thirdwing_migrate/scripts/validate-migration.php
-
-# Check sync status and history
-./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --status
-
-# Run individual migrations for testing
-drush migrate:import d6_thirdwing_taxonomy_vocabulary --feedback=10
-```
-
-## 🤝 Contributing
-
-This project provides a comprehensive foundation for Drupal 6 to 11 migrations with full incremental sync capabilities, especially for music organizations. The architecture supports:
-
-- **Clean D11 Installation**: Designed for fresh installations only
-- **Complete Incremental Migration**: Ongoing content synchronization between sites with automated conflict resolution
-- **Modern Media Architecture**: Complete node-to-media conversion framework
-- **Comprehensive Content Migration**: All content types and relationships preserved
-- **Modern Drupal Patterns**: Uses D11 core modules and best practices
-- **Production-Safe Operations**: Dual-site operation during transition with comprehensive testing
-- **Automated Setup & Validation**: Complete setup automation with built-in validation system
+#### Sync Safety Features
+- **Backup Before Sync**: Automatic database backup before incremental migration
+- **Rollback Capability**: Ability to revert incremental changes if needed
+- **Simple Conflict Resolution**: Always overwrite new site changes with old site content (old site is authoritative)
+- **Validation Checks**: Verify data integrity after each sync operation
 
 ## 📄 License
 

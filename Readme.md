@@ -104,6 +104,10 @@ The migration supports a **dual-site strategy** where:
 - **Error Handling & Safety**: Robust error handling with data validation
 
 #### Content Architecture
+- **User Role Migration**: Complete implementation with comprehensive role mapping
+- **User Account Migration**: Full migration with role assignment and profile fields
+- **Role Permission System**: D6 to D11 role structure conversion
+- **User Profile Fields**: Complete Dutch field mapping (voornaam, achternaam, etc.)
 - **Content Types**: Complete field mapping for all 7 primary content types
 - **Entity References**: Proper relationships between content types maintained
 - **Field Structure**: Comprehensive field definitions matching D6 source data
@@ -128,15 +132,15 @@ The migration supports a **dual-site strategy** where:
 - Media entity creation with specialized metadata fields
 - File field to media reference conversion
 
-#### 3. User Role Migration
-**Status**: Critical gap - currently disabled
+#### 3. Content Moderation & Workflow
+**Status**: Missing implementation
 
-- D6 user role migration (currently disabled in migration list)
-- Role assignment during user migration process
-- Role permission mapping and configuration
-- Integration with access control system
+- Node revision migration (currently disabled)
+- D6 workflow state to D11 Content Moderation mapping
+- Editorial workflow configuration
+- Content moderation state field integration
 
-#### 4. Content Moderation & Workflow
+#### 4. Access Control Integration
 **Status**: Missing implementation
 
 - Node revision migration (currently disabled)
@@ -309,24 +313,23 @@ modules/custom/thirdwing_migrate/
 4. **Conflict Detection System** - Identify and handle content conflicts
 
 ### Phase 2: Core Migration Completion (Immediate)
-5. **User Role Migration** - Enable proper access control
-6. **Basic Media Migration** - Convert files to media entities  
-7. **Access Control Setup** - Implement Permissions by Term integration
+5. **Basic Media Migration** - Convert files to media entities  
+6. **Access Control Setup** - Implement Permissions by Term integration
 
 ### Phase 3: Editorial Workflows (Short-term)
-8. **Content Moderation Integration** - Enable editorial workflows
-9. **Revision Migration** - Preserve editorial history
-10. **Workflow Configuration** - Set up approval processes
+7. **Content Moderation Integration** - Enable editorial workflows
+8. **Revision Migration** - Preserve editorial history
+9. **Workflow Configuration** - Set up approval processes
 
 ### Phase 4: Advanced Features (Medium-term)  
-11. **Advanced Media System** - Context-based categorization
-12. **Webform Migration** - Enable form functionality
-13. **Sheet Music Management** - Specialized music features
+10. **Advanced Media System** - Context-based categorization
+11. **Webform Migration** - Enable form functionality
+12. **Sheet Music Management** - Specialized music features
 
 ### Phase 5: Optimization (Long-term)
-14. **Performance Optimization** - Batch processing, caching
-15. **Testing & Validation** - Comprehensive testing suite
-16. **Documentation** - Complete implementation guide
+13. **Performance Optimization** - Batch processing, caching
+14. **Testing & Validation** - Comprehensive testing suite
+15. **Documentation** - Complete implementation guide
 
 ## 📊 Project Metrics
 

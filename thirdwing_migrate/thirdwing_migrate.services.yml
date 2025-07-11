@@ -1,7 +1,27 @@
 services:
+  # Drush commands for incremental migration
+  thirdwing_migrate.commands:
+    class: Drupal\thirdwing_migrate\Commands\MigrationSyncCommands
+    arguments: ['@plugin.manager.migration']
+    tags:
+      - { name: drush.command }
 
+  # Event subscriber for migration author fix
   thirdwing_migrate.migration_author_fix_subscriber:
     class: Drupal\thirdwing_migrate\EventSubscriber\MigrationAuthorFixSubscriber
     arguments: ['@entity_type.manager', '@logger.factory']
     tags:
       - { name: event_subscriber }
+
+  # Custom process plugins (if you add any in the future)
+  # thirdwing_migrate.process.custom_plugin:
+  #   class: Drupal\thirdwing_migrate\Plugin\migrate\process\CustomPlugin
+  #   tags:
+  #     - { name: migrate.process }
+
+  # Custom source plugins are auto-discovered via annotations
+  # Custom destination plugins would go here if needed
+  # thirdwing_migrate.destination.custom:
+  #   class: Drupal\thirdwing_migrate\Plugin\migrate\destination\CustomDestination
+  #   tags:
+  #     - { name: migrate.destination }

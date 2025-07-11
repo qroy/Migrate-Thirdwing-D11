@@ -1,0 +1,43 @@
+id: d6_thirdwing_incremental_file
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'File'
+  - 'Incremental'
+
+label: 'D6 Files (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_file
+  # Default configuration - can be overridden by Drush commands
+  since_timestamp: null
+  date_range: {}
+  status: 1  # Only permanent files by default
+
+destination:
+  plugin: 'entity:file'
+  # Always update existing content (old site wins)
+  overwrite_properties: true
+
+process:
+  fid: fid
+  filename: filename
+  uri:
+    plugin: file_copy
+    source:
+      - filepath
+      - filename
+  filemime: filemime
+  filesize: filesize
+  status: status
+  created: timestamp
+  changed: timestamp
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user

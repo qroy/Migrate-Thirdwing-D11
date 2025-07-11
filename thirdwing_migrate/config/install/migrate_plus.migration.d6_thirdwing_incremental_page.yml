@@ -1,0 +1,88 @@
+id: d6_thirdwing_incremental_page
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Pages (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: pagina
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: pagina
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: pagina
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Page-specific fields
+  field_pagina_type: field_pagina_type_value
+  field_menu_weight: field_menu_weight_value
+  field_show_in_menu: field_show_in_menu_value
+  
+  # Images
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+  
+  # Files
+  field_files:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_files_fid
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term

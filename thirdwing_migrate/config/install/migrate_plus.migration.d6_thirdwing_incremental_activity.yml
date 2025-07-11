@@ -1,0 +1,102 @@
+id: d6_thirdwing_incremental_activity
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Activities (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: activiteit
+  # Default configuration - can be overridden by Drush commands
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: activiteit
+  # Always update existing content (old site wins)
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: activiteit
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Activity-specific fields
+  field_datum_begin: field_datum_begin_value
+  field_datum_einde: field_datum_einde_value
+  field_tijd_begin: field_tijd_begin_value
+  field_tijd_einde: field_tijd_einde_value
+  field_locatie:
+    plugin: migration_lookup
+    migration: d6_thirdwing_location
+    source: field_locatie_nid
+  field_externe_locatie: field_externe_locatie_value
+  field_kleding: field_kleding_value
+  field_prijs_leden: field_prijs_leden_value
+  field_prijs_niet_leden: field_prijs_niet_leden_value
+  field_aanmelden: field_aanmelden_value
+  field_activiteit_type: field_activiteit_type_value
+  
+  # Images
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+  
+  # Files
+  field_files:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_files_fid
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_location

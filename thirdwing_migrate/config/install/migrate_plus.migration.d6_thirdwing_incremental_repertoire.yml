@@ -1,0 +1,99 @@
+id: d6_thirdwing_incremental_repertoire
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Repertoire (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: repertoire
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: repertoire
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: repertoire
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Repertoire-specific fields
+  field_componist: field_componist_value
+  field_arrangeur: field_arrangeur_value
+  field_tekstdichter: field_tekstdichter_value
+  field_uitgever: field_uitgever_value
+  field_genre: field_genre_value
+  field_taal: field_taal_value
+  field_niveau: field_niveau_value
+  field_stemverdeling: field_stemverdeling_value
+  field_duur: field_duur_value
+  field_opmerking: field_opmerking_value
+  field_aankoop_datum: field_aankoop_datum_value
+  field_aankoop_prijs: field_aankoop_prijs_value
+  field_aantal_exemplaren: field_aantal_exemplaren_value
+  field_locatie_partituren: field_locatie_partituren_value
+  
+  # Images
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+  
+  # Files (sheet music)
+  field_files:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_files_fid
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term

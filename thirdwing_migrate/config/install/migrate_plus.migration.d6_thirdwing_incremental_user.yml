@@ -1,0 +1,84 @@
+id: d6_thirdwing_incremental_user
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'User'
+  - 'Incremental'
+
+label: 'D6 Users (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_user
+  # Default configuration - can be overridden by Drush commands
+  since_access: null
+  since_created: null
+  date_range: {}
+  include_blocked: false
+
+destination:
+  plugin: 'entity:user'
+  # Always update existing content (old site wins)
+  overwrite_properties: true
+
+process:
+  uid: uid
+  name: name
+  mail: mail
+  created: created
+  access: access
+  login: login
+  status: status
+  
+  # Role assignment - migrate user roles
+  roles:
+    plugin: thirdwing_user_roles
+    source: uid
+    migration: d6_thirdwing_user_role
+  
+  # Profile fields - using Dutch field names matching D6
+  field_voornaam: field_voornaam_value
+  field_achternaam: field_achternaam_value
+  field_tussenvoegsel: field_achternaam_voorvoegsel_value
+  field_geboortedatum: field_geboortedatum_value
+  field_geslacht: field_geslacht_value
+  field_karrijder: field_karrijder_value
+  field_lidsinds: field_lidsinds_value
+  field_uitkoor: field_uitkoor_value
+  field_adres: field_adres_value
+  field_postcode: field_postcode_value
+  field_woonplaats: field_woonplaats
+  field_telefoon: field_telefoon_value
+  field_mobiel: field_mobiel_value
+  field_sleepgroep: field_sleepgroep_1_value
+  field_koor: field_koor_value
+  field_notes/value: field_notes_value
+  field_notes/format:
+    plugin: static_map
+    source: field_notes_format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  field_functie_bestuur: field_functie_bestuur_value
+  field_functie_mc: field_functie_mc_value
+  field_functie_concert: field_functie_concert_value
+  field_functie_feest: field_functie_feest_value
+  field_functie_regie: field_functie_regie_value
+  field_functie_ir: field_functie_ir_value
+  field_functie_pr: field_functie_pr_value
+  field_functie_tec: field_functie_tec_value
+  field_positie: field_positie_value
+  field_functie_lw: field_functie_lw_value
+  field_functie_fl: field_functie_fl_value
+
+  # User picture
+  user_picture:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: picture
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user_role
+    - d6_thirdwing_file

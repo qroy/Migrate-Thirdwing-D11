@@ -19,6 +19,12 @@ process:
   login: login
   status: status
   
+  # Role assignment - migrate user roles
+  roles:
+    plugin: thirdwing_user_roles
+    source: uid
+    migration: d6_thirdwing_user_role
+  
   # Profile fields - using Dutch field names matching D6
   field_voornaam: field_voornaam_value
   field_achternaam: field_achternaam_value
@@ -56,4 +62,6 @@ process:
   field_functie_lw: field_functie_lw_value
   field_functie_fl: field_functie_fl_value
 
-migration_dependencies: []
+migration_dependencies:
+  required:
+    - d6_thirdwing_user_role

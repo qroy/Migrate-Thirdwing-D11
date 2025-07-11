@@ -9,10 +9,11 @@ if ! drush migrate:status --group=thirdwing_d6 > /dev/null 2>&1; then
     exit 1
 fi
 
-# Phase 1: Core Data
+# Phase 1: Core Data (UPDATED - now includes roles)
 echo "Phase 1: Importing core data..."
 drush migrate:import d6_thirdwing_taxonomy_vocabulary --feedback="10 items"
 drush migrate:import d6_thirdwing_taxonomy_term --feedback="50 items"
+drush migrate:import d6_thirdwing_user_role --feedback="20 items"
 drush migrate:import d6_thirdwing_user --feedback="50 items"
 drush migrate:import d6_thirdwing_file --feedback="100 items"
 
@@ -48,4 +49,10 @@ echo "Post-migration tasks:"
 echo "1. Clear all caches: drush cr"
 echo "2. Rebuild permissions: drush eval \"node_access_rebuild();\""
 echo "3. Generate URL aliases: drush pathauto:update-aliases --all"
-echo "4. Install and configure the Thirdwing theme"
+echo "4. Configure role permissions: Visit /admin/people/permissions"
+echo "5. Install and configure the Thirdwing theme"
+
+# Optional: Show role migration results
+echo ""
+echo "Role migration summary:"
+drush migrate:messages d6_thirdwing_user_role

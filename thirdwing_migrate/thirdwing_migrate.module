@@ -2,216 +2,13 @@
 
 /**
  * @file
- * Thirdwing migration module.
+ * Thirdwing D6 to D11 migration module.
+ * 
+ * Provides custom migration plugins and configurations for migrating
+ * a Drupal 6 choir/band website to Drupal 11.
  */
 
 use Drupal\Core\Database\Database;
-
-/**
- * Implements hook_help().
- */
-function thirdwing_migrate_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.thirdwing_migrate':
-      return '<p>' . t('Migration module for Thirdwing D6 to D11.') . '</p>';
-  }
-}
-
-/**
- * Implements hook_migrate_prepare_row().
- * 
- * This runs for EVERY row in EVERY migration and ensures all data is properly typed.
- */
-function thirdwing_migrate_migrate_prepare_row(\Drupal\migrate\Row $row, \Drupal\migrate\Plugin\MigrateSourceInterface $source, \Drupal\migrate\Plugin\MigrationInterface $migration) {
-  $migration_id = $migration->id();
-  
-  // Only process our migrations
-  if (strpos($migration_id, 'd6_thirdwing') !== 0) {
-    return;
-  }
-  
-  $source_data = $row->getSource();
-  
-  // AGGRESSIVE NULL CLEANING - Convert ALL null values
-  foreach ($source_data as $field_name => $value) {
-    if ($value === null) {
-      // For numeric-looking fields, use 0
-      if (preg_match('/^(nid|vid|tid|uid|fid|gid|weight|status|created|changed|access|login|timestamp|filesize|delta|hierarchy|multiple|required|relations|tags|promote|sticky)/', $field_name)) {
-        $row->setSourceProperty($field_name, 0);
-      } else {
-        // For everything else, use empty string
-        $row->setSourceProperty($field_name, '');
-      }
-    }
-    // Also handle empty strings that might cause issues
-    elseif ($value === '' && preg_match('/^(nid|vid|tid|uid|fid|gid|weight|status|created|changed|access|login|timestamp|filesize|delta|hierarchy|multiple|required|relations|tags|promote|sticky)/', $field_name)) {
-      $row->setSourceProperty($field_name, 0);
-    }
-    // Convert numeric strings to actual numbers
-    elseif (is_string($value) && is_numeric($value) && preg_match('/^(nid|vid|tid|uid|fid|gid|weight|status|created|changed|access|login|timestamp|filesize|delta|hierarchy|multiple|required|relations|tags|promote|sticky)/', $field_name)) {
-      $row->setSourceProperty($field_name, (int) $value);
-    }
-    // Ensure all other values are strings
-    elseif (!is_string($value) && !is_numeric($value) && $value !== null) {
-      $row->setSourceProperty($field_name, (string) $value);
-    }
-  }
-  
-  // Extra safety for known problematic fields
-  $critical_string_fields = ['name', 'title', 'description', 'help', 'module', 'mail', 'filename'];
-  foreach ($critical_string_fields as $field) {
-    $value = $row->getSourceProperty($field);
-    if ($value === null || $value === false) {
-      $row->setSourceProperty($field, '');
-    } elseif (!is_string($value)) {
-      $row->setSourceProperty($field, (string) $value);
-    }
-  }
-}
-
-/**
- * Implements hook_module_implements_alter().
- * 
- * Ensure our migrate_prepare_row runs FIRST.
- */
-function thirdwing_migrate_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'migrate_prepare_row') {
-    $group = $implementations['thirdwing_migrate'];
-    unset($implementations['thirdwing_migrate']);
-    $implementations = ['thirdwing_migrate' => $group] + $implementations;
-  }
-}
-
-/**
- * Custom error handler to completely suppress numeric warnings during migration.
- */
-function thirdwing_migrate_suppress_numeric_warnings($severity, $message, $file, $line) {
-  // Suppress specific numeric warnings
-  if (strpos($message, 'non-numeric value') !== FALSE || 
-      strpos($message, 'A non-numeric value encountered') !== FALSE) {
-    
-    // Log for debugging if needed
-    \Drupal::logger('thirdwing_migrate')->debug('Suppressed numeric warning: @message in @file:@line', [
-      '@message' => $message,
-      '@file' => basename($file),
-      '@line' => $line,
-    ]);
-    
-    return TRUE; // Suppress the warning
-  }
-  
-  // Suppress Html::escape() argument type errors
-  if (strpos($message, 'Html::escape()') !== FALSE && 
-      strpos($message, 'must be of type string, null given') !== FALSE) {
-    
-    \Drupal::logger('thirdwing_migrate')->debug('Suppressed Html::escape null error: @message in @file:@line', [
-      '@message' => $message,
-      '@file' => basename($file),
-      '@line' => $line,
-    ]);
-    
-    return TRUE; // Suppress the error
-  }
-  
-  // Suppress any other type errors related to null values
-  if (strpos($message, 'must be of type string, null given') !== FALSE ||
-      strpos($message, 'must be of type string, NULL given') !== FALSE) {
-    
-    \Drupal::logger('thirdwing_migrate')->debug('Suppressed null type error: @message in @file:@line', [
-      '@message' => $message,
-      '@file' => basename($file),
-      '@line' => $line,
-    ]);
-    
-    return TRUE; // Suppress the error
-  }
-  
-  return FALSE; // Let other errors through
-}
-
-/**
- * Global error handler for migration UI pages.
- */
-function thirdwing_migrate_global_error_handler($severity, $message, $file, $line) {
-  // Only suppress on migration pages
-  $current_path = \Drupal::service('path.current')->getPath();
-  if (strpos($current_path, '/admin/structure/migrate') === FALSE) {
-    return FALSE;
-  }
-  
-  // Suppress Html::escape errors on migration admin pages
-  if (strpos($message, 'Html::escape()') !== FALSE && 
-      strpos($message, 'must be of type string, null given') !== FALSE) {
-    return TRUE;
-  }
-  
-  if (strpos($message, 'must be of type string, null given') !== FALSE ||
-      strpos($message, 'must be of type string, NULL given') !== FALSE) {
-    return TRUE;
-  }
-  
-  return FALSE;
-}
-
-/**
- * Implements hook_migrate_pre_import().
- */
-function thirdwing_migrate_migrate_pre_import(\Drupal\migrate\Event\MigrateImportEvent $event) {
-  $migration_id = $event->getMigration()->id();
-  
-  if (strpos($migration_id, 'd6_thirdwing') === 0) {
-    // Set custom error handler to suppress numeric warnings and type errors
-    set_error_handler('thirdwing_migrate_suppress_numeric_warnings', E_WARNING | E_NOTICE | E_ERROR | E_RECOVERABLE_ERROR);
-    
-    \Drupal::logger('thirdwing_migrate')->info('Migration @id started with comprehensive error suppression', [
-      '@id' => $migration_id,
-    ]);
-  }
-}
-
-/**
- * Implements hook_migrate_post_import().
- */
-function thirdwing_migrate_migrate_post_import(\Drupal\migrate\Event\MigrateImportEvent $event) {
-  $migration_id = $event->getMigration()->id();
-  
-  if (strpos($migration_id, 'd6_thirdwing') === 0) {
-    // Restore original error handler
-    restore_error_handler();
-    
-    \Drupal::logger('thirdwing_migrate')->info('Migration @id completed', [
-      '@id' => $migration_id,
-    ]);
-  }
-}
-
-/**
- * Implements hook_migrate_post_row_save().
- * 
- * Log successful migrations for verification.
- */
-function thirdwing_migrate_migrate_post_row_save(\Drupal\migrate\Event\MigratePostRowSaveEvent $event) {
-  $migration_id = $event->getMigration()->id();
-  
-  if (strpos($migration_id, 'd6_thirdwing') === 0) {
-    $row = $event->getRow();
-    $destination_ids = $event->getDestinationIdValues();
-    
-    // Log successful row save (only for first few items to avoid spam)
-    static $logged_count = [];
-    if (!isset($logged_count[$migration_id])) {
-      $logged_count[$migration_id] = 0;
-    }
-    
-    if ($logged_count[$migration_id] < 5) {
-      \Drupal::logger('thirdwing_migrate')->info('Successfully migrated @migration row to ID: @id', [
-        '@migration' => $migration_id,
-        '@id' => implode(', ', $destination_ids),
-      ]);
-      $logged_count[$migration_id]++;
-    }
-  }
-}
 
 /**
  * Implements hook_migration_plugins_alter().
@@ -225,8 +22,8 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
     'd6_menu', 'd6_search_settings', 'd6_system_cron', 'd6_system_date', 
     'd6_system_file', 'd6_system_performance', 'd6_user_mail', 'd6_user_settings',
     'd6_filter_format', 'd6_custom_block', 'd6_comment_type', 'd6_node_type',
-    'd6_taxonomy_vocabulary', 'd6_user_role', 'd6_block', 'd6_file', 
-    'd6_user_picture_file', 'd6_user', 'd6_node_settings', 'd6_field',
+    'd6_taxonomy_vocabulary', 'd6_block', 'd6_file', 
+    'd6_user_picture_file', 'd6_node_settings', 'd6_field',
     'd6_field_instance', 'd6_field_instance_widget_settings', 'd6_view_modes',
     'd6_field_formatter_settings', 'd6_upload_field', 'd6_comment_field',
     'd6_comment_field_instance', 'd6_comment_entity_display', 
@@ -237,7 +34,8 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
     'd6_node_setting_sticky', 'd6_node_setting_status', 'd6_url_alias',
     'd6_vocabulary_field', 'd6_vocabulary_field_instance', 'd6_vocabulary_entity_display',
     'd6_vocabulary_entity_form_display', 'd6_taxonomy_term', 'd6_user_contact_settings',
-    'd6_comment_entity_form_display_subject'
+    'd6_comment_entity_form_display_subject',
+    // REMOVED: 'd6_user_role' and 'd6_user' - we now use custom versions
   ];
   
   // List of ALL D7 migrations to disable
@@ -273,126 +71,91 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
   foreach ($migrations as $id => $migration) {
     if (strpos($id, 'd6_node:') === 0 || 
         strpos($id, 'd6_node_complete:') === 0 ||
-        strpos($id, 'd6_node_revision:') === 0 ||
-        strpos($id, 'd6_term_node:') === 0 ||
-        strpos($id, 'd6_term_node_revision:') === 0 ||
-        strpos($id, 'd7_node:') === 0 ||
+        strpos($id, 'd7_node:') === 0 || 
         strpos($id, 'd7_node_complete:') === 0 ||
-        strpos($id, 'd7_node_revision:') === 0 ||
-        strpos($id, 'd7_term_node:') === 0 ||
-        strpos($id, 'd7_term_node_revision:') === 0) {
+        strpos($id, 'd6_node_revision:') === 0 ||
+        strpos($id, 'd7_node_revision:') === 0) {
       unset($migrations[$id]);
     }
   }
   
-  // Remove all other core migrations
-  $core_migration_patterns = [
-    'action_settings', 'file_settings', 'locale_settings', 'menu_settings',
-    'search_page', 'system_', 'taxonomy_settings', 'text_settings',
-    'block_content_', 'contact_category', 'language', 'default_language',
-    'user_picture_', 'language_prefixes_and_domains'
+  // Remove field migrations that would conflict with our custom content types
+  $field_migrations_to_remove = [
+    'd6_field', 'd6_field_instance', 'd6_field_instance_widget_settings',
+    'd6_view_modes', 'd6_field_formatter_settings',
+    'd7_field', 'd7_field_instance', 'd7_field_instance_widget_settings',
+    'd7_view_modes', 'd7_field_formatter_settings'
   ];
   
-  foreach ($migrations as $id => $migration) {
-    foreach ($core_migration_patterns as $pattern) {
-      if (strpos($id, $pattern) === 0) {
-        unset($migrations[$id]);
-        break;
+  foreach ($field_migrations_to_remove as $migration_id) {
+    if (isset($migrations[$migration_id])) {
+      unset($migrations[$migration_id]);
+    }
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function thirdwing_migrate_install() {
+  // Test database connection on install
+  try {
+    $connection = Database::getConnection('default', 'migrate');
+    $result = $connection->query("SELECT COUNT(*) FROM {users}")->fetchField();
+    \Drupal::messenger()->addMessage(t('Migration database connection successful. Found @count users.', ['@count' => $result]));
+  } catch (\Exception $e) {
+    \Drupal::messenger()->addError(t('Migration database connection failed: @error', ['@error' => $e->getMessage()]));
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function thirdwing_migrate_requirements($phase) {
+  $requirements = [];
+  
+  if ($phase == 'runtime') {
+    // Check migration database connection
+    try {
+      $connection = Database::getConnection('default', 'migrate');
+      $user_count = $connection->query("SELECT COUNT(*) FROM {users}")->fetchField();
+      $node_count = $connection->query("SELECT COUNT(*) FROM {node}")->fetchField();
+      
+      $requirements['thirdwing_migrate_db'] = [
+        'title' => t('Thirdwing Migration Database'),
+        'value' => t('Connected (@users users, @nodes nodes)', [
+          '@users' => $user_count,
+          '@nodes' => $node_count
+        ]),
+        'severity' => REQUIREMENT_OK,
+      ];
+    } catch (\Exception $e) {
+      $requirements['thirdwing_migrate_db'] = [
+        'title' => t('Thirdwing Migration Database'),
+        'value' => t('Connection failed'),
+        'description' => t('Error: @error', ['@error' => $e->getMessage()]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    
+    // Check required modules
+    $required_modules = [
+      'permissions_by_term' => 'Permissions by Term',
+      'workflows' => 'Workflows',
+      'content_moderation' => 'Content Moderation',
+    ];
+    
+    foreach ($required_modules as $module => $label) {
+      if (!\Drupal::moduleHandler()->moduleExists($module)) {
+        $requirements['thirdwing_migrate_' . $module] = [
+          'title' => t('Thirdwing Migration: @module', ['@module' => $label]),
+          'value' => t('Not installed'),
+          'description' => t('The @module module is required for full migration functionality.', ['@module' => $label]),
+          'severity' => REQUIREMENT_WARNING,
+        ];
       }
     }
   }
   
-  // Count remaining migrations
-  $remaining = 0;
-  $thirdwing_count = 0;
-  foreach ($migrations as $id => $migration) {
-    $remaining++;
-    if (strpos($id, 'd6_thirdwing') === 0) {
-      $thirdwing_count++;
-    }
-  }
-  
-  \Drupal::logger('thirdwing_migrate')->info('Migration cleanup: @total total, @thirdwing Thirdwing migrations', [
-    '@total' => $remaining,
-    '@thirdwing' => $thirdwing_count,
-  ]);
-}
-
-/**
- * Implements hook_migrate_MIGRATION_ID_prepare_row() for taxonomy vocabulary.
- */
-function thirdwing_migrate_migrate_d6_thirdwing_taxonomy_vocabulary_prepare_row(\Drupal\migrate\Row $row, \Drupal\migrate\Plugin\MigrateSourceInterface $source, \Drupal\migrate\Plugin\MigrationInterface $migration) {
-  // Extra safety for taxonomy vocabulary
-  $fields_to_clean = ['name', 'description', 'help', 'module'];
-  foreach ($fields_to_clean as $field) {
-    $value = $row->getSourceProperty($field);
-    if ($value === null) {
-      $row->setSourceProperty($field, '');
-    }
-  }
-}
-
-/**
- * Implements hook_migrate_MIGRATION_ID_prepare_row() for taxonomy terms.
- */
-function thirdwing_migrate_migrate_d6_thirdwing_taxonomy_term_prepare_row(\Drupal\migrate\Row $row, \Drupal\migrate\Plugin\MigrateSourceInterface $source, \Drupal\migrate\Plugin\MigrationInterface $migration) {
-  // Extra safety for taxonomy terms
-  $fields_to_clean = ['name', 'description'];
-  foreach ($fields_to_clean as $field) {
-    $value = $row->getSourceProperty($field);
-    if ($value === null) {
-      $row->setSourceProperty($field, '');
-    }
-  }
-}
-
-/**
- * Implements hook_page_attachments_alter().
- */
-function thirdwing_migrate_page_attachments_alter(array &$attachments) {
-  $current_path = \Drupal::service('path.current')->getPath();
-  
-  // Set up error suppression on migration admin pages
-  if (strpos($current_path, '/admin/structure/migrate') !== FALSE) {
-    set_error_handler('thirdwing_migrate_global_error_handler', E_ERROR | E_RECOVERABLE_ERROR | E_WARNING);
-  }
-}
-
-/**
- * Helper function to identify string fields.
- */
-function thirdwing_migrate_is_string_field($field_name) {
-  $string_patterns = [
-    'name', 'title', 'description', 'body', 'mail', 'filename', 
-    'filepath', 'url', 'link', 'text', '_value', '_title', 
-    '_description', '_name', '_mail', 'help'
-  ];
-
-  foreach ($string_patterns as $pattern) {
-    if (strpos($field_name, $pattern) !== FALSE) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-/**
- * Helper function to identify numeric fields.
- */
-function thirdwing_migrate_is_numeric_field($field_name) {
-  $numeric_patterns = [
-    'nid', 'vid', 'tid', 'uid', 'fid', 'gid', 'weight', 'status',
-    'created', 'changed', 'access', 'login', 'timestamp', 'filesize',
-    '_id', '_count', '_number', '_year', '_delta', 'hierarchy',
-    'multiple', 'required', 'relations', 'tags', 'promote', 'sticky'
-  ];
-
-  foreach ($numeric_patterns as $pattern) {
-    if (strpos($field_name, $pattern) !== FALSE) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
+  return $requirements;
 }

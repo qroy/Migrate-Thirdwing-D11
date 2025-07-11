@@ -1,5 +1,4 @@
 <?php
-// File: modules/custom/thirdwing_migrate/src/Plugin/migrate/source/D6ThirdwingUser.php
 
 namespace Drupal\thirdwing_migrate\Plugin\migrate\source;
 
@@ -7,7 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Source plugin for D6 Users with profile data.
+ * Source plugin for D6 users with profile data and roles.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_user",
@@ -21,20 +20,16 @@ class D6ThirdwingUser extends SqlBase {
    */
   public function query() {
     $query = $this->select('users', 'u')
-      ->fields('u')
-      ->condition('u.uid', 0, '>')
-      ->orderBy('u.uid');
+      ->fields('u', [
+        'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status'
+      ])
+      ->condition('u.uid', 0, '>'); // Skip anonymous user
 
-    // Join profile data from profiel content type
-    $query->leftJoin('node', 'pn', 'u.uid = pn.uid AND pn.type = \'profiel\'');
-    $query->leftJoin('content_type_profiel', 'ctp', 'pn.nid = ctp.nid AND pn.vid = ctp.vid');
-    $query->fields('ctp');
-
-    // Join woonplaats field
-    $query->leftJoin('content_field_woonplaats', 'cfw', 'pn.nid = cfw.nid AND pn.vid = cfw.vid');
-    $query->addField('cfw', 'field_woonplaats_value', 'field_woonplaats');
-
-    return $query;
+    // Join with profile values to get all profile fields
+    $query->leftJoin('profile_values', 'pv', 'u.uid = pv.uid');
+    $query->leftJoin('profile_fields', 'pf', 'pv.fid = pf.fid');
+    
+    return $query->orderBy('u.uid');
   }
 
   /**
@@ -44,11 +39,13 @@ class D6ThirdwingUser extends SqlBase {
     return [
       'uid' => $this->t('User ID'),
       'name' => $this->t('Username'),
+      'pass' => $this->t('Password'),
       'mail' => $this->t('Email'),
-      'created' => $this->t('Created'),
-      'access' => $this->t('Last access'),
-      'login' => $this->t('Last login'),
+      'created' => $this->t('Created timestamp'),
+      'access' => $this->t('Last access timestamp'),
+      'login' => $this->t('Last login timestamp'),
       'status' => $this->t('Status'),
+      // Profile fields
       'field_voornaam_value' => $this->t('First name'),
       'field_achternaam_value' => $this->t('Last name'),
       'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
@@ -56,23 +53,27 @@ class D6ThirdwingUser extends SqlBase {
       'field_geslacht_value' => $this->t('Gender'),
       'field_karrijder_value' => $this->t('Car driver'),
       'field_lidsinds_value' => $this->t('Member since'),
-      'field_uitkoor_value' => $this->t('Member until'),
+      'field_uitkoor_value' => $this->t('Left choir'),
       'field_adres_value' => $this->t('Address'),
       'field_postcode_value' => $this->t('Postal code'),
       'field_woonplaats' => $this->t('City'),
       'field_telefoon_value' => $this->t('Phone'),
-      'field_mobiel_value' => $this->t('Mobile phone'),
-      'field_sleepgroep_1_value' => $this->t('Sleep group'),
-      'field_koor_value' => $this->t('Choir function'),
+      'field_mobiel_value' => $this->t('Mobile'),
+      'field_sleepgroep_1_value' => $this->t('Transport group'),
+      'field_koor_value' => $this->t('Choir'),
       'field_notes_value' => $this->t('Notes'),
       'field_notes_format' => $this->t('Notes format'),
       'field_functie_bestuur_value' => $this->t('Board function'),
-      'field_functie_mc_value' => $this->t('Music committee'),
-      'field_functie_concert_value' => $this->t('Concert committee'),
-      'field_functie_feest_value' => $this->t('Party committee'),
-      'field_functie_regie_value' => $this->t('Choir direction'),
-      'field_functie_ir_value' => $this->t('Internal relations'),
-      'field_functie_pr_value' => $this->t('Public relations'),
+      'field_functie_mc_value' => $this->t('Music committee function'),
+      'field_functie_concert_value' => $this->t('Concert function'),
+      'field_functie_feest_value' => $this->t('Party function'),
+      'field_functie_regie_value' => $this->t('Direction function'),
+      'field_functie_ir_value' => $this->t('Internal relations function'),
+      'field_functie_pr_value' => $this->t('Public relations function'),
+      'field_functie_tec_value' => $this->t('Technical function'),
+      'field_positie_value' => $this->t('Position'),
+      'field_functie_lw_value' => $this->t('Member recruitment function'),
+      'field_functie_fl_value' => $this->t('Facilities function'),
     ];
   }
 
@@ -83,6 +84,7 @@ class D6ThirdwingUser extends SqlBase {
     return [
       'uid' => [
         'type' => 'integer',
+        'alias' => 'u',
       ],
     ];
   }
@@ -91,22 +93,33 @@ class D6ThirdwingUser extends SqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
-    if (parent::prepareRow($row) === FALSE) {
-      return FALSE;
+    $uid = $row->getSourceProperty('uid');
+
+    // Get all profile field values for this user
+    $profile_query = $this->select('profile_values', 'pv')
+      ->fields('pv', ['value'])
+      ->fields('pf', ['name'])
+      ->condition('pv.uid', $uid);
+    $profile_query->leftJoin('profile_fields', 'pf', 'pv.fid = pf.fid');
+    
+    $profile_values = $profile_query->execute();
+    
+    // Set profile field values on the row
+    foreach ($profile_values as $profile_value) {
+      if (!empty($profile_value['name'])) {
+        $row->setSourceProperty($profile_value['name'] . '_value', $profile_value['value']);
+      }
     }
 
-    // Clean postal code (remove spaces)
-    $postcode = $row->getSourceProperty('field_postcode_value');
-    if ($postcode) {
-      $row->setSourceProperty('field_postcode_value', str_replace(' ', '', $postcode));
-    }
+    // Get user roles for this user (used by the roles process plugin)
+    $roles_query = $this->select('users_roles', 'ur')
+      ->fields('ur', ['rid'])
+      ->condition('ur.uid', $uid);
+    
+    $user_roles = $roles_query->execute()->fetchCol();
+    $row->setSourceProperty('user_roles', $user_roles);
 
-    // Transform car driver value
-    $karrijder = $row->getSourceProperty('field_karrijder_value');
-    if ($karrijder === '*') {
-      $row->setSourceProperty('field_karrijder_value', 1);
-    }
-
-    return TRUE;
+    return parent::prepareRow($row);
   }
+
 }

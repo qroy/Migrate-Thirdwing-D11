@@ -6,7 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Source plugin for D6 users with profile data and roles.
+ * Source plugin for D6 users with Content Profile data and roles.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_user",
@@ -19,16 +19,13 @@ class D6ThirdwingUser extends SqlBase {
    * {@inheritdoc}
    */
   public function query() {
+    // Simple user query without profile joins
     $query = $this->select('users', 'u')
       ->fields('u', [
-        'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status'
+        'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status', 'picture'
       ])
       ->condition('u.uid', 0, '>'); // Skip anonymous user
 
-    // Join with profile values to get all profile fields
-    $query->leftJoin('profile_values', 'pv', 'u.uid = pv.uid');
-    $query->leftJoin('profile_fields', 'pf', 'pv.fid = pf.fid');
-    
     return $query->orderBy('u.uid');
   }
 
@@ -45,7 +42,9 @@ class D6ThirdwingUser extends SqlBase {
       'access' => $this->t('Last access timestamp'),
       'login' => $this->t('Last login timestamp'),
       'status' => $this->t('Status'),
-      // Profile fields
+      'picture' => $this->t('Picture file ID'),
+      
+      // Profile fields from Content Profile
       'field_voornaam_value' => $this->t('First name'),
       'field_achternaam_value' => $this->t('Last name'),
       'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
@@ -56,7 +55,7 @@ class D6ThirdwingUser extends SqlBase {
       'field_uitkoor_value' => $this->t('Left choir'),
       'field_adres_value' => $this->t('Address'),
       'field_postcode_value' => $this->t('Postal code'),
-      'field_woonplaats' => $this->t('City'),
+      'field_woonplaats_value' => $this->t('City'),
       'field_telefoon_value' => $this->t('Phone'),
       'field_mobiel_value' => $this->t('Mobile'),
       'field_sleepgroep_1_value' => $this->t('Transport group'),
@@ -74,6 +73,7 @@ class D6ThirdwingUser extends SqlBase {
       'field_positie_value' => $this->t('Position'),
       'field_functie_lw_value' => $this->t('Member recruitment function'),
       'field_functie_fl_value' => $this->t('Facilities function'),
+      'field_emailbewaking_value' => $this->t('Email monitoring'),
     ];
   }
 
@@ -95,31 +95,103 @@ class D6ThirdwingUser extends SqlBase {
   public function prepareRow(Row $row) {
     $uid = $row->getSourceProperty('uid');
 
-    // Get all profile field values for this user
-    $profile_query = $this->select('profile_values', 'pv')
-      ->fields('pv', ['value'])
-      ->fields('pf', ['name'])
-      ->condition('pv.uid', $uid);
-    $profile_query->leftJoin('profile_fields', 'pf', 'pv.fid = pf.fid');
+    // Add user roles
+    $this->addUserRoles($row, $uid);
     
-    $profile_values = $profile_query->execute();
+    // Add Content Profile fields
+    $this->addContentProfileFields($row, $uid);
     
-    // Set profile field values on the row
-    foreach ($profile_values as $profile_value) {
-      if (!empty($profile_value['name'])) {
-        $row->setSourceProperty($profile_value['name'] . '_value', $profile_value['value']);
-      }
-    }
+    // Add user picture information
+    $this->addUserPicture($row);
 
-    // Get user roles for this user (used by the roles process plugin)
-    $roles_query = $this->select('users_roles', 'ur')
+    return parent::prepareRow($row);
+  }
+
+  /**
+   * Add user roles to the row.
+   */
+  protected function addUserRoles(Row $row, $uid) {
+    $role_query = $this->select('users_roles', 'ur')
       ->fields('ur', ['rid'])
       ->condition('ur.uid', $uid);
     
-    $user_roles = $roles_query->execute()->fetchCol();
-    $row->setSourceProperty('user_roles', $user_roles);
+    $rids = $role_query->execute()->fetchCol();
+    
+    if (!empty($rids)) {
+      // Get role names
+      $role_name_query = $this->select('role', 'r')
+        ->fields('r', ['rid', 'name'])
+        ->condition('r.rid', $rids, 'IN');
+      
+      $roles = $role_name_query->execute()->fetchAllKeyed();
+      $row->setSourceProperty('roles', $roles);
+      $row->setSourceProperty('role_ids', $rids);
+      $row->setSourceProperty('user_roles', $rids);
+    }
+  }
 
-    return parent::prepareRow($row);
+  /**
+   * Add Content Profile fields to the row.
+   */
+  protected function addContentProfileFields(Row $row, $uid) {
+    // Check for 'profiel' content type (your profile content type)
+    $profile_types = ['profiel'];
+    
+    foreach ($profile_types as $type) {
+      $table_name = 'content_type_' . $type;
+      
+      if ($this->getDatabase()->schema()->tableExists($table_name)) {
+        // Find the profile node for this user
+        $profile_query = $this->select('node', 'n')
+          ->fields('n', ['nid', 'vid'])
+          ->condition('n.type', $type)
+          ->condition('n.uid', $uid)
+          ->condition('n.status', 1)
+          ->range(0, 1); // Only get the first profile node
+        
+        $profile_node = $profile_query->execute()->fetchAssoc();
+        
+        if ($profile_node) {
+          // Get profile field data from content_type_profiel table
+          $content_query = $this->select($table_name, 'ct')
+            ->condition('ct.nid', $profile_node['nid'])
+            ->condition('ct.vid', $profile_node['vid']);
+          
+          // Get all fields from the content_type_profiel table
+          $content_query->fields('ct');
+          $content_data = $content_query->execute()->fetchAssoc();
+          
+          if ($content_data) {
+            // Filter and set only the field_ columns
+            foreach ($content_data as $field_name => $value) {
+              if (strpos($field_name, 'field_') === 0) {
+                // Set the field value on the row
+                $row->setSourceProperty($field_name, $value);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Add user picture information to the row.
+   */
+  protected function addUserPicture(Row $row) {
+    $picture_fid = $row->getSourceProperty('picture');
+    
+    if (!empty($picture_fid)) {
+      $file_query = $this->select('files', 'f')
+        ->fields('f', ['fid', 'filename', 'filepath', 'filemime', 'filesize'])
+        ->condition('f.fid', $picture_fid);
+      
+      $file_data = $file_query->execute()->fetchAssoc();
+      
+      if ($file_data) {
+        $row->setSourceProperty('picture_file', $file_data);
+      }
+    }
   }
 
 }

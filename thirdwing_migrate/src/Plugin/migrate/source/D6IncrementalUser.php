@@ -6,9 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Drupal 6 incremental user source plugin.
- *
- * Supports timestamp-based filtering for incremental user migration.
+ * Source plugin for D6 incremental user updates with Content Profile data.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_incremental_user",
@@ -21,118 +19,43 @@ class D6IncrementalUser extends SqlBase {
    * {@inheritdoc}
    */
   public function query() {
+    // Simple user query without profile joins
     $query = $this->select('users', 'u')
       ->fields('u', [
-        'uid', 'name', 'pass', 'mail', 'mode', 'sort', 'threshold',
-        'theme', 'signature', 'signature_format', 'created', 'access',
-        'login', 'status', 'timezone', 'language', 'picture', 'init', 'data'
+        'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status', 'picture'
       ])
-      ->condition('uid', 0, '>'); // Exclude anonymous user
+      ->condition('u.uid', 0, '>'); // Skip anonymous user
 
-    // Apply incremental filtering
-    $this->applyIncrementalFilters($query);
+    // Add incremental filtering based on configuration
+    $since_access = $this->configuration['since_access'] ?? null;
+    $since_created = $this->configuration['since_created'] ?? null;
+    $date_range = $this->configuration['date_range'] ?? [];
+    $include_blocked = $this->configuration['include_blocked'] ?? false;
 
-    return $query;
-  }
-
-  /**
-   * Apply incremental filtering to the query.
-   */
-  protected function applyIncrementalFilters($query) {
-    $config = $this->configuration;
-
-    // Filter by login date (users who logged in since date)
-    if (!empty($config['since_login'])) {
-      $since_timestamp = $this->parseDateFilter($config['since_login']);
-      if ($since_timestamp) {
-        $query->condition('u.login', $since_timestamp, '>=');
-      }
+    // Filter by access time if specified
+    if (!empty($since_access)) {
+      $query->condition('u.access', strtotime($since_access), '>=');
     }
 
-    // Filter by access date (users who accessed site since date)
-    if (!empty($config['since_access'])) {
-      $since_timestamp = $this->parseDateFilter($config['since_access']);
-      if ($since_timestamp) {
-        $query->condition('u.access', $since_timestamp, '>=');
-      }
+    // Filter by created time if specified  
+    if (!empty($since_created)) {
+      $query->condition('u.created', strtotime($since_created), '>=');
     }
 
-    // Filter by created date (new user registrations)
-    if (!empty($config['since_created'])) {
-      $since_timestamp = $this->parseDateFilter($config['since_created']);
-      if ($since_timestamp) {
-        $query->condition('u.created', $since_timestamp, '>=');
-      }
+    // Filter by date range if specified
+    if (!empty($date_range['start'])) {
+      $query->condition('u.created', strtotime($date_range['start']), '>=');
+    }
+    if (!empty($date_range['end'])) {
+      $query->condition('u.created', strtotime($date_range['end']), '<=');
     }
 
-    // Filter by date range
-    if (!empty($config['date_range'])) {
-      $range = $config['date_range'];
-      if (!empty($range['start'])) {
-        $start_timestamp = $this->parseDateFilter($range['start']);
-        if ($start_timestamp) {
-          $query->condition('u.access', $start_timestamp, '>=');
-        }
-      }
-      if (!empty($range['end'])) {
-        $end_timestamp = $this->parseDateFilter($range['end']);
-        if ($end_timestamp) {
-          $query->condition('u.access', $end_timestamp, '<=');
-        }
-      }
-    }
-
-    // Filter by specific user IDs
-    if (!empty($config['user_ids'])) {
-      $uids = is_array($config['user_ids']) ? $config['user_ids'] : [$config['user_ids']];
-      $query->condition('u.uid', $uids, 'IN');
-    }
-
-    // Filter by user status
-    if (isset($config['status'])) {
-      $query->condition('u.status', $config['status']);
-    }
-
-    // Only active users by default
-    if (empty($config['include_blocked'])) {
+    // Filter blocked users unless explicitly included
+    if (!$include_blocked) {
       $query->condition('u.status', 1);
     }
-  }
 
-  /**
-   * Parse date filter string into timestamp.
-   */
-  protected function parseDateFilter($date_filter) {
-    if (empty($date_filter)) {
-      return NULL;
-    }
-
-    // Handle Unix timestamps
-    if (is_numeric($date_filter)) {
-      return (int) $date_filter;
-    }
-
-    // Handle relative date shortcuts
-    $shortcuts = [
-      'yesterday' => '-1 day',
-      'last-week' => '-1 week',
-      'last-month' => '-1 month',
-      'last-year' => '-1 year',
-      'today' => '0 days',
-    ];
-
-    if (isset($shortcuts[$date_filter])) {
-      $date_filter = $shortcuts[$date_filter];
-    }
-
-    // Try to parse as strtotime
-    $timestamp = strtotime($date_filter);
-    if ($timestamp === FALSE) {
-      \Drupal::logger('thirdwing_migrate')->warning('Invalid date filter: @filter', ['@filter' => $date_filter]);
-      return NULL;
-    }
-
-    return $timestamp;
+    return $query->orderBy('u.uid');
   }
 
   /**
@@ -143,22 +66,43 @@ class D6IncrementalUser extends SqlBase {
       'uid' => $this->t('User ID'),
       'name' => $this->t('Username'),
       'pass' => $this->t('Password'),
-      'mail' => $this->t('Email address'),
-      'mode' => $this->t('Comment display mode'),
-      'sort' => $this->t('Comment sort order'),
-      'threshold' => $this->t('Comment threshold'),
-      'theme' => $this->t('Default theme'),
-      'signature' => $this->t('Signature'),
-      'signature_format' => $this->t('Signature format'),
-      'created' => $this->t('Registration timestamp'),
+      'mail' => $this->t('Email'),
+      'created' => $this->t('Created timestamp'),
       'access' => $this->t('Last access timestamp'),
       'login' => $this->t('Last login timestamp'),
       'status' => $this->t('Status'),
-      'timezone' => $this->t('Timezone'),
-      'language' => $this->t('Language'),
-      'picture' => $this->t('Picture'),
-      'init' => $this->t('Initial email address'),
-      'data' => $this->t('User data'),
+      'picture' => $this->t('Picture file ID'),
+      
+      // Profile fields from Content Profile
+      'field_voornaam_value' => $this->t('First name'),
+      'field_achternaam_value' => $this->t('Last name'),
+      'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
+      'field_geboortedatum_value' => $this->t('Birth date'),
+      'field_geslacht_value' => $this->t('Gender'),
+      'field_karrijder_value' => $this->t('Car driver'),
+      'field_lidsinds_value' => $this->t('Member since'),
+      'field_uitkoor_value' => $this->t('Left choir'),
+      'field_adres_value' => $this->t('Address'),
+      'field_postcode_value' => $this->t('Postal code'),
+      'field_woonplaats_value' => $this->t('City'),
+      'field_telefoon_value' => $this->t('Phone'),
+      'field_mobiel_value' => $this->t('Mobile'),
+      'field_sleepgroep_1_value' => $this->t('Transport group'),
+      'field_koor_value' => $this->t('Choir'),
+      'field_notes_value' => $this->t('Notes'),
+      'field_notes_format' => $this->t('Notes format'),
+      'field_functie_bestuur_value' => $this->t('Board function'),
+      'field_functie_mc_value' => $this->t('Music committee function'),
+      'field_functie_concert_value' => $this->t('Concert function'),
+      'field_functie_feest_value' => $this->t('Party function'),
+      'field_functie_regie_value' => $this->t('Direction function'),
+      'field_functie_ir_value' => $this->t('Internal relations function'),
+      'field_functie_pr_value' => $this->t('Public relations function'),
+      'field_functie_tec_value' => $this->t('Technical function'),
+      'field_positie_value' => $this->t('Position'),
+      'field_functie_lw_value' => $this->t('Member recruitment function'),
+      'field_functie_fl_value' => $this->t('Facilities function'),
+      'field_emailbewaking_value' => $this->t('Email monitoring'),
     ];
   }
 
@@ -169,6 +113,7 @@ class D6IncrementalUser extends SqlBase {
     return [
       'uid' => [
         'type' => 'integer',
+        'alias' => 'u',
       ],
     ];
   }
@@ -179,18 +124,13 @@ class D6IncrementalUser extends SqlBase {
   public function prepareRow(Row $row) {
     $uid = $row->getSourceProperty('uid');
 
-    // Skip user 0 (anonymous)
-    if ($uid == 0) {
-      return FALSE;
-    }
-
     // Add user roles
     $this->addUserRoles($row, $uid);
-
-    // Add profile fields
-    $this->addProfileFields($row, $uid);
-
-    // Add user picture file info
+    
+    // Add Content Profile fields
+    $this->addContentProfileFields($row, $uid);
+    
+    // Add user picture information
     $this->addUserPicture($row);
 
     return parent::prepareRow($row);
@@ -215,78 +155,46 @@ class D6IncrementalUser extends SqlBase {
       $roles = $role_name_query->execute()->fetchAllKeyed();
       $row->setSourceProperty('roles', $roles);
       $row->setSourceProperty('role_ids', $rids);
+      $row->setSourceProperty('user_roles', $rids);
     }
-  }
-
-  /**
-   * Add profile fields to the row.
-   */
-  protected function addProfileFields(Row $row, $uid) {
-    // Check if profile module table exists
-    if ($this->getDatabase()->schema()->tableExists('profile_values')) {
-      $profile_query = $this->select('profile_values', 'pv')
-        ->fields('pv', ['fid', 'value'])
-        ->condition('pv.uid', $uid);
-      
-      $profile_query->leftJoin('profile_fields', 'pf', 'pv.fid = pf.fid');
-      $profile_query->addField('pf', 'name');
-      $profile_query->addField('pf', 'type');
-      
-      $profile_data = $profile_query->execute()->fetchAll();
-      
-      foreach ($profile_data as $field) {
-        $field_name = 'field_' . $field->name;
-        if ($field->type == 'date') {
-          // Handle date fields
-          $row->setSourceProperty($field_name . '_value', $field->value);
-        } else {
-          $row->setSourceProperty($field_name . '_value', $field->value);
-        }
-      }
-    }
-
-    // Also check for CCK profile fields if Content Profile module was used
-    $this->addContentProfileFields($row, $uid);
   }
 
   /**
    * Add Content Profile fields to the row.
    */
   protected function addContentProfileFields(Row $row, $uid) {
-    // Check if there are any profile content types
-    $profile_types = ['profile', 'user_profile', 'member_profile'];
+    // Check for 'profiel' content type (your profile content type)
+    $profile_types = ['profiel'];
     
     foreach ($profile_types as $type) {
       $table_name = 'content_type_' . $type;
       
       if ($this->getDatabase()->schema()->tableExists($table_name)) {
-        // Find nodes of this profile type for this user
+        // Find the profile node for this user
         $profile_query = $this->select('node', 'n')
           ->fields('n', ['nid', 'vid'])
           ->condition('n.type', $type)
           ->condition('n.uid', $uid)
-          ->condition('n.status', 1);
+          ->condition('n.status', 1)
+          ->range(0, 1); // Only get the first profile node
         
-        $profile_nodes = $profile_query->execute()->fetchAll();
+        $profile_node = $profile_query->execute()->fetchAssoc();
         
-        foreach ($profile_nodes as $profile_node) {
-          // Get profile field data
+        if ($profile_node) {
+          // Get profile field data from content_type_profiel table
           $content_query = $this->select($table_name, 'ct')
-            ->condition('ct.nid', $profile_node->nid)
-            ->condition('ct.vid', $profile_node->vid);
+            ->condition('ct.nid', $profile_node['nid'])
+            ->condition('ct.vid', $profile_node['vid']);
           
-          // Get all field columns
-          $columns = $this->getDatabase()->schema()->getFieldNames($table_name);
-          $field_columns = array_filter($columns, function($col) {
-            return strpos($col, 'field_') === 0;
-          });
+          // Get all fields from the content_type_profiel table
+          $content_query->fields('ct');
+          $content_data = $content_query->execute()->fetchAssoc();
           
-          if (!empty($field_columns)) {
-            $content_query->fields('ct', $field_columns);
-            $content_data = $content_query->execute()->fetchAssoc();
-            
-            if ($content_data) {
-              foreach ($content_data as $field_name => $value) {
+          if ($content_data) {
+            // Filter and set only the field_ columns
+            foreach ($content_data as $field_name => $value) {
+              if (strpos($field_name, 'field_') === 0) {
+                // Set the field value on the row
                 $row->setSourceProperty($field_name, $value);
               }
             }
@@ -297,7 +205,7 @@ class D6IncrementalUser extends SqlBase {
   }
 
   /**
-   * Add user picture information.
+   * Add user picture information to the row.
    */
   protected function addUserPicture(Row $row) {
     $picture_fid = $row->getSourceProperty('picture');

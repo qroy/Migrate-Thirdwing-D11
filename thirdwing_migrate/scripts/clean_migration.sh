@@ -1,6 +1,14 @@
 #!/bin/bash
 
-echo "=== Cleaning up conflicting migrations ==="
+# Script directory and paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODULE_DIR="$(dirname "$SCRIPT_DIR")"
+DRUPAL_ROOT="$(cd "$MODULE_DIR/../../../.." && pwd)"
+
+# Ensure we're in the Drupal root
+cd "$DRUPAL_ROOT"
+
+echo "Cleaning Thirdwing Migration Data..."
 
 # Verwijder problematische services file als die bestaat
 if [ -f "modules/custom/thirdwing_migrate/thirdwing_migrate.services.yml" ]; then

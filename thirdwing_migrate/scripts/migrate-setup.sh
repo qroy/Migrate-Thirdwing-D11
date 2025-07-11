@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Script directory and paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODULE_DIR="$(dirname "$SCRIPT_DIR")"
+DRUPAL_ROOT="$(cd "$MODULE_DIR/../../../.." && pwd)"
+
+# Ensure we're in the Drupal root
+cd "$DRUPAL_ROOT"
+
 echo "Setting up Thirdwing Migration Environment..."
 
 # Install required modules

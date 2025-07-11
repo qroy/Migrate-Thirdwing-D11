@@ -159,3 +159,194 @@ function thirdwing_migrate_requirements($phase) {
   
   return $requirements;
 }
+/**
+ * Get the last incremental sync timestamp.
+ *
+ * @return int
+ *   Unix timestamp of last sync, or 0 if never synced.
+ */
+function thirdwing_migrate_get_last_sync() {
+  return \Drupal::state()->get('thirdwing_migrate.last_sync', 0);
+}
+
+/**
+ * Set the last incremental sync timestamp.
+ *
+ * @param int $timestamp
+ *   Unix timestamp to store.
+ */
+function thirdwing_migrate_set_last_sync($timestamp = NULL) {
+  if ($timestamp === NULL) {
+    $timestamp = time();
+  }
+  \Drupal::state()->set('thirdwing_migrate.last_sync', $timestamp);
+}
+
+/**
+ * Get sync history.
+ *
+ * @param int $limit
+ *   Number of history entries to return.
+ *
+ * @return array
+ *   Array of sync history entries.
+ */
+function thirdwing_migrate_get_sync_history($limit = 10) {
+  $history = \Drupal::state()->get('thirdwing_migrate.sync_history', []);
+  return array_slice($history, -$limit);
+}
+
+/**
+ * Add entry to sync history.
+ *
+ * @param array $entry
+ *   Sync history entry to add.
+ */
+function thirdwing_migrate_add_sync_history($entry) {
+  $history = \Drupal::state()->get('thirdwing_migrate.sync_history', []);
+  $history[] = $entry;
+  
+  // Keep only last 20 entries
+  $history = array_slice($history, -20);
+  
+  \Drupal::state()->set('thirdwing_migrate.sync_history', $history);
+}
+
+/**
+ * Check if source database is accessible.
+ *
+ * @return bool
+ *   TRUE if source database is accessible, FALSE otherwise.
+ */
+function thirdwing_migrate_check_source_database() {
+  try {
+    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $user_count = $database->query('SELECT COUNT(*) FROM {users}')->fetchField();
+    return is_numeric($user_count) && $user_count > 0;
+  } catch (\Exception $e) {
+    \Drupal::logger('thirdwing_migrate')->error('Source database check failed: @error', ['@error' => $e->getMessage()]);
+    return FALSE;
+  }
+}
+
+/**
+ * Get content change statistics from source database.
+ *
+ * @param int $since_timestamp
+ *   Unix timestamp to check changes since.
+ * @param array $content_types
+ *   Array of content types to check, or empty for all.
+ *
+ * @return array
+ *   Array of content type statistics.
+ */
+function thirdwing_migrate_get_change_statistics($since_timestamp = NULL, array $content_types = []) {
+  try {
+    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $stats = [];
+    
+    // Default content types if none specified
+    if (empty($content_types)) {
+      $content_types = ['activiteit', 'nieuws', 'pagina', 'repertoire', 'foto', 'locatie', 'vriend'];
+    }
+    
+    foreach ($content_types as $type) {
+      $query = $database->select('node', 'n')
+        ->condition('n.type', $type);
+      
+      if ($since_timestamp) {
+        $query->condition('n.changed', $since_timestamp, '>=');
+      }
+      
+      $count = $query->countQuery()->execute()->fetchField();
+      $stats[$type] = $count;
+    }
+    
+    return $stats;
+  } catch (\Exception $e) {
+    \Drupal::logger('thirdwing_migrate')->error('Failed to get change statistics: @error', ['@error' => $e->getMessage()]);
+    return [];
+  }
+}
+
+/**
+ * Get user activity statistics from source database.
+ *
+ * @param int $since_timestamp
+ *   Unix timestamp to check activity since.
+ *
+ * @return array
+ *   Array with user activity statistics.
+ */
+function thirdwing_migrate_get_user_activity_statistics($since_timestamp = NULL) {
+  try {
+    $database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    $stats = [];
+    
+    // Users who logged in since timestamp
+    $login_query = $database->select('users', 'u')
+      ->condition('u.uid', 0, '>')
+      ->condition('u.status', 1);
+    
+    if ($since_timestamp) {
+      $login_query->condition('u.login', $since_timestamp, '>=');
+    }
+    
+    $stats['logins'] = $login_query->countQuery()->execute()->fetchField();
+    
+    // Users who accessed site since timestamp
+    $access_query = $database->select('users', 'u')
+      ->condition('u.uid', 0, '>')
+      ->condition('u.status', 1);
+    
+    if ($since_timestamp) {
+      $access_query->condition('u.access', $since_timestamp, '>=');
+    }
+    
+    $stats['access'] = $access_query->countQuery()->execute()->fetchField();
+    
+    // New user registrations
+    $new_query = $database->select('users', 'u')
+      ->condition('u.uid', 0, '>')
+      ->condition('u.status', 1);
+    
+    if ($since_timestamp) {
+      $new_query->condition('u.created', $since_timestamp, '>=');
+    }
+    
+    $stats['new_users'] = $new_query->countQuery()->execute()->fetchField();
+    
+    return $stats;
+  } catch (\Exception $e) {
+    \Drupal::logger('thirdwing_migrate')->error('Failed to get user activity statistics: @error', ['@error' => $e->getMessage()]);
+    return [];
+  }
+}
+
+/**
+ * Implements hook_cron().
+ * 
+ * Optionally run incremental sync during cron (if enabled).
+ */
+function thirdwing_migrate_cron() {
+  // Check if automatic sync is enabled
+  $auto_sync = \Drupal::config('thirdwing_migrate.settings')->get('auto_sync_enabled');
+  
+  if ($auto_sync) {
+    $interval = \Drupal::config('thirdwing_migrate.settings')->get('auto_sync_interval', 86400); // Default 24 hours
+    $last_sync = thirdwing_migrate_get_last_sync();
+    
+    if ((time() - $last_sync) >= $interval) {
+      \Drupal::logger('thirdwing_migrate')->info('Running automatic incremental sync via cron.');
+      
+      try {
+        // Run a basic incremental sync
+        $migration_manager = \Drupal::service('plugin.manager.migration');
+        // Implementation would call the sync commands programmatically
+        // This is a placeholder - full implementation would be more complex
+      } catch (\Exception $e) {
+        \Drupal::logger('thirdwing_migrate')->error('Automatic sync failed: @error', ['@error' => $e->getMessage()]);
+      }
+    }
+  }
+}

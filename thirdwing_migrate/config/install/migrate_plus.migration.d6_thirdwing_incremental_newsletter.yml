@@ -1,0 +1,92 @@
+id: d6_thirdwing_incremental_newsletter
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Newsletters (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: nieuwsbrief
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: nieuwsbrief
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: nieuwsbrief
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Newsletter-specific fields
+  field_uitgave_nummer: field_uitgave_nummer_value
+  field_uitgave_datum: field_uitgave_datum_value
+  field_jaargang: field_jaargang_value
+  
+  # Newsletter file
+  field_nieuwsbrief:
+    plugin: migration_lookup
+    migration: d6_thirdwing_file
+    source: field_nieuwsbrief_fid
+  
+  # Content references
+  field_inhoud:
+    plugin: sub_process
+    source: content_references
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: 
+          - d6_thirdwing_news
+          - d6_thirdwing_activity
+          - d6_thirdwing_repertoire
+          - d6_thirdwing_page
+        source: field_inhoud_nid
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_news
+    - d6_thirdwing_activity
+    - d6_thirdwing_repertoire
+    - d6_thirdwing_page

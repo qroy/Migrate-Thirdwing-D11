@@ -58,9 +58,10 @@ show_usage() {
     echo "  $0 --reset                Reset sync tracking"
     echo ""
     echo "Related Scripts:"
-    echo "  ./scripts/migrate-execute.sh     Run full initial migration"
-    echo "  ./scripts/migrate-setup.sh       Setup migration environment"
-    echo "  ./scripts/migration-status-check.sh  Check migration status"
+    echo "  ./scripts/migrate-execute.sh           Run full initial migration"
+    echo "  ./scripts/setup-complete-migration.sh  Complete system setup"
+    echo "  ./scripts/migration-status-check.sh    Check migration status"
+    echo "  ./scripts/validate-migration.php       Comprehensive validation"
     echo ""
 }
 
@@ -286,6 +287,8 @@ if [ $? -eq 0 ]; then
         echo "Other useful commands:"
         echo "- Check full migration status: $SCRIPT_DIR/migration-status-check.sh"
         echo "- Run full migration: $SCRIPT_DIR/migrate-execute.sh"
+        echo "- Complete system setup: $SCRIPT_DIR/setup-complete-migration.sh"
+        echo "- Validate system: drush php:script $SCRIPT_DIR/validate-migration.php"
     fi
 else
     echo -e "${RED}Sync failed. Check the output above for errors.${NC}"

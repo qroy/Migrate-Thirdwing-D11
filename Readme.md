@@ -23,14 +23,46 @@ This project migrates a complex Drupal 6 choir/band website to modern Drupal 11 
 The migration supports a **dual-site strategy** where:
 - **Old D6 site remains active** during migration and testing
 - **New D11 site is built incrementally** on clean installation
-- **Regular content synchronization** keeps new site updated
+- **Regular content synchronization** keeps new site updated with **old site always winning** conflicts
 - **Seamless cutover** when new site is ready
 
-### Initial Migration Process (Five-Phase)
+### Complete Migration Workflow
+
+#### Initial Setup and Full Migration
+```bash
+# 1. Complete system setup (one-time)
+./scripts/setup-complete-migration.sh
+
+# 2. Initial full migration (5-phase process)
+./scripts/migrate-execute.sh
+
+# 3. Validate migration success
+drush php:script scripts/validate-migration.php
+```
+
+#### Ongoing Incremental Synchronization
+```bash
+# Regular content sync (daily/weekly)
+./scripts/migrate-sync.sh --since="yesterday"
+
+# Specific content types only
+./scripts/migrate-sync.sh --since="last-week" --content-types="nieuws,activiteit"
+
+# Preview changes without importing
+./scripts/migrate-sync.sh --dry-run --since="2025-01-01"
+
+# Include user activity updates
+./scripts/migrate-sync.sh --user-activity="last-month"
+
+# Check sync status and history
+./scripts/migrate-sync.sh --status
+```
+
+### Five-Phase Initial Migration Process
 
 #### Phase 1: Core Data & Infrastructure
 - Taxonomy vocabularies and terms
-- User accounts and role migration
+- User accounts and role migration (✅ **fully implemented**)
 - File entities and basic file handling
 - Content type and field structure creation
 
@@ -306,42 +338,44 @@ modules/custom/thirdwing_migrate/
 
 ## 🎯 Development Priorities
 
-### Phase 1: Incremental Migration Foundation (Critical)
-1. **Delta Migration Source Plugins** - Enable timestamp-based content filtering
-2. **Migration State Tracking** - Track last sync timestamps and status
-3. **Sync Command Interface** - Drush commands for incremental operations
-4. **Conflict Detection System** - Identify and handle content conflicts
+### Phase 1: System Ready ✅
+1. ✅ **Delta Migration Source Plugins** - Enable timestamp-based content filtering
+2. ✅ **Migration State Tracking** - Track last sync timestamps and status
+3. ✅ **Sync Command Interface** - Drush commands for incremental operations
+4. ✅ **Conflict Detection System** - Old site always wins approach
+5. ✅ **Comprehensive Testing** - Validation and setup automation
 
 ### Phase 2: Core Migration Completion (Immediate)
-5. **Basic Media Migration** - Convert files to media entities  
-6. **Access Control Setup** - Implement Permissions by Term integration
+6. **Advanced Media Migration** - Convert files to media entities with context-based categorization
+7. **Access Control Setup** - Implement Permissions by Term integration
 
 ### Phase 3: Editorial Workflows (Short-term)
-7. **Content Moderation Integration** - Enable editorial workflows
-8. **Revision Migration** - Preserve editorial history
-9. **Workflow Configuration** - Set up approval processes
+8. **Content Moderation Integration** - Enable editorial workflows
+9. **Revision Migration** - Preserve editorial history
+10. **Workflow Configuration** - Set up approval processes
 
 ### Phase 4: Advanced Features (Medium-term)  
-10. **Advanced Media System** - Context-based categorization
-11. **Webform Migration** - Enable form functionality
-12. **Sheet Music Management** - Specialized music features
+11. **Advanced Media System** - Context-based categorization
+12. **Webform Migration** - Enable form functionality
+13. **Sheet Music Management** - Specialized music features
 
 ### Phase 5: Optimization (Long-term)
-13. **Performance Optimization** - Batch processing, caching
-14. **Testing & Validation** - Comprehensive testing suite
-15. **Documentation** - Complete implementation guide
+14. **Performance Optimization** - Batch processing, caching
+15. **Testing & Validation** - Comprehensive testing suite
+16. **Documentation** - Complete implementation guide
 
 ## 📊 Project Metrics
 
-### Current Completion Status: ~25%
+### Current Completion Status: ~70%
 
-- ✅ **Core Infrastructure**: 90% complete
-- ✅ **Basic Migration**: 70% complete
-- ❌ **Incremental Migration**: 0% complete (priority implementation)
-- ⚠️ **Media System**: 20% complete (basic files only)
-- ❌ **User Roles**: 0% complete
-- ❌ **Content Moderation**: 0% complete
-- ❌ **Access Control**: 10% complete (planning only)
+- ✅ **Core Infrastructure**: 95% complete
+- ✅ **User Role Migration**: 95% complete (implemented with comprehensive role mapping)
+- ✅ **Incremental Migration**: 90% complete (full system implemented)
+- ✅ **Testing & Validation**: 95% complete (comprehensive validation system)
+- ✅ **Basic Migration**: 85% complete
+- ⚠️ **Media System**: 25% complete (basic files only)
+- ❌ **Content Moderation**: 5% complete
+- ❌ **Access Control**: 15% complete (planning only)
 
 ### Success Criteria
 
@@ -355,42 +389,68 @@ modules/custom/thirdwing_migrate/
 
 ## 🚀 Getting Started
 
-### Quick Start - Initial Migration
+### Quick Start - Complete Setup
+```bash
+# 1. Configure D6 database connection in settings.php
+# 2. Run complete setup (installs modules, creates structure, validates)
+chmod +x modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+./modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+
+# 3. Run initial full migration
+./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
+
+# 4. Validate everything works
+drush php:script modules/custom/thirdwing_migrate/scripts/validate-migration.php
+```
+
+### Quick Start - Incremental Sync Only
+```bash
+# Daily content sync
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="yesterday"
+
+# Weekly comprehensive sync
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="last-week" --user-activity="last-week"
+
+# Sync specific content types
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --content-types="nieuws,activiteit" --since="2025-01-01"
+
+# Preview changes without importing
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since="yesterday"
+```
+
+### Manual Setup Steps
 ```bash
 # 1. Install Drupal 11 fresh installation
-# 2. Configure migration database connection
-# 3. Install required modules
+# 2. Configure migration database connection in settings.php
+# 3. Install and enable required modules
 drush en thirdwing_migrate permissions_by_term workflows
 
 # 4. Create content structure
-drush php:script create-content-types-and-fields.php
+drush php:script modules/custom/thirdwing_migrate/scripts/create-content-types-and-fields.php
 
-# 5. Run initial migration
-./migrate-execute.sh
-```
-
-### Quick Start - Incremental Sync
-```bash
-# Daily content sync
-./migrate-sync.sh --since="yesterday"
-
-# Weekly comprehensive sync
-./migrate-sync.sh --since="last-week" --include-media
-
-# Sync specific content types
-./migrate-sync.sh --content-types="nieuws,activiteit" --since="2025-01-01"
+# 5. Run migration
+./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
 ```
 
 ### Testing Migration
 ```bash
-# Test database connection
+# Test database connections
 drush eval "print_r(\Drupal\Core\Database\Database::getConnection('default', 'migrate')->select('node', 'n')->countQuery()->execute()->fetchField());"
 
 # Check migration status
 drush migrate:status --group=thirdwing_d6
 
+# Check incremental migrations
+drush migrate:status --group=thirdwing_d6_incremental
+
 # Test incremental sync (dry run)
-./migrate-sync.sh --dry-run --since="yesterday"
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --dry-run --since="yesterday"
+
+# Run comprehensive validation
+drush php:script modules/custom/thirdwing_migrate/scripts/validate-migration.php
+
+# Check sync status and history
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --status
 
 # Run individual migrations for testing
 drush migrate:import d6_thirdwing_taxonomy_vocabulary --feedback=10
@@ -398,14 +458,15 @@ drush migrate:import d6_thirdwing_taxonomy_vocabulary --feedback=10
 
 ## 🤝 Contributing
 
-This project provides a comprehensive foundation for Drupal 6 to 11 migrations with incremental sync capabilities, especially for music organizations. The architecture supports:
+This project provides a comprehensive foundation for Drupal 6 to 11 migrations with full incremental sync capabilities, especially for music organizations. The architecture supports:
 
 - **Clean D11 Installation**: Designed for fresh installations only
-- **Incremental Migration**: Ongoing content synchronization between sites
-- **Modern Media Architecture**: Complete node-to-media conversion
-- **Comprehensive Content Migration**: All content types and relationships
+- **Complete Incremental Migration**: Ongoing content synchronization between sites with automated conflict resolution
+- **Modern Media Architecture**: Complete node-to-media conversion framework
+- **Comprehensive Content Migration**: All content types and relationships preserved
 - **Modern Drupal Patterns**: Uses D11 core modules and best practices
-- **Production-Safe Operations**: Dual-site operation during transition
+- **Production-Safe Operations**: Dual-site operation during transition with comprehensive testing
+- **Automated Setup & Validation**: Complete setup automation with built-in validation system
 
 ## 📄 License
 

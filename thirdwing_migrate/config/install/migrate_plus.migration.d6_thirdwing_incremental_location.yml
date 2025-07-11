@@ -1,0 +1,72 @@
+id: d6_thirdwing_incremental_location
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Locations (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: locatie
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: locatie
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: locatie
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Location-specific fields
+  field_adres: field_adres_value
+  field_postcode: field_postcode_value
+  field_woonplaats: field_woonplaats_value
+  field_telefoon: field_telefoon_value
+  
+  # Website link
+  field_l_routelink/uri: field_l_routelink_url
+  field_l_routelink/title: field_l_routelink_title
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term

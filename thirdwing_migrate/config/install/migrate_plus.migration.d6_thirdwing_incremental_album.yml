@@ -1,0 +1,88 @@
+id: d6_thirdwing_incremental_album
+migration_group: thirdwing_d6_incremental
+migration_tags:
+  - 'Drupal 6'
+  - 'Content'
+  - 'Incremental'
+
+label: 'D6 Photo Albums (Incremental)'
+
+source:
+  plugin: d6_thirdwing_incremental_node
+  node_type: foto
+  since_changed: null
+  date_range: {}
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: foto
+  overwrite_properties: true
+
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: foto
+  title: title
+  
+  uid:
+    plugin: author_lookup_with_fallback
+    migration: d6_thirdwing_user
+    source: uid
+    fallback_uid: 1
+  
+  status: status
+  created: created
+  changed: changed
+  
+  body/value: body
+  body/format:
+    plugin: static_map
+    source: format
+    map:
+      1: basic_html
+      3: full_html
+      6: basic_html
+    default_value: basic_html
+  
+  # Album-specific fields
+  field_datum: field_datum_value
+  field_audio_type: field_audio_type_value
+  
+  # Related activity reference
+  field_ref_activiteit:
+    plugin: sub_process
+    source: related_activities
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_activity
+        source: field_ref_activiteit_nid
+  
+  # Images
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: field_afbeeldingen_fid
+
+  # Taxonomy terms
+  field_taxonomy:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+
+migration_dependencies:
+  required:
+    - d6_thirdwing_user
+    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_activity

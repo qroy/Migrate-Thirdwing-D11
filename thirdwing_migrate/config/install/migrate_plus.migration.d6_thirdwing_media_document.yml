@@ -1,39 +1,103 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_document.yml
 id: d6_thirdwing_media_document
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Media'
+  - 'Document'
+
+label: 'D6 Document Media Entities'
 
 source:
-  plugin: d6_file
+  plugin: d6_thirdwing_document_files
   constants:
     bundle: document
-  type: document
 
 destination:
   plugin: 'entity:media'
   default_bundle: document
 
 process:
+  # Basic entity properties
   mid: fid
   bundle: constants/bundle
-  name: filename
+  
+  # Name field migration - use D6 field_files description with filename fallback
+  name:
+    plugin: thirdwing_file_description
+    source:
+      - field_files_description
+      - filename
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
+  
   status:
     plugin: default_value
     default_value: 1
+  
   created: timestamp
   changed: timestamp
+  
+  # Main document field
   field_media_document/target_id:
     plugin: migration_lookup
     migration: d6_thirdwing_file
     source: fid
+    no_stub: true
+  
+  # Document classification based on source and file type
+  field_document_soort:
+    plugin: thirdwing_document_classifier
+    source:
+      - source_content_type
+      - file_extension
+      - repertoire_attachment
+  
+  # Verslag type mapping (only for verslagen)
+  field_verslag_type:
+    plugin: static_map
+    source: verslag_taxonomy_term
+    bypass: true
+    map:
+      82: 'algemene_ledenvergadering'
+      83: 'bestuursvergadering'
+      84: 'combo_overleg'
+      85: 'concertcommissie'
+      86: 'jaarevaluatie_dirigent'
+      87: 'jaarverslag'
+      88: 'overige_vergadering'
+      89: 'vergadering_muziekcommissie'
+  
+  # Document date (required for verslagen)
+  field_datum:
+    plugin: format_date
+    source: document_date
+    from_format: 'Y-m-d H:i:s'
+    to_format: 'Y-m-d'
+  
+  # Related repertoire (required for partituren)
+  field_gerelateerd_repertoire:
+    plugin: migration_lookup
+    migration: d6_thirdwing_repertoire
+    source: repertoire_nid
+    no_stub: true
+  
+  # Access control
+  field_toegang:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: access_terms
+    no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_file
     - d6_thirdwing_user
+  optional:
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_repertoire

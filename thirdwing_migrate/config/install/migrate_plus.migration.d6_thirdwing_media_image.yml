@@ -1,13 +1,18 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_image.yml
 id: d6_thirdwing_media_image
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Media'
+  - 'Image'
+
+label: 'D6 Image Media Entities'
 
 source:
   plugin: d6_file
   constants:
     bundle: image
+  # Filter for image files
   type: image
 
 destination:
@@ -15,27 +20,65 @@ destination:
   default_bundle: image
 
 process:
+  # Basic entity properties
   mid: fid
   bundle: constants/bundle
-  name: filename
+  
+  # Name field migration - use filename or alt text
+  name:
+    plugin: callback
+    callable: trim
+    source: filename
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
+  
   status:
     plugin: default_value
     default_value: 1
+  
   created: timestamp
   changed: timestamp
+  
+  # Main image field
   field_media_image/target_id:
     plugin: migration_lookup
     migration: d6_thirdwing_file
     source: fid
-  field_media_image/alt: filename
-  field_media_image/title: filename
+    no_stub: true
+  
+  field_media_image/alt:
+    plugin: default_value
+    default_value: ''
+  
+  field_media_image/title:
+    plugin: callback
+    callable: trim
+    source: filename
+  
+  # EXIF date extraction - primary source
+  field_datum:
+    plugin: callback
+    callable: 'Drupal\thirdwing_migrate\Plugin\migrate\process\ExtractExifDate::transform'
+    source: 
+      - filepath
+      - field_exif_datetimeoriginal
+      - timestamp
+  
+  # Access control
+  field_toegang:
+    plugin: migration_lookup
+    migration: d6_thirdwing_taxonomy_term
+    source: access_terms
+    no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_file
     - d6_thirdwing_user
+  optional:
+    - d6_thirdwing_taxonomy_term

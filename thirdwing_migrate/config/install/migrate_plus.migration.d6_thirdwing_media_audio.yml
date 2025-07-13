@@ -1,61 +1,99 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_audio.yml
 id: d6_thirdwing_media_audio
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Media'
+  - 'Audio'
+
+label: 'D6 Audio Media Entities'
 
 source:
   plugin: d6_thirdwing_audio
+  constants:
+    bundle: audio
 
 destination:
   plugin: 'entity:media'
   default_bundle: audio
 
 process:
+  # Basic entity properties
   mid: nid
-  bundle:
-    plugin: default_value
-    default_value: audio
+  bundle: constants/bundle
+  
+  # Name field from D6 node title
   name: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
+  
   status: status
   created: created
   changed: changed
   
-  field_media_audio_file/target_id:
+  # Main audio file field - handle multiple files
+  field_media_audio_file:
+    plugin: sub_process
+    source: audio_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: fid
+        no_stub: true
+  
+  # Audio metadata from D6 audio content type
+  field_datum:
+    plugin: format_date
+    source: field_datum_value
+    from_format: 'Y-m-d H:i:s'
+    to_format: 'Y-m-d'
+  
+  field_audio_type:
+    plugin: callback
+    callable: trim
+    source: field_audio_type_value
+  
+  field_audio_uitvoerende:
+    plugin: callback
+    callable: trim
+    source: field_audio_uitvoerende_value
+  
+  field_audio_bijz:
+    plugin: callback
+    callable: trim
+    source: field_audio_bijz_value
+  
+  # Related content references using consistent naming
+  field_gerelateerd_activiteit:
     plugin: migration_lookup
-    migration: d6_thirdwing_file
-    source: field_mp3_fid
+    migration: d6_thirdwing_activiteit
+    source: field_ref_activiteit_nid
+    no_stub: true
   
-  field_media_type: field_audio_type_value
-  field_media_notes: field_audio_bijz_value
-  field_media_performer: field_audio_uitvoerende_value
-  field_media_date: field_datum_value
-  
-  field_media_activity:
-    plugin: migration_lookup
-    migration: d6_thirdwing_activity
-    source: related_activities
-  
-  field_media_repertoire:
+  field_gerelateerd_repertoire:
     plugin: migration_lookup
     migration: d6_thirdwing_repertoire
     source: field_repertoire_nid
+    no_stub: true
   
-  field_media_access:
+  # Access control
+  field_toegang:
     plugin: migration_lookup
     migration: d6_thirdwing_taxonomy_term
     source: access_terms
+    no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_file
     - d6_thirdwing_user
-    - d6_thirdwing_taxonomy_term
   optional:
-    - d6_thirdwing_activity
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_activiteit
     - d6_thirdwing_repertoire

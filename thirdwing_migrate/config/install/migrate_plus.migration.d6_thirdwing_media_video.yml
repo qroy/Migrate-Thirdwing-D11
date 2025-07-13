@@ -1,10 +1,12 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_video.yml
 id: d6_thirdwing_media_video
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Media'
   - 'Video'
-  - 'YouTube'
+
+label: 'D6 Video Media Entities'
 
 source:
   plugin: d6_thirdwing_video
@@ -16,54 +18,73 @@ destination:
   default_bundle: video
 
 process:
+  # Basic entity properties
   mid: nid
   bundle: constants/bundle
+  
+  # Name field from D6 node title
   name: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
     no_stub: true
+  
   status: status
   created: created
   changed: changed
   
-  # Main video field - YouTube oEmbed URL
-  field_media_oembed_video: field_video_embed
-  
-  # Video metadata
-  field_media_video_title: field_video_title
-  field_media_video_description: field_video_description
-  
-  # Media type classification (same as audio)
-  field_media_type: field_audio_type_value
-  
-  # Performance details
-  field_media_performer: field_audio_uitvoerende_value
-  field_media_date: field_datum_value
-  
-  # Handle null values in notes field
-  field_media_notes:
+  # Main video field - oEmbed URL (YouTube, Vimeo, etc.)
+  field_media_oembed_video:
     plugin: callback
     callable: trim
-    source: field_video_description
+    source: field_video_embed_url
   
-  # Related content references
-  field_media_activity:
+  # Alternative video file field for local files
+  field_media_video_file:
+    plugin: sub_process
+    source: video_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_file
+        source: fid
+        no_stub: true
+  
+  # Video metadata from D6 video content type
+  field_datum:
+    plugin: format_date
+    source: field_datum_value
+    from_format: 'Y-m-d H:i:s'
+    to_format: 'Y-m-d'
+  
+  field_audio_type:
+    plugin: callback
+    callable: trim
+    source: field_audio_type_value
+  
+  field_audio_uitvoerende:
+    plugin: callback
+    callable: trim
+    source: field_audio_uitvoerende_value
+  
+  # Related content references using consistent naming
+  field_gerelateerd_activiteit:
     plugin: migration_lookup
-    migration: d6_thirdwing_activity
-    source: related_activities
+    migration: d6_thirdwing_activiteit
+    source: field_ref_activiteit_nid
     no_stub: true
   
-  field_media_repertoire:
+  field_gerelateerd_repertoire:
     plugin: migration_lookup
     migration: d6_thirdwing_repertoire
     source: field_repertoire_nid
     no_stub: true
   
   # Access control
-  field_media_access:
+  field_toegang:
     plugin: migration_lookup
     migration: d6_thirdwing_taxonomy_term
     source: access_terms
@@ -71,8 +92,9 @@ process:
 
 migration_dependencies:
   required:
+    - d6_thirdwing_file
     - d6_thirdwing_user
-    - d6_thirdwing_taxonomy_term
   optional:
-    - d6_thirdwing_activity
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_activiteit
     - d6_thirdwing_repertoire

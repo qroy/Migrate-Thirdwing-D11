@@ -18,7 +18,7 @@ destination:
   default_bundle: document
 
 process:
-  # Basic entity properties
+  # FIXED: Use file-based IDs to maintain consistency with file entities
   mid: fid
   bundle: constants/bundle
   

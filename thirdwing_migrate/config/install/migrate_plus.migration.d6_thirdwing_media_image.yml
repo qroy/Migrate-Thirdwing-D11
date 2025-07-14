@@ -20,7 +20,7 @@ destination:
   default_bundle: image
 
 process:
-  # Basic entity properties
+  # FIXED: Use file-based IDs to avoid conflicts with node-based media
   mid: fid
   bundle: constants/bundle
   
@@ -60,10 +60,9 @@ process:
     callable: trim
     source: filename
   
-  # EXIF date extraction - primary source
+  # FIXED: Use proper plugin syntax instead of callback
   field_datum:
-    plugin: callback
-    callable: 'Drupal\thirdwing_migrate\Plugin\migrate\process\ExtractExifDate::transform'
+    plugin: extract_exif_date
     source: 
       - filepath
       - field_exif_datetimeoriginal

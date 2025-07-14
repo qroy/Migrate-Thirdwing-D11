@@ -12,14 +12,21 @@ source:
   plugin: d6_thirdwing_audio
   constants:
     bundle: audio
+    # Use high ID range to avoid conflicts with file-based media
+    id_prefix: 'audio_'
 
 destination:
   plugin: 'entity:media'
   default_bundle: audio
 
 process:
-  # Basic entity properties
-  mid: nid
+  # FIXED: Use prefixed IDs to avoid conflicts with file-based media IDs
+  mid:
+    plugin: concat
+    source:
+      - constants/id_prefix
+      - nid
+  
   bundle: constants/bundle
   
   # Name field from D6 node title
@@ -72,7 +79,7 @@ process:
   # Related content references using consistent naming
   field_gerelateerd_activiteit:
     plugin: migration_lookup
-    migration: d6_thirdwing_activiteit
+    migration: d6_thirdwing_activity
     source: field_ref_activiteit_nid
     no_stub: true
   
@@ -95,5 +102,5 @@ migration_dependencies:
     - d6_thirdwing_user
   optional:
     - d6_thirdwing_taxonomy_term
-    - d6_thirdwing_activiteit
+    - d6_thirdwing_activity
     - d6_thirdwing_repertoire

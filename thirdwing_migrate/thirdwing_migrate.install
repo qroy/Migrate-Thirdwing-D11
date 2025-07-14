@@ -36,7 +36,6 @@ function thirdwing_migrate_uninstall() {
     'd6_thirdwing_page',
     'd6_thirdwing_album',
     'd6_thirdwing_friend',
-    'd6_thirdwing_newsletter',
     'd6_thirdwing_comment',
   ];
 

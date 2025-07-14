@@ -44,7 +44,6 @@ drush migrate:import d6_thirdwing_news --feedback="100 items"
 drush migrate:import d6_thirdwing_page --feedback="50 items"
 drush migrate:import d6_thirdwing_album --feedback="50 items"
 drush migrate:import d6_thirdwing_friend --feedback="50 items"
-drush migrate:import d6_thirdwing_newsletter --feedback="20 items"
 drush migrate:import d6_thirdwing_comment --feedback="100 items"
 
 echo "Migration completed!"

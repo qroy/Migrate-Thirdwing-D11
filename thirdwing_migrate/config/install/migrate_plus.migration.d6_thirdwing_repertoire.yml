@@ -1,3 +1,4 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_repertoire.yml
 id: d6_thirdwing_repertoire
 migration_group: thirdwing_d6
 migration_tags:
@@ -52,15 +53,16 @@ process:
   field_audio_seizoen: field_audio_seizoen_value
   field_klapper: field_klapper_value
   
-  # Sheet music files (using actual D6 field names)
+  # FIXED: Sheet music files now reference DOCUMENT MEDIA ENTITIES
   field_partij_band:
     plugin: sub_process
     source: partij_band_files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_partij_band_fid
+        no_stub: true
   
   field_partij_koor_l:
     plugin: sub_process
@@ -68,8 +70,9 @@ process:
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_partij_koor_l_fid
+        no_stub: true
   
   field_partij_tekst:
     plugin: sub_process
@@ -77,20 +80,35 @@ process:
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_partij_tekst_fid
+        no_stub: true
   
-  # MP3 audio files (using actual D6 field name)
+  # FIXED: MP3 audio files now reference AUDIO MEDIA ENTITIES
   field_mp3:
     plugin: sub_process
     source: mp3_files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_audio
         source: field_mp3_fid
+        no_stub: true
+
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES
+  field_afbeeldingen:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_file
+    - d6_thirdwing_media_document
+    - d6_thirdwing_media_audio
+    - d6_thirdwing_media_image

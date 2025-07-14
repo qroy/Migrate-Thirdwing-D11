@@ -1,3 +1,4 @@
+# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_activity.yml
 id: d6_thirdwing_activity
 migration_group: thirdwing_d6
 migration_tags:
@@ -58,49 +59,53 @@ process:
   field_l_bijzonderheden: field_l_bijzonderheden_value
   field_bijzonderheden: field_bijzonderheden_value
   
-  # REMOVED: field_ledeninfo - does not exist in D6
-  
   # Location reference (actual D6 field)
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
+    no_stub: true
   
   # Program references (actual D6 field)
   field_programma2:
     plugin: migration_lookup
     migration: d6_thirdwing_repertoire
     source: field_programma2_nid
+    no_stub: true
   
-  # Images (actual D6 field)
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES
   field_afbeeldingen:
     plugin: sub_process
     source: images
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Background image (actual D6 field)
+  # FIXED: Background image now references IMAGE MEDIA ENTITY
   field_background:
     plugin: migration_lookup
-    migration: d6_thirdwing_file
+    migration: d6_thirdwing_media_image
     source: field_background_fid
+    no_stub: true
   
-  # Files (actual D6 field)
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES
   field_files:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_files_fid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
     - d6_thirdwing_location
     - d6_thirdwing_repertoire
-    - d6_thirdwing_file
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

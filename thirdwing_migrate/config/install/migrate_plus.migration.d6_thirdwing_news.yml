@@ -4,9 +4,10 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 News'
+
 source:
-  plugin: d6_node
-  node_type: nieuws
+  plugin: d6_thirdwing_news
 
 destination:
   plugin: 'entity:node'
@@ -40,33 +41,57 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # CORRECTED: Using actual D6 field - field_datum (not field_news_datum)
+  # News date field
   field_datum: field_datum_value
   
-  # REMOVED: field_news_workflow - does not exist in D6
-  # Note: Workflow states should be handled in source plugin via workflow_stateid
+  # Workflow state handling
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      1: published
+      2: draft
+      3: pending_review
+    default_value: published
   
-  # Images (actual D6 field)
-  field_afbeeldingen:
+  # Media references - Images
+  field_media_images:
     plugin: sub_process
     source: images
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
   
-  # Files (actual D6 field)
-  field_files:
+  # Media references - Files/Documents
+  field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration:
+          - d6_thirdwing_media_document
+          - d6_thirdwing_media_audio
+          - d6_thirdwing_media_video
         source: field_files_fid
+
+  # Taxonomy terms (access control)
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_file
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document
+    - d6_thirdwing_media_audio
+    - d6_thirdwing_media_video

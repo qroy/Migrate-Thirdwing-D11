@@ -4,9 +4,10 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Pages'
+
 source:
-  plugin: d6_node
-  node_type: pagina
+  plugin: d6_thirdwing_page
 
 destination:
   plugin: 'entity:node'
@@ -19,11 +20,13 @@ process:
     plugin: default_value
     default_value: pagina
   title: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+  
   status: status
   created: created
   changed: changed
@@ -37,7 +40,50 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+  
+  # Page-specific fields
+  field_pagina_type: field_pagina_type_value
+  field_menu_weight: field_menu_weight_value
+  field_show_in_menu: field_show_in_menu_value
+  
+  # Media references - Images
+  field_media_images:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+  
+  # Media references - Files/Documents
+  field_media_documents:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: 
+          - d6_thirdwing_media_document
+          - d6_thirdwing_media_audio
+          - d6_thirdwing_media_video
+        source: field_files_fid
+
+  # Taxonomy terms (access control)
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document
+    - d6_thirdwing_media_audio
+    - d6_thirdwing_media_video

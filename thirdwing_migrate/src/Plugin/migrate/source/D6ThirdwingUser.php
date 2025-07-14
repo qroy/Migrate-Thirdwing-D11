@@ -6,7 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Source plugin for D6 users with Content Profile data and roles.
+ * Source plugin for D6 users with Content Profile data and roles - CORRECTED VERSION.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_user",
@@ -19,7 +19,6 @@ class D6ThirdwingUser extends SqlBase {
    * {@inheritdoc}
    */
   public function query() {
-    // Simple user query without profile joins
     $query = $this->select('users', 'u')
       ->fields('u', [
         'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status', 'picture'
@@ -44,7 +43,12 @@ class D6ThirdwingUser extends SqlBase {
       'status' => $this->t('Status'),
       'picture' => $this->t('Picture file ID'),
       
-      // Profile fields from Content Profile
+      // User roles
+      'roles' => $this->t('User roles (name => rid)'),
+      'role_ids' => $this->t('User role IDs'),
+      'user_roles' => $this->t('User roles array'),
+      
+      // Profile fields from Content Profile (content_type_profiel)
       'field_voornaam_value' => $this->t('First name'),
       'field_achternaam_value' => $this->t('Last name'),
       'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
@@ -74,6 +78,9 @@ class D6ThirdwingUser extends SqlBase {
       'field_functie_lw_value' => $this->t('Member recruitment function'),
       'field_functie_fl_value' => $this->t('Facilities function'),
       'field_emailbewaking_value' => $this->t('Email monitoring'),
+      
+      // Picture file data
+      'picture_file' => $this->t('Picture file data'),
     ];
   }
 
@@ -93,6 +100,10 @@ class D6ThirdwingUser extends SqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
+    if (parent::prepareRow($row) === FALSE) {
+      return FALSE;
+    }
+
     $uid = $row->getSourceProperty('uid');
 
     // Add user roles
@@ -104,7 +115,7 @@ class D6ThirdwingUser extends SqlBase {
     // Add user picture information
     $this->addUserPicture($row);
 
-    return parent::prepareRow($row);
+    return TRUE;
   }
 
   /**
@@ -127,51 +138,72 @@ class D6ThirdwingUser extends SqlBase {
       $row->setSourceProperty('roles', $roles);
       $row->setSourceProperty('role_ids', $rids);
       $row->setSourceProperty('user_roles', $rids);
+    } else {
+      // Set empty arrays if no additional roles
+      $row->setSourceProperty('roles', []);
+      $row->setSourceProperty('role_ids', []);
+      $row->setSourceProperty('user_roles', []);
     }
   }
 
   /**
    * Add Content Profile fields to the row.
+   * CORRECTED: Uses verified table name and proper error handling.
    */
   protected function addContentProfileFields(Row $row, $uid) {
-    // Check for 'profiel' content type (your profile content type)
-    $profile_types = ['profiel'];
+    // CORRECTED: Use the confirmed table name from schema
+    $table_name = 'content_type_profiel';
     
-    foreach ($profile_types as $type) {
-      $table_name = 'content_type_' . $type;
+    // Check if the profile table exists
+    if (!$this->getDatabase()->schema()->tableExists($table_name)) {
+      \Drupal::logger('thirdwing_migrate')->warning('Profile table @table does not exist', [
+        '@table' => $table_name
+      ]);
+      return;
+    }
+
+    try {
+      // Find the profile node for this user
+      $profile_query = $this->select('node', 'n')
+        ->fields('n', ['nid', 'vid'])
+        ->condition('n.type', 'profiel')
+        ->condition('n.uid', $uid)
+        ->condition('n.status', 1)
+        ->range(0, 1); // Only get the first profile node
       
-      if ($this->getDatabase()->schema()->tableExists($table_name)) {
-        // Find the profile node for this user
-        $profile_query = $this->select('node', 'n')
-          ->fields('n', ['nid', 'vid'])
-          ->condition('n.type', $type)
-          ->condition('n.uid', $uid)
-          ->condition('n.status', 1)
-          ->range(0, 1); // Only get the first profile node
+      $profile_node = $profile_query->execute()->fetchAssoc();
+      
+      if ($profile_node) {
+        // Get profile field data from content_type_profiel table
+        $content_query = $this->select($table_name, 'ctp')
+          ->condition('ctp.nid', $profile_node['nid'])
+          ->condition('ctp.vid', $profile_node['vid']);
         
-        $profile_node = $profile_query->execute()->fetchAssoc();
+        // Get all fields from the content_type_profiel table
+        $content_query->fields('ctp');
+        $content_data = $content_query->execute()->fetchAssoc();
         
-        if ($profile_node) {
-          // Get profile field data from content_type_profiel table
-          $content_query = $this->select($table_name, 'ct')
-            ->condition('ct.nid', $profile_node['nid'])
-            ->condition('ct.vid', $profile_node['vid']);
-          
-          // Get all fields from the content_type_profiel table
-          $content_query->fields('ct');
-          $content_data = $content_query->execute()->fetchAssoc();
-          
-          if ($content_data) {
-            // Filter and set only the field_ columns
-            foreach ($content_data as $field_name => $value) {
-              if (strpos($field_name, 'field_') === 0) {
-                // Set the field value on the row
-                $row->setSourceProperty($field_name, $value);
-              }
+        if ($content_data) {
+          // Set all profile field values on the row
+          foreach ($content_data as $field_name => $value) {
+            // Skip the primary keys
+            if (!in_array($field_name, ['nid', 'vid'])) {
+              $row->setSourceProperty($field_name, $value);
             }
           }
         }
+      } else {
+        // Log that no profile was found for this user
+        \Drupal::logger('thirdwing_migrate')->info('No profile node found for user @uid', [
+          '@uid' => $uid
+        ]);
       }
+    } catch (\Exception $e) {
+      // Log errors but don't fail the migration
+      \Drupal::logger('thirdwing_migrate')->error('Error loading profile for user @uid: @error', [
+        '@uid' => $uid,
+        '@error' => $e->getMessage()
+      ]);
     }
   }
 
@@ -182,16 +214,23 @@ class D6ThirdwingUser extends SqlBase {
     $picture_fid = $row->getSourceProperty('picture');
     
     if (!empty($picture_fid)) {
-      $file_query = $this->select('files', 'f')
-        ->fields('f', ['fid', 'filename', 'filepath', 'filemime', 'filesize'])
-        ->condition('f.fid', $picture_fid);
-      
-      $file_data = $file_query->execute()->fetchAssoc();
-      
-      if ($file_data) {
-        $row->setSourceProperty('picture_file', $file_data);
+      try {
+        $file_query = $this->select('files', 'f')
+          ->fields('f', ['fid', 'filename', 'filepath', 'filemime', 'filesize'])
+          ->condition('f.fid', $picture_fid);
+        
+        $file_data = $file_query->execute()->fetchAssoc();
+        
+        if ($file_data) {
+          $row->setSourceProperty('picture_file', $file_data);
+        }
+      } catch (\Exception $e) {
+        \Drupal::logger('thirdwing_migrate')->warning('Error loading picture file @fid for user @uid: @error', [
+          '@fid' => $picture_fid,
+          '@uid' => $row->getSourceProperty('uid'),
+          '@error' => $e->getMessage()
+        ]);
       }
     }
   }
-
 }

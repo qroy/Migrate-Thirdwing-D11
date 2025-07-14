@@ -4,9 +4,10 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Programs'
+
 source:
-  plugin: d6_node
-  node_type: programma
+  plugin: d6_thirdwing_program
 
 destination:
   plugin: 'entity:node'
@@ -19,11 +20,13 @@ process:
     plugin: default_value
     default_value: programma
   title: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+  
   status: status
   created: created
   changed: changed
@@ -40,8 +43,9 @@ process:
   
   # Program-specific fields
   field_datum: field_datum_value
+  field_prog_type: field_prog_type_value
   
-  # Location reference - targeting Dutch content type
+  # Location reference
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
@@ -57,18 +61,29 @@ process:
         migration: d6_thirdwing_repertoire
         source: field_repertoire_nid
   
-  # Additional program items
+  # Program items (self-reference)
   field_programma2:
     plugin: sub_process
     source: program_items
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_repertoire
+        migration: d6_thirdwing_program
         source: field_programma2_nid
+
+  # Taxonomy terms (access control)
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
     - d6_thirdwing_repertoire

@@ -3,8 +3,34 @@ type: module
 description: 'Migration module for Thirdwing D6 to D11'
 package: Custom
 core_version_requirement: ^10 || ^11
+
 dependencies:
+  # Core migration modules
   - migrate
   - migrate_drupal
+  
+  # Contrib migration modules
   - migrate_plus
   - migrate_tools
+  - migrate_upgrade
+  
+  # Core content & media modules
+  - media
+  - file
+  - image
+  - taxonomy
+  - menu_ui
+  - field
+  - text
+  - datetime
+  - link
+  - path
+  
+  # Core workflow modules
+  - workflows
+  - content_moderation
+  
+  # Contrib access control modules
+  - permissions_by_term
+  - permissions_by_entity
+  - field_permissions

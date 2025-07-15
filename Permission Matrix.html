@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thirdwing - Complete Permission Matrix</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .sticky { position: sticky; }
+        .z-10 { z-index: 10; }
+        .min-w-96 { min-width: 24rem; }
+        .min-w-20 { min-width: 5rem; }
+        .break-all { word-break: break-all; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="w-full max-w-full mx-auto p-6 bg-gray-50">
+        <div class="bg-white rounded-lg shadow-lg">
+            <!-- Header -->
+            <div class="bg-blue-600 text-white p-6 rounded-t-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <h1 class="text-2xl font-bold">Thirdwing - Complete Permission Matrix</h1>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div class="bg-blue-700 p-3 rounded">
+                        <div class="flex items-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path></svg>
+                            <span class="font-semibold">Total Roles:</span>
+                        </div>
+                        <div class="text-xl font-bold">16</div>
+                    </div>
+                    <div class="bg-blue-700 p-3 rounded">
+                        <div class="flex items-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span class="font-semibold">Total Permissions:</span>
+                        </div>
+                        <div class="text-xl font-bold">291</div>
+                    </div>
+                    <div class="bg-blue-700 p-3 rounded">
+                        <span class="font-semibold">Categories:</span>
+                        <div class="text-xl font-bold">9</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Summary -->
+            <div class="p-6 border-b bg-gray-50">
+                <h3 class="font-semibold mb-4">Role Permission Summary</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Anonymous User</div>
+                        <div class="text-xs text-gray-600">RID: 1</div>
+                        <div class="text-lg font-bold text-blue-600">64 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Authenticated User</div>
+                        <div class="text-xs text-gray-600">RID: 2</div>
+                        <div class="text-lg font-bold text-blue-600">65 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Lid</div>
+                        <div class="text-xs text-gray-600">RID: 3</div>
+                        <div class="text-lg font-bold text-blue-600">35 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Vriend</div>
+                        <div class="text-xs text-gray-600">RID: 4</div>
+                        <div class="text-lg font-bold text-blue-600">2 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Beheerder</div>
+                        <div class="text-xs text-gray-600">RID: 6</div>
+                        <div class="text-lg font-bold text-blue-600">214 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Bestuur</div>
+                        <div class="text-xs text-gray-600">RID: 7</div>
+                        <div class="text-lg font-bold text-blue-600">25 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Muziekcommissie</div>
+                        <div class="text-xs text-gray-600">RID: 8</div>
+                        <div class="text-lg font-bold text-blue-600">6 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Feestcommissie</div>
+                        <div class="text-xs text-gray-600">RID: 10</div>
+                        <div class="text-lg font-bold text-blue-600">2 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Commissie IR</div>
+                        <div class="text-xs text-gray-600">RID: 11</div>
+                        <div class="text-lg font-bold text-blue-600">2 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Auteur</div>
+                        <div class="text-xs text-gray-600">RID: 12</div>
+                        <div class="text-lg font-bold text-blue-600">52 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Commissie Concerten</div>
+                        <div class="text-xs text-gray-600">RID: 13</div>
+                        <div class="text-lg font-bold text-blue-600">2 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Admin</div>
+                        <div class="text-xs text-gray-600">RID: 14</div>
+                        <div class="text-lg font-bold text-blue-600">11 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Commissie Koorregie</div>
+                        <div class="text-xs text-gray-600">RID: 15</div>
+                        <div class="text-lg font-bold text-blue-600">4 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Band</div>
+                        <div class="text-xs text-gray-600">RID: 16</div>
+                        <div class="text-lg font-bold text-blue-600">33 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Aspirant-lid</div>
+                        <div class="text-xs text-gray-600">RID: 21</div>
+                        <div class="text-lg font-bold text-blue-600">27 permissions</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="font-semibold text-sm">Dirigent</div>
+                        <div class="text-xs text-gray-600">RID: 22</div>
+                        <div class="text-lg font-bold text-blue-600">6 permissions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matrix Container -->
+            <div class="overflow-x-auto" id="matrixContainer">
+                <div class="p-8 text-center">
+                    <div class="text-lg">Loading permission matrix...</div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="p-6 bg-gray-50">
+                <h3 class="font-semibold mb-3">Permission Categories:</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                        <span>Administration</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
+                        <span>Content Editing</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-purple-500 rounded-full"></span>
+                        <span>Content Management</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+                        <span>Field Permissions</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span>Access & Viewing</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                        <span>Webforms</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-pink-500 rounded-full"></span>
+                        <span>User Management</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-teal-500 rounded-full"></span>
+                        <span>Comments</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
+                        <span>Other</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-600">
+                    <strong>Legend:</strong> ✅ = Permission granted, ❌ = Permission denied
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simplified permission data structure
+        const roles = [
+            { id: 1, name: "Anonymous User", permissions: ["access comments", "access content", "access site-wide contact form", "post comments", "search content", "view field_achternaam", "view field_achternaam_voorvoegsel", "view field_afbeeldingen", "view field_audio_bijz", "view field_audio_nummer", "view field_audio_seizoen", "view field_audio_type", "view field_audio_uitvoerende", "view field_background", "view field_datum", "view field_files", "view field_functie_bestuur", "view field_functie_concert", "view field_functie_feest", "view field_functie_fl", "view field_functie_ir", "view field_functie_lw", "view field_functie_mc", "view field_functie_pr", "view field_functie_regie", "view field_functie_tec", "view field_geboortedatum", "view field_geslacht", "view field_inhoud", "view field_jaargang", "view field_koor", "view field_l_adres", "view field_l_bijzonderheden", "view field_l_plaats", "view field_l_postcode", "view field_l_routelink", "view field_locatie", "view field_mp3", "view field_positie", "view field_ref_activiteit", "view field_rep_arr", "view field_rep_arr_jaar", "view field_rep_componist", "view field_rep_componist_jaar", "view field_rep_genre", "view field_rep_sinds", "view field_rep_uitv", "view field_rep_uitv_jaar", "view field_uitgave", "view field_video", "view field_voornaam", "view field_vriend_benaming", "view field_vriend_soort", "view field_vriend_tot", "view field_vriend_vanaf", "view field_website", "view field_woonplaats", "view imagecache ProfilePicture", "view imagecache nieuwsbrief", "view imagecache preview", "view imagecache thumbnail", "view imagecache vierkant", "view status messages", "view warning messages"] },
+            { id: 2, name: "Authenticated User", permissions: ["access content", "access own webform results", "access own webform submissions", "access site-wide contact form", "post comments", "search content", "view error messages", "view field_achternaam", "view field_achternaam_voorvoegsel", "view field_afbeeldingen", "view field_audio_bijz", "view field_audio_nummer", "view field_audio_seizoen", "view field_audio_type", "view field_audio_uitvoerende", "view field_background", "view field_datum", "view field_files", "view field_functie_bestuur", "view field_functie_concert", "view field_functie_feest", "view field_functie_fl", "view field_functie_ir", "view field_functie_lw", "view field_functie_mc", "view field_functie_pr", "view field_functie_regie", "view field_functie_tec", "view field_geslacht", "view field_inhoud", "view field_jaargang", "view field_koor", "view field_l_adres", "view field_l_bijzonderheden", "view field_l_plaats", "view field_l_postcode", "view field_l_routelink", "view field_locatie", "view field_mp3", "view field_positie", "view field_ref_activiteit", "view field_rep_arr", "view field_rep_arr_jaar", "view field_rep_componist", "view field_rep_componist_jaar", "view field_rep_genre", "view field_rep_sinds", "view field_rep_uitv", "view field_rep_uitv_jaar", "view field_uitgave", "view field_video", "view field_voornaam", "view field_vriend_benaming", "view field_vriend_soort", "view field_vriend_tot", "view field_vriend_vanaf", "view field_website", "view field_woonplaats", "view imagecache ProfilePicture", "view imagecache nieuwsbrief", "view imagecache preview", "view imagecache thumbnail", "view imagecache vierkant", "view status messages", "view warning messages"] },
+            { id: 3, name: "Lid", permissions: ["access comments", "edit field_video", "post comments", "post comments without approval", "use advanced search", "view field_adres", "view field_basgitaar", "view field_bijzonderheden", "view field_drums", "view field_geboortedatum", "view field_gitaar", "view field_huiswerk", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_lidsinds", "view field_mobiel", "view field_partij_koor_l", "view field_partij_tekst", "view field_postcode", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_telefoon", "view field_tijd_aanwezig", "view field_uitkoor", "view field_vervoer", "view status messages", "view warning messages"] },
+            { id: 4, name: "Vriend", permissions: ["view status messages", "view warning messages"] },
+            { id: 6, name: "Beheerder", permissions: ["access Pending tab", "access administration pages", "access all webform results", "access comments", "access imagefield_zip widget", "access site reports", "access user profiles", "administer comments", "administer menu", "administer nodes", "administer permissions", "administer site-wide contact form", "administer user pictures", "administer users", "bulk upload files with plupload", "change workflow state via node edit form", "clone node", "clone own nodes", "create activiteit content", "create audio content", "create foto content", "create locatie content", "create nieuws content", "create pagina content", "create profiel content", "create programma content", "create repertoire content", "create url aliases", "create verslag content", "create video content", "create vriend content", "delete all webform submissions", "delete any activiteit content", "delete any audio content", "delete any locatie content", "delete any nieuws content", "delete any pagina content", "delete any profiel content", "delete any programma content", "delete any repertoire content", "delete any verslag content", "delete any video content", "delete any vriend content", "delete own activiteit content", "delete own audio content", "delete own locatie content", "delete own nieuws content", "delete own pagina content", "delete own profiel content", "delete own programma content", "delete own repertoire content", "delete own verslag content", "delete own video content", "delete own vriend content", "edit all webform submissions", "edit any activiteit content", "edit any audio content", "edit any locatie content", "edit any nieuws content", "edit any pagina content", "edit any profiel content", "edit any programma content", "edit any repertoire content", "edit any verslag content", "edit any video content", "edit any vriend content", "edit field_achternaam", "edit field_achternaam_voorvoegsel", "edit field_adres", "edit field_afbeeldingen", "edit field_audio_bijz", "edit field_audio_nummer", "edit field_audio_seizoen", "edit field_audio_type", "edit field_audio_uitvoerende", "edit field_background", "edit field_basgitaar", "edit field_bijzonderheden", "edit field_datum", "edit field_drums", "edit field_emailbewaking", "edit field_files", "edit field_functie_bestuur", "edit field_functie_concert", "edit field_functie_feest", "edit field_functie_fl", "edit field_functie_ir", "edit field_functie_lw", "edit field_functie_mc", "edit field_functie_pr", "edit field_functie_regie", "edit field_functie_tec", "edit field_geboortedatum", "edit field_geslacht", "edit field_gitaar", "edit field_inhoud", "edit field_jaargang", "edit field_karrijder", "edit field_keyboard", "edit field_klapper", "edit field_kledingcode", "edit field_koor", "edit field_l_adres", "edit field_l_bijzonderheden", "edit field_l_plaats", "edit field_l_postcode", "edit field_l_routelink", "edit field_ledeninfo", "edit field_lidsinds", "edit field_locatie", "edit field_mobiel", "edit field_mp3", "edit field_notes", "edit field_partij_band", "edit field_partij_koor_l", "edit field_partij_tekst", "edit field_positie", "edit field_postcode", "edit field_prog_type", "edit field_programma2", "edit field_ref_activiteit", "edit field_rep_arr", "edit field_rep_arr_jaar", "edit field_rep_componist", "edit field_rep_componist_jaar", "edit field_rep_genre", "edit field_rep_sinds", "edit field_rep_uitv", "edit field_rep_uitv_jaar", "edit field_repertoire", "edit field_sleepgroep", "edit field_sleepgroep_1", "edit field_sleepgroep_aanwezig", "edit field_sleepgroep_terug", "edit field_telefoon", "edit field_tijd_aanwezig", "edit field_uitgave", "edit field_uitkoor", "edit field_vervoer", "edit field_video", "edit field_voornaam", "edit field_vriend_benaming", "edit field_vriend_lengte", "edit field_vriend_soort", "edit field_vriend_tot", "edit field_vriend_vanaf", "edit field_website", "edit field_woonplaats", "edit own activiteit content", "edit own audio content", "edit own locatie content", "edit own nieuws content", "edit own pagina content", "edit own profiel content", "edit own programma content", "edit own repertoire content", "edit own verslag content", "edit own video content", "edit own vriend content", "edit revisions", "edit workflow log", "notify of path changes", "post comments", "post comments without approval", "publish revisions", "publish revisions of any activiteit content", "publish revisions of any audio content", "publish revisions of any pagina content", "publish revisions of own activiteit content", "publish revisions of own nieuws content", "publish revisions of own pagina content", "schedule workflow transitions", "select different theme", "use admin toolbar", "use advanced search", "view field_adres", "view field_basgitaar", "view field_bijzonderheden", "view field_drums", "view field_emailbewaking", "view field_geboortedatum", "view field_gitaar", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_lidsinds", "view field_mobiel", "view field_notes", "view field_partij_band", "view field_partij_koor_l", "view field_partij_tekst", "view field_postcode", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_telefoon", "view field_tijd_aanwezig", "view field_uitkoor", "view field_vervoer", "view revision status messages", "view revisions of any activiteit content", "view revisions of any nieuws content", "view revisions of any pagina content", "view revisions of own activiteit content", "view revisions of own nieuws content", "view revisions of own pagina content", "view status messages", "view warning messages"] },
+            { id: 7, name: "Bestuur", permissions: ["access all webform results", "view field_adres", "view field_geboortedatum", "view field_gitaar", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_lidsinds", "view field_mobiel", "view field_postcode", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_telefoon", "view field_tijd_aanwezig", "view field_uitkoor", "view field_vervoer", "view status messages", "view warning messages"] },
+            { id: 8, name: "Muziekcommissie", permissions: ["access all webform results", "view field_partij_band", "view field_partij_koor_l", "view field_partij_tekst", "view status messages", "view warning messages"] },
+            { id: 10, name: "Feestcommissie", permissions: ["view status messages", "view warning messages"] },
+            { id: 11, name: "Commissie IR", permissions: ["view status messages", "view warning messages"] },
+            { id: 12, name: "Auteur", permissions: ["access All tab", "access I Can Edit tab", "access I Can View tab", "access I Created tab", "access I Last Modified tab", "access Pending tab", "access Published tab", "access Unpublished tab", "access comments", "access imagefield_zip widget", "bulk upload files with plupload", "create foto content", "edit any activiteit content", "edit field_afbeeldingen", "edit field_datum", "edit field_files", "edit field_ref_activiteit", "edit field_video", "edit own activiteit content", "edit revisions", "post comments without approval", "use admin toolbar", "use advanced search", "view field_adres", "view field_basgitaar", "view field_bijzonderheden", "view field_drums", "view field_geboortedatum", "view field_gitaar", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_lidsinds", "view field_mobiel", "view field_postcode", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_telefoon", "view field_tijd_aanwezig", "view field_uitkoor", "view field_vervoer", "view revisions of any activiteit content", "view revisions of own activiteit content", "view status messages", "view warning messages"] },
+            { id: 13, name: "Commissie Concerten", permissions: ["view status messages", "view warning messages"] },
+            { id: 14, name: "Admin", permissions: ["access devel information", "administer pathauto", "administer permissions", "administer url aliases", "bulk upload files with plupload", "display source code", "execute php code", "switch users", "use admin toolbar", "view status messages", "view warning messages"] },
+            { id: 15, name: "Commissie Koorregie", permissions: ["view field_partij_koor_l", "view field_partij_tekst", "view status messages", "view warning messages"] },
+            { id: 16, name: "Band", permissions: ["edit field_basgitaar", "edit field_drums", "edit field_gitaar", "edit field_keyboard", "view field_adres", "view field_basgitaar", "view field_bijzonderheden", "view field_drums", "view field_geboortedatum", "view field_gitaar", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_lidsinds", "view field_mobiel", "view field_partij_band", "view field_partij_tekst", "view field_postcode", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_telefoon", "view field_tijd_aanwezig", "view field_uitkoor", "view field_vervoer", "view status messages", "view warning messages"] },
+            { id: 21, name: "Aspirant-lid", permissions: ["access comments", "post comments", "post comments without approval", "view field_basgitaar", "view field_bijzonderheden", "view field_drums", "view field_gitaar", "view field_huiswerk", "view field_karrijder", "view field_keyboard", "view field_klapper", "view field_kledingcode", "view field_ledeninfo", "view field_partij_koor_l", "view field_partij_tekst", "view field_positie", "view field_prog_type", "view field_programma2", "view field_repertoire", "view field_sleepgroep", "view field_sleepgroep_1", "view field_sleepgroep_aanwezig", "view field_sleepgroep_terug", "view field_tijd_aanwezig", "view field_vervoer", "view status messages", "view warning messages"] },
+            { id: 22, name: "Dirigent", permissions: ["edit any activiteit content", "edit field_huiswerk", "edit field_ledeninfo", "publish revisions of any activiteit content", "view revision status messages", "view revisions of any activiteit content"] }
+        ];
+
+        // Get all unique permissions
+        const allPermissions = new Set();
+        roles.forEach(role => {
+            role.permissions.forEach(perm => allPermissions.add(perm));
+        });
+        const sortedPermissions = Array.from(allPermissions).sort();
+
+        // Categorize permissions
+        function categorizePermission(perm) {
+            if (perm.includes('field_')) return 'fields';
+            if (perm.includes('content') || perm.includes('node')) return 'content';
+            if (perm.includes('user') || perm.includes('role')) return 'users';
+            if (perm.includes('admin') || perm.includes('site')) return 'admin';
+            if (perm.includes('webform')) return 'webforms';
+            if (perm.includes('comment')) return 'comments';
+            if (perm.includes('view') || perm.includes('access')) return 'access';
+            if (perm.includes('edit') || perm.includes('create') || perm.includes('delete')) return 'editing';
+            return 'other';
+        }
+
+        // Check if role has permission
+        function hasPermission(roleId, permission) {
+            const role = roles.find(r => r.id === roleId);
+            return role && role.permissions.includes(permission);
+        }
+
+        // Create matrix
+        function createMatrix() {
+            console.log('Creating matrix...');
+            
+            // Group permissions by category
+            const categories = {};
+            sortedPermissions.forEach(perm => {
+                const category = categorizePermission(perm);
+                if (!categories[category]) categories[category] = [];
+                categories[category].push(perm);
+            });
+
+            const categoryOrder = ['access', 'editing', 'content', 'fields', 'webforms', 'admin', 'users', 'comments', 'other'];
+            const categoryNames = {
+                access: 'Access & Viewing',
+                editing: 'Content Editing',
+                fields: 'Field Permissions',
+                content: 'Content Management',
+                webforms: 'Webforms',
+                users: 'User Management',
+                admin: 'Administration',
+                comments: 'Comments',
+                other: 'Other'
+            };
+
+            const categoryColors = {
+                admin: 'bg-red-100 border-red-200',
+                editing: 'bg-orange-100 border-orange-200',
+                content: 'bg-purple-100 border-purple-200',
+                fields: 'bg-blue-100 border-blue-200',
+                access: 'bg-green-100 border-green-200',
+                webforms: 'bg-yellow-100 border-yellow-200',
+                users: 'bg-pink-100 border-pink-200',
+                comments: 'bg-teal-100 border-teal-200',
+                other: 'bg-gray-100 border-gray-200'
+            };
+
+            const dotColors = {
+                admin: 'bg-red-500',
+                editing: 'bg-orange-500',
+                content: 'bg-purple-500',
+                fields: 'bg-blue-500',
+                access: 'bg-green-500',
+                webforms: 'bg-yellow-500',
+                users: 'bg-pink-500',
+                comments: 'bg-teal-500',
+                other: 'bg-gray-500'
+            };
+
+            let html = '';
+
+            categoryOrder.forEach(category => {
+                if (!categories[category]) return;
+                
+                const permissions = categories[category];
+                html += `
+                    <div class="border-b-2 ${categoryColors[category]}">
+                        <div class="p-4 font-semibold text-lg bg-white border-b">
+                            ${categoryNames[category]} (${permissions.length} permissions)
+                        </div>
+                        
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3 text-left font-semibold border-r bg-white sticky left-0 z-10 min-w-96">
+                                        Permission
+                                    </th>`;
+
+                roles.forEach(role => {
+                    html += `
+                        <th class="p-2 text-center font-semibold min-w-20 border-r">
+                            <div class="text-xs whitespace-nowrap">
+                                <div>${role.name}</div>
+                                <div class="text-gray-500">(${role.permissions.length})</div>
+                            </div>
+                        </th>`;
+                });
+
+                html += `
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                permissions.forEach((permission, index) => {
+                    const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="p-3 border-r font-mono text-sm bg-white sticky left-0 z-10">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-block w-2 h-2 rounded-full ${dotColors[category]}"></span>
+                                    <span class="break-all">${permission}</span>
+                                </div>
+                            </td>`;
+
+                    roles.forEach(role => {
+                        const roleHasPermission = hasPermission(role.id, permission);
+                        const icon = roleHasPermission ? 
+                            '<svg class="h-4 w-4 text-green-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' : 
+                            '<svg class="h-4 w-4 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                        html += `<td class="p-2 text-center border-r">${icon}</td>`;
+                    });
+
+                    html += '</tr>';
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>`;
+            });
+
+            document.getElementById('matrixContainer').innerHTML = html;
+            console.log('Matrix created successfully');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            console.log('Roles:', roles.length);
+            console.log('Total permissions:', sortedPermissions.length);
+            createMatrix();
+        });
+    </script>
+</body>
+</html>

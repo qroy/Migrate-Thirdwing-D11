@@ -1,4 +1,70 @@
-<?php
+# Setup workflow configuration
+drush php:script modules/custom/thirdwing_migrate/scripts/setup-content-moderation.php
+
+# Setup role permissions (content editing and viewing only)
+drush php:script modules/custom/thirdwing_migrate/scripts/setup-role-permissions.php
+```
+
+#### 4. Migration Execution
+```bash
+# Complete system setup (one-time)
+chmod +x modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+./modules/custom/thirdwing_migrate/scripts/setup-complete-migration.sh
+
+# Initial full migration
+./modules/custom/thirdwing_migrate/scripts/migrate-execute.sh
+
+# Regular incremental sync
+./modules/custom/thirdwing_migrate/scripts/migrate-sync.sh --since="yesterday"
+```
+
+## 🚀 Usage Examples
+
+### Permission Configuration
+The setup-role-permissions.php script configures focused content permissions:
+
+```bash
+# Run permission setup
+drush php:script modules/custom/thirdwing_migrate/scripts/setup-role-permissions.php
+
+# Verify permissions are configured
+drush user:role:list
+drush user:role:permissions beheerder
+```
+
+**Permission Categories Configured:**
+- **Content Creation**: `create [content_type] content`
+- **Content Editing**: `edit own [content_type] content`, `edit any [content_type] content`
+- **Content Deletion**: `delete own [content_type] content`, `delete any [content_type] content`
+- **Content Viewing**: `access content`, `view media`, `view own unpublished content`
+- **Field Permissions**: `view field_*`, `edit field_*` for all D6 fields
+- **Basic Access**: Status and warning messages
+
+**Content Types Covered:**
+- `activiteit` (Activities)
+- `audio` (Audio content)
+- `foto` (Photos)
+- `locatie` (Locations)
+- `nieuws` (News)
+- `pagina` (Pages)
+- `profiel` (Profiles)
+- `programma` (Programs)
+- `repertoire` (Repertoire)
+- `verslag` (Reports)
+- `video` (Videos)
+- `vriend` (Friends)
+
+### Role-Based Permission Summary
+- **Anonymous/Authenticated**: Content viewing and public field access
+- **Lid** (Member): Content viewing + photo creation + member-specific field access
+- **Vriend** (Friend): Limited content viewing only
+- **Aspirant-lid**: Member-level viewing permissions
+- **Committee Roles**: Member permissions + content creation for activities/news
+- **Auteur** (Author): Content creation and editing for news/pages/photos
+- **Muziekcommissie**: Repertoire management + activity creation
+- **Bestuur** (Board): Member permissions + enhanced field access
+- **Beheerder** (Administrator): Full content management + all field editing
+- **Dirigent** (Conductor): Activity editing + specific music-related permissions<?php
 
 /**
  * @file

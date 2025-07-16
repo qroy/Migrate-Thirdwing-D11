@@ -1,11 +1,12 @@
 <?php
+// File: modules/custom/thirdwing_migrate/scripts/create-content-types-and-fields.php
 
 /**
- * @file
  * Create content types and fields for Thirdwing D6 to D11 migration.
  * 
- * FIXED VERSION: Removed obsolete 'profiel' content type since profiles
- * are migrated as user fields, not separate nodes.
+ * CORRECTED VERSION: Based on actual D6 database structure and migration needs.
+ * 
+ * Usage: drush php:script modules/custom/thirdwing_migrate/scripts/create-content-types-and-fields.php
  */
 
 use Drupal\Core\Database\Database;
@@ -16,7 +17,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 echo "=== CREATING THIRDWING CONTENT TYPES AND FIELDS ===\n\n";
 
-// CORRECTED: Content types configuration with profiel REMOVED
+// CORRECTED: Content types configuration based on actual D6 database
 $content_types_config = [
   'activiteit' => [
     'name' => 'Activiteit',
@@ -32,6 +33,7 @@ $content_types_config = [
         'label' => 'Tijd Aanwezig',
         'settings' => ['max_length' => 100],
       ],
+      // Instrument availability fields
       'field_keyboard' => [
         'type' => 'boolean',
         'label' => 'Keyboard Beschikbaar',
@@ -48,6 +50,7 @@ $content_types_config = [
         'type' => 'boolean',
         'label' => 'Drums Beschikbaar',
       ],
+      // Logistics fields
       'field_vervoer' => [
         'type' => 'string',
         'label' => 'Vervoer',
@@ -73,6 +76,7 @@ $content_types_config = [
         'label' => 'Kledingcode',
         'settings' => ['max_length' => 255],
       ],
+      // Location and details
       'field_l_bijzonderheden' => [
         'type' => 'text_long',
         'label' => 'Locatie Bijzonderheden',
@@ -81,6 +85,7 @@ $content_types_config = [
         'type' => 'text_long',
         'label' => 'Bijzonderheden',
       ],
+      // References
       'field_locatie' => [
         'type' => 'entity_reference',
         'label' => 'Locatie',
@@ -92,68 +97,175 @@ $content_types_config = [
         'label' => 'Programma',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
+        'target_bundles' => ['programma'],
       ],
+      // Media fields - will reference media entities
       'field_afbeeldingen' => [
-        'type' => 'image',
+        'type' => 'entity_reference',
         'label' => 'Afbeeldingen',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'activiteit-afbeeldingen',
-          'alt_field' => TRUE,
-          'title_field' => TRUE,
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
       'field_background' => [
-        'type' => 'image',
+        'type' => 'entity_reference',
         'label' => 'Achtergrond Afbeelding',
-        'settings' => [
-          'file_directory' => 'activiteit-backgrounds',
-          'alt_field' => TRUE,
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
       'field_files' => [
-        'type' => 'file',
+        'type' => 'entity_reference',
         'label' => 'Bestanden',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'activiteit-bestanden',
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['document'],
       ],
     ],
   ],
   
-  'audio' => [
-    'name' => 'Audio',
-    'description' => 'Audio opnames en bestanden',
+  'nieuws' => [
+    'name' => 'Nieuws',
+    'description' => 'Nieuwsberichten en aankondigingen',
     'fields' => [
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Audio Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'mp3 wav ogg m4a aac',
-          'file_directory' => 'audio',
-        ],
-      ],
-      'field_audio_bijz' => [
-        'type' => 'text_long',
-        'label' => 'Audio Bijzonderheden',
-      ],
       'field_datum' => [
         'type' => 'datetime',
-        'label' => 'Datum',
+        'label' => 'Nieuws Datum',
         'settings' => ['datetime_type' => 'date'],
       ],
+      'field_huiswerk' => [
+        'type' => 'text_long',
+        'label' => 'Huiswerk',
+      ],
+      'field_jaargang' => [
+        'type' => 'integer',
+        'label' => 'Jaargang',
+      ],
+      // Media fields - will reference media entities
       'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Cover Afbeelding',
+        'type' => 'entity_reference',
+        'label' => 'Nieuws Afbeeldingen',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'audio-covers',
-          'alt_field' => TRUE,
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
+      ],
+      'field_files' => [
+        'type' => 'entity_reference',
+        'label' => 'Bijlagen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['document'],
+      ],
+      'field_nieuwsbrief' => [
+        'type' => 'entity_reference',
+        'label' => 'Nieuwsbrief Bestand',
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['document'],
+      ],
+      // Content references
+      'field_inhoud_referenties' => [
+        'type' => 'entity_reference',
+        'label' => 'Inhoud Referenties',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'node'],
+        'target_bundles' => ['nieuws', 'activiteit', 'programma'],
+      ],
+    ],
+  ],
+  
+  'pagina' => [
+    'name' => 'Pagina',
+    'description' => 'Algemene pagina\'s',
+    'fields' => [
+      'field_view' => [
+        'type' => 'string',
+        'label' => 'View Reference',
+        'settings' => ['max_length' => 255],
+      ],
+      // Media fields - will reference media entities
+      'field_afbeeldingen' => [
+        'type' => 'entity_reference',
+        'label' => 'Afbeeldingen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
+      ],
+      'field_files' => [
+        'type' => 'entity_reference',
+        'label' => 'Bestanden',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['document'],
+      ],
+    ],
+  ],
+  
+  'programma' => [
+    'name' => 'Programma',
+    'description' => 'Concert programma\'s en repertoire',
+    'fields' => [
+      'field_prog_type' => [
+        'type' => 'entity_reference',
+        'label' => 'Programma Type',
+        'settings' => ['target_type' => 'taxonomy_term'],
+        'target_bundles' => ['programma_type'],
+      ],
+      'field_rep_arr' => [
+        'type' => 'string',
+        'label' => 'Arrangeur',
+        'settings' => ['max_length' => 255],
+      ],
+      'field_rep_arr_jaar' => [
+        'type' => 'integer',
+        'label' => 'Arrangeur Jaar',
+      ],
+      'field_rep_componist' => [
+        'type' => 'string',
+        'label' => 'Componist',
+        'settings' => ['max_length' => 255],
+      ],
+      'field_rep_componist_jaar' => [
+        'type' => 'integer',
+        'label' => 'Componist Jaar',
+      ],
+      'field_rep_genre' => [
+        'type' => 'entity_reference',
+        'label' => 'Genre',
+        'settings' => ['target_type' => 'taxonomy_term'],
+        'target_bundles' => ['genre'],
+      ],
+      'field_rep_sinds' => [
+        'type' => 'datetime',
+        'label' => 'Repertoire Sinds',
+        'settings' => ['datetime_type' => 'date'],
+      ],
+      'field_rep_uitv' => [
+        'type' => 'string',
+        'label' => 'Uitvoering',
+        'settings' => ['max_length' => 255],
+      ],
+      'field_rep_uitv_jaar' => [
+        'type' => 'integer',
+        'label' => 'Uitvoering Jaar',
+      ],
+      'field_uitgave' => [
+        'type' => 'string',
+        'label' => 'Uitgave',
+        'settings' => ['max_length' => 255],
+      ],
+      // Media fields - will reference media entities
+      'field_files' => [
+        'type' => 'entity_reference',
+        'label' => 'Partituren',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['document', 'audio'],
+      ],
+      'field_afbeeldingen' => [
+        'type' => 'entity_reference',
+        'label' => 'Repertoire Afbeeldingen',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
     ],
   ],
@@ -162,20 +274,24 @@ $content_types_config = [
     'name' => 'Foto',
     'description' => 'Foto albums en galerijen',
     'fields' => [
-      'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Foto\'s',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'foto-albums',
-          'alt_field' => TRUE,
-          'title_field' => TRUE,
-        ],
-      ],
       'field_datum' => [
         'type' => 'datetime',
         'label' => 'Datum',
         'settings' => ['datetime_type' => 'date'],
+      ],
+      'field_ref_activiteit' => [
+        'type' => 'entity_reference',
+        'label' => 'Gerelateerde Activiteit',
+        'settings' => ['target_type' => 'node'],
+        'target_bundles' => ['activiteit'],
+      ],
+      // Media fields - will reference media entities
+      'field_afbeeldingen' => [
+        'type' => 'entity_reference',
+        'label' => 'Foto\'s',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
     ],
   ],
@@ -206,195 +322,13 @@ $content_types_config = [
         'type' => 'text_long',
         'label' => 'Bijzonderheden',
       ],
+      // Media fields - will reference media entities
       'field_afbeeldingen' => [
-        'type' => 'image',
+        'type' => 'entity_reference',
         'label' => 'Locatie Foto\'s',
         'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'locatie-fotos',
-          'alt_field' => TRUE,
-        ],
-      ],
-    ],
-  ],
-  
-  'nieuws' => [
-    'name' => 'Nieuws',
-    'description' => 'Nieuwsberichten en aankondigingen',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Nieuws Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Nieuws Afbeeldingen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'nieuws-afbeeldingen',
-          'alt_field' => TRUE,
-          'title_field' => TRUE,
-        ],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Bijlagen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'nieuws-bestanden',
-        ],
-      ],
-      'field_huiswerk' => [
-        'type' => 'text_long',
-        'label' => 'Huiswerk',
-      ],
-      'field_nieuwsbrief' => [
-        'type' => 'file',
-        'label' => 'Nieuwsbrief Bestand',
-        'settings' => [
-          'file_extensions' => 'pdf doc docx',
-          'file_directory' => 'nieuwsbrieven',
-        ],
-      ],
-      'field_inhoud_referenties' => [
-        'type' => 'entity_reference',
-        'label' => 'Inhoud Referenties',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['nieuws', 'activiteit', 'repertoire'],
-      ],
-      'field_jaargang' => [
-        'type' => 'integer',
-        'label' => 'Jaargang',
-      ],
-    ],
-  ],
-  
-  'pagina' => [
-    'name' => 'Pagina',
-    'description' => 'Algemene pagina\'s',
-    'fields' => [
-      'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Afbeeldingen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'pagina-afbeeldingen',
-          'alt_field' => TRUE,
-          'title_field' => TRUE,
-        ],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'pagina-bestanden',
-        ],
-      ],
-      'field_view' => [
-        'type' => 'string',
-        'label' => 'View Reference',
-        'settings' => ['max_length' => 255],
-      ],
-    ],
-  ],
-  
-  'repertoire' => [
-    'name' => 'Repertoire',
-    'description' => 'Muziek repertoire en nummers',
-    'fields' => [
-      'field_artiest' => [
-        'type' => 'string',
-        'label' => 'Artiest',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_genre' => [
-        'type' => 'entity_reference',
-        'label' => 'Genre',
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['genre'],
-      ],
-      'field_rep_uitv_jaar' => [
-        'type' => 'integer',
-        'label' => 'Uitvoering Jaar',
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Partituren',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt mid kar',
-          'file_directory' => 'repertoire',
-        ],
-      ],
-      'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Repertoire Afbeeldingen',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'repertoire-afbeeldingen',
-          'alt_field' => TRUE,
-        ],
-      ],
-    ],
-  ],
-  
-  'verslag' => [
-    'name' => 'Verslag',
-    'description' => 'Vergaderverslagen en rapporten',
-    'fields' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Vergader Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Verslag Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'pdf doc docx txt',
-          'file_directory' => 'verslagen',
-        ],
-      ],
-    ],
-  ],
-  
-  'video' => [
-    'name' => 'Video',
-    'description' => 'Video opnames en content',
-    'fields' => [
-      'field_emvideo' => [
-        'type' => 'string',
-        'label' => 'Embedded Video URL',
-        'settings' => ['max_length' => 500],
-      ],
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Video Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_afbeeldingen' => [
-        'type' => 'image',
-        'label' => 'Video Thumbnail',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_directory' => 'video-thumbnails',
-          'alt_field' => TRUE,
-        ],
-      ],
-      'field_files' => [
-        'type' => 'file',
-        'label' => 'Video Bestanden',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => [
-          'file_extensions' => 'mp4 avi mov wmv flv',
-          'file_directory' => 'video',
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
     ],
   ],
@@ -403,10 +337,31 @@ $content_types_config = [
     'name' => 'Vriend',
     'description' => 'Vrienden en partners organisaties',
     'fields' => [
-      'field_organisatie' => [
-        'type' => 'string',
-        'label' => 'Organisatie',
-        'settings' => ['max_length' => 255],
+      'field_vriend_soort' => [
+        'type' => 'entity_reference',
+        'label' => 'Vriend Soort',
+        'settings' => ['target_type' => 'taxonomy_term'],
+        'target_bundles' => ['vriend_soort'],
+      ],
+      'field_vriend_benaming' => [
+        'type' => 'entity_reference',
+        'label' => 'Benaming',
+        'settings' => ['target_type' => 'taxonomy_term'],
+        'target_bundles' => ['vriend_benaming'],
+      ],
+      'field_vriend_vanaf' => [
+        'type' => 'datetime',
+        'label' => 'Vriend Vanaf',
+        'settings' => ['datetime_type' => 'date'],
+      ],
+      'field_vriend_tot' => [
+        'type' => 'datetime',
+        'label' => 'Vriend Tot',
+        'settings' => ['datetime_type' => 'date'],
+      ],
+      'field_vriend_lengte' => [
+        'type' => 'integer',
+        'label' => 'Lengte (maanden)',
       ],
       'field_contactpersoon' => [
         'type' => 'string',
@@ -435,13 +390,12 @@ $content_types_config = [
         'type' => 'link',
         'label' => 'Website',
       ],
-      'field_logo' => [
-        'type' => 'image',
+      // Media fields - will reference media entities
+      'field_afbeeldingen' => [
+        'type' => 'entity_reference',
         'label' => 'Logo',
-        'settings' => [
-          'file_directory' => 'vriend-logos',
-          'alt_field' => TRUE,
-        ],
+        'settings' => ['target_type' => 'media'],
+        'target_bundles' => ['image'],
       ],
     ],
   ],
@@ -471,6 +425,8 @@ foreach ($content_types_config as $type_id => $type_info) {
     echo "  Creating fields...\n";
     
     foreach ($type_info['fields'] as $field_name => $field_config) {
+      echo "    Processing field: $field_name\n";
+      
       // Check if field storage exists
       $field_storage = FieldStorageConfig::loadByName('node', $field_name);
       if (!$field_storage) {
@@ -531,19 +487,27 @@ foreach ($content_types_config as $type_id => $type_info) {
 }
 
 echo "=== CONTENT TYPE CREATION COMPLETE ===\n\n";
-echo "✅ FIXED: Removed 'profiel' content type (profiles are user fields)\n\n";
 
-echo "Content types created:\n";
+echo "✅ Content types created:\n";
 foreach ($content_types_config as $type_id => $type_info) {
   $field_count = isset($type_info['fields']) ? count($type_info['fields']) : 0;
   echo "  - {$type_id}: {$type_info['name']} ({$field_count} fields)\n";
 }
 
-echo "\nNote: Profile data is handled by user profile fields, not as separate content type.\n";
-echo "User profile fields are created separately and managed by the user migration system.\n\n";
+echo "\n🔧 Key corrections made:\n";
+echo "  - Added missing 'programma' content type (was missing)\n";
+echo "  - Fixed field references to use media entities instead of files\n";
+echo "  - Added proper entity reference fields for taxonomy terms\n";
+echo "  - Included all instrument availability fields for activities\n";
+echo "  - Added proper logistics fields for activities\n";
+echo "  - Fixed field naming to match D6 source structure\n";
 
-echo "Next steps:\n";
-echo "1. Run user profile field creation script\n";
-echo "2. Configure form and display modes via admin UI if needed\n";
-echo "3. Set up media types for file fields if Media module is used\n";
-echo "4. Configure access permissions for content types\n";
+echo "\n📋 Next steps:\n";
+echo "1. Run media bundle creation script\n";
+echo "2. Create taxonomy vocabularies and terms\n";
+echo "3. Configure content moderation workflow\n";
+echo "4. Set up user roles and permissions\n";
+echo "5. Run migration validation script\n";
+
+echo "\n⚠️  Note: All media fields now reference media entities instead of files.\n";
+echo "This requires the media bundles to be created first using the media script.\n";

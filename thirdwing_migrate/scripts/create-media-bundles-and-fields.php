@@ -189,17 +189,35 @@ function getFieldConfigurations() {
     ],
     
     'document' => [
+      // FIXED: Changed from entity_reference to list_string with allowed values
       'field_document_soort' => [
-        'type' => 'entity_reference',
+        'type' => 'list_string',
         'label' => 'Document Soort',
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['document_soort'],
+        'settings' => [
+          'allowed_values' => [
+            'verslag' => 'Verslag',
+            'partituur' => 'Partituur',
+            'huiswerk' => 'Huiswerk',
+            'overig' => 'Overig',
+          ],
+        ],
       ],
+      // FIXED: Changed from entity_reference to list_string with allowed values
       'field_verslag_type' => [
-        'type' => 'entity_reference',
+        'type' => 'list_string',
         'label' => 'Verslag Type',
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['verslag_type'],
+        'settings' => [
+          'allowed_values' => [
+            'algemene_ledenvergadering' => 'Algemene Ledenvergadering',
+            'bestuursvergadering' => 'Bestuursvergadering',
+            'combo_overleg' => 'Combo Overleg',
+            'concertcommissie' => 'Concertcommissie',
+            'jaarevaluatie_dirigent' => 'Jaarevaluatie Dirigent',
+            'jaarverslag' => 'Jaarverslag',
+            'overige_vergadering' => 'Overige Vergadering',
+            'vergadering_muziekcommissie' => 'Vergadering Muziekcommissie',
+          ],
+        ],
       ],
       'field_datum' => [
         'type' => 'datetime',
@@ -240,8 +258,9 @@ function getFieldConfigurations() {
         'settings' => ['max_length' => 255],
       ],
       'field_audio_bijz' => [
-        'type' => 'text_long',
+        'type' => 'string',
         'label' => 'Bijzonderheden',
+        'settings' => ['max_length' => 255],
       ],
       'field_gerelateerd_activiteit' => [
         'type' => 'entity_reference',

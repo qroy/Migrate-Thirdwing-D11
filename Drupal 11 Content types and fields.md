@@ -240,34 +240,54 @@ The media bundle system has been carefully designed to handle all D6 file types 
 **Source Field:** `field_media_document`
 **File Extensions:** pdf, doc, docx, txt, xls, xlsx, mscz
 
-| Field Name | Field Type | Label | Cardinality | Target/Settings |
-|------------|------------|-------|-------------|-----------------|
-| `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt xls xlsx mscz |
-| `field_document_soort` | list_string | Document Soort | 1 | Select options: verslag, partituur, overig |
-| `field_verslag_type` | list_string | Verslag Type | 1 | Select options: algemene_ledenvergadering, bestuursvergadering, combo_overleg, concertcommissie, jaarevaluatie_dirigent, jaarverslag, overige_vergadering, vergadering_muziekcommissie |
-| `field_datum` | datetime | Datum | 1 | date only |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
+| Field Name | Field Type | Label | Cardinality | Target/Settings | Required When |
+|------------|------------|-------|-------------|-----------------|---------------|
+| `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt xls xlsx mscz | Always |
+| `field_document_soort` | list_string | Document Soort | 1 | Select options: verslag, partituur, huiswerk, overig | Always |
+| `field_verslag_type` | list_string | Verslag Type | 1 | Select options: algemene_ledenvergadering, bestuursvergadering, combo_overleg, concertcommissie, jaarevaluatie_dirigent, jaarverslag, overige_vergadering, vergadering_muziekcommissie | field_document_soort = verslag |
+| `field_datum` | datetime | Datum | 1 | date only | field_document_soort = verslag |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] | field_document_soort = partituur |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | Always |
+
+### Conditional Field Requirements
+
+The Document Bundle uses conditional field requirements based on the document type:
+
+#### **When `field_document_soort` = "verslag":**
+- **`field_verslag_type`** - Required to specify the type of meeting report
+- **`field_datum`** - Required to record the date of the meeting/report
+
+#### **When `field_document_soort` = "partituur":**
+- **`field_gerelateerd_repertoire`** - Required to link sheet music to specific repertoire pieces
+
+#### **When `field_document_soort` = "huiswerk" or "overig":**
+- No additional required fields beyond the base document and toegang fields
 
 ### Document Soort Select Options
 
-The `field_document_soort` field includes three main document categories:
+The `field_document_soort` field includes four main document categories:
 
 | Key | Label (Dutch) | Description | Usage |
 |-----|---------------|-------------|-------|
 | `verslag` | Verslag | Meeting report | Files attached to verslag content type |
 | `partituur` | Partituur | Sheet music | MuseScore files (.mscz) or repertoire attachments |
+| `huiswerk` | Huiswerk | Homework/assignments | Files attached to Activiteit nodes via field_huiswerk |
 | `overig` | Overig | Other documents | General documents (PDFs, DOCs, etc.) |
 
 **Document Classification Logic:**
 ```php
-// From ThirdwingDocumentClassifier plugin
+// From ThirdwingDocumentClassifier plugin (updated)
 if ($source_content_type === 'verslag') {
   return 'verslag';
 }
 
 if ($file_extension === 'mscz' || $repertoire_attachment) {
   return 'partituur';
+}
+
+// Check for homework files (attached to activities via field_huiswerk)
+if ($source_content_type === 'activiteit' && $field_name === 'field_huiswerk') {
+  return 'huiswerk';
 }
 
 // Default to general document

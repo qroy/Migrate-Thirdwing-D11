@@ -1,3 +1,4 @@
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_activity.yml
 id: d6_thirdwing_incremental_activity
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -48,44 +49,70 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Activity-specific fields
-  field_datum_begin: field_datum_begin_value
-  field_datum_einde: field_datum_einde_value
-  field_tijd_begin: field_tijd_begin_value
-  field_tijd_einde: field_tijd_einde_value
+  # Activity-specific fields - FIXED: Added proper _value suffix mappings
+  field_datum: field_datum_value
+  field_tijd_aanwezig: field_tijd_aanwezig_value
+  field_keyboard: field_keyboard_value
+  field_gitaar: field_gitaar_value
+  field_basgitaar: field_basgitaar_value
+  field_drums: field_drums_value
+  field_vervoer: field_vervoer_value
+  field_sleepgroep: field_sleepgroep_value
+  field_sleepgroep_aanwezig: field_sleepgroep_aanwezig_value
+  field_sleepgroep_terug: field_sleepgroep_terug_value
+  field_kledingcode: field_kledingcode_value
+  field_l_bijzonderheden: field_l_bijzonderheden_value
+  field_bijzonderheden: field_bijzonderheden_value
+  
+  # Location reference
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
-  field_externe_locatie: field_externe_locatie_value
-  field_kleding: field_kleding_value
-  field_prijs_leden: field_prijs_leden_value
-  field_prijs_niet_leden: field_prijs_niet_leden_value
-  field_aanmelden: field_aanmelden_value
-  field_activiteit_type: field_activiteit_type_value
+    no_stub: true
   
-  # Images
-  field_afbeeldingen:
+  # FIXED: Program references (corrected source field)
+  field_programma2:
+    plugin: sub_process
+    source: program_items
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_program
+        source: field_programma2_nid
+        no_stub: true
+  
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES instead of files
+  field_media_images:
     plugin: sub_process
     source: images
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Files
-  field_files:
+  # FIXED: Background image now references IMAGE MEDIA ENTITY
+  field_background:
+    plugin: migration_lookup
+    migration: d6_thirdwing_media_image
+    source: field_background_fid
+    no_stub: true
+  
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES instead of files
+  field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms
-  field_taxonomy:
+  # Taxonomy terms (access control)
+  field_toegang:
     plugin: sub_process
     source: taxonomy_terms
     process:
@@ -93,10 +120,13 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_file
     - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
+    - d6_thirdwing_program
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

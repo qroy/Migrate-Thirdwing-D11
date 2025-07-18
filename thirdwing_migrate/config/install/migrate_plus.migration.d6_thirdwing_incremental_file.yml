@@ -1,3 +1,4 @@
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_file.yml
 id: d6_thirdwing_incremental_file
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -27,6 +28,7 @@ process:
     source:
       - filepath
       - filename
+    file_exists: 'replace'
   filemime: filemime
   filesize: filesize
   status: status

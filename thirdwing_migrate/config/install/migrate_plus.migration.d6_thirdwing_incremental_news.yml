@@ -1,3 +1,4 @@
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_news.yml
 id: d6_thirdwing_incremental_news
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -51,28 +52,43 @@ process:
   # Date field
   field_datum: field_datum_value
   
-  # Images
-  field_afbeeldingen:
+  # Workflow state handling - FIXED: Added missing workflow mapping
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      1: published
+      2: draft
+      3: pending_review
+    default_value: published
+  
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES instead of files
+  field_media_images:
     plugin: sub_process
     source: images
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Files
-  field_files:
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES instead of files
+  field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration:
+          - d6_thirdwing_media_document
+          - d6_thirdwing_media_audio
+          - d6_thirdwing_media_video
         source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms
-  field_taxonomy:
+  # Taxonomy terms (access control)
+  field_toegang:
     plugin: sub_process
     source: taxonomy_terms
     process:
@@ -80,9 +96,13 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_file
     - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document
+    - d6_thirdwing_media_audio
+    - d6_thirdwing_media_video

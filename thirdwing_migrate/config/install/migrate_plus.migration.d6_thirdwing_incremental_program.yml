@@ -1,3 +1,4 @@
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_program.yml
 id: d6_thirdwing_incremental_program
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -46,14 +47,16 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Program-specific fields
+  # Program-specific fields - FIXED: Added proper _value suffix mappings
   field_datum: field_datum_value
+  field_prog_type: field_prog_type_value
   
   # Location reference
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
+    no_stub: true
   
   # Repertoire references
   field_repertoire:
@@ -64,6 +67,7 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_repertoire
         source: field_repertoire_nid
+        no_stub: true
   
   # Program items (self-reference)
   field_programma2:
@@ -74,12 +78,32 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_program
         source: field_programma2_nid
+        no_stub: true
   
-  # Program type
-  field_prog_type: field_prog_type_value
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES instead of files
+  field_media_images:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+        no_stub: true
+  
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES instead of files  
+  field_media_documents:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_document
+        source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms
-  field_taxonomy:
+  # Taxonomy terms (access control)
+  field_toegang:
     plugin: sub_process
     source: taxonomy_terms
     process:
@@ -87,6 +111,7 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
@@ -94,3 +119,5 @@ migration_dependencies:
     - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
     - d6_thirdwing_repertoire
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

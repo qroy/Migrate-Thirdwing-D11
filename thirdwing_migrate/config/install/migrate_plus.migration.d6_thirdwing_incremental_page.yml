@@ -1,3 +1,4 @@
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_page.yml
 id: d6_thirdwing_incremental_page
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -46,33 +47,35 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # Page-specific fields
+  # Page-specific fields - FIXED: Added proper _value suffix mappings
   field_pagina_type: field_pagina_type_value
   field_menu_weight: field_menu_weight_value
   field_show_in_menu: field_show_in_menu_value
   
-  # Images
-  field_afbeeldingen:
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES instead of files
+  field_media_images:
     plugin: sub_process
     source: images
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Files
-  field_files:
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES instead of files
+  field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: d6_thirdwing_file
+        migration: d6_thirdwing_media_document
         source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms
-  field_taxonomy:
+  # Taxonomy terms (access control)
+  field_toegang:
     plugin: sub_process
     source: taxonomy_terms
     process:
@@ -80,9 +83,11 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_file
     - d6_thirdwing_taxonomy_term
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

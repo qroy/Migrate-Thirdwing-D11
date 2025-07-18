@@ -1,4 +1,4 @@
-# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_repertoire.yml
+# Fixed: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_repertoire.yml
 id: d6_thirdwing_repertoire
 migration_group: thirdwing_d6
 migration_tags:
@@ -38,17 +38,18 @@ process:
       6: basic_html
     default_value: basic_html
   
-  # CORRECTED: Using actual D6 field names
-  field_rep_componist: field_rep_componist_value
-  field_rep_componist_jaar: field_rep_componist_jaar_value
-  field_rep_arr: field_rep_arr_value
-  field_rep_arr_jaar: field_rep_arr_jaar_value
-  field_rep_uitv: field_rep_uitv_value
-  field_rep_uitv_jaar: field_rep_uitv_jaar_value
-  field_rep_genre: field_rep_genre_value
-  field_rep_sinds: field_rep_sinds_value
+  # FIXED: Corrected field name mappings to match D6 source and D11 target
+  # D6 fields (from content_type_repertoire table) → D11 fields
+  field_componist: field_rep_componist_value
+  field_componist_jaar: field_rep_componist_jaar_value
+  field_arrangeur: field_rep_arr_value
+  field_arrangeur_jaar: field_rep_arr_jaar_value
+  field_uitvoerende: field_rep_uitv_value
+  field_uitvoerende_jaar: field_rep_uitv_jaar_value
+  field_genre: field_rep_genre_value
+  field_sinds: field_rep_sinds_value
   
-  # Audio cataloging fields (actual D6 fields)
+  # Audio cataloging fields (from D6 content_type_repertoire)
   field_audio_nummer: field_audio_nummer_value
   field_audio_seizoen: field_audio_seizoen_value
   field_klapper: field_klapper_value
@@ -96,7 +97,7 @@ process:
         no_stub: true
 
   # FIXED: Images now reference IMAGE MEDIA ENTITIES
-  field_afbeeldingen:
+  field_media_images:
     plugin: sub_process
     source: images
     process:
@@ -106,9 +107,21 @@ process:
         source: field_afbeeldingen_fid
         no_stub: true
 
+  # Taxonomy terms (access control)
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+        no_stub: true
+
 migration_dependencies:
   required:
     - d6_thirdwing_user
     - d6_thirdwing_media_document
     - d6_thirdwing_media_audio
     - d6_thirdwing_media_image
+    - d6_thirdwing_taxonomy_term

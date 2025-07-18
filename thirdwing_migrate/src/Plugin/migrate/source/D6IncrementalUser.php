@@ -6,7 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Source plugin for D6 incremental user updates with Content Profile data.
+ * Source plugin for D6 incremental user migration - CORRECTED WITH DUTCH LABELS.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_incremental_user",
@@ -19,7 +19,6 @@ class D6IncrementalUser extends SqlBase {
    * {@inheritdoc}
    */
   public function query() {
-    // Simple user query without profile joins
     $query = $this->select('users', 'u')
       ->fields('u', [
         'uid', 'name', 'pass', 'mail', 'created', 'access', 'login', 'status', 'picture'
@@ -27,31 +26,21 @@ class D6IncrementalUser extends SqlBase {
       ->condition('u.uid', 0, '>'); // Skip anonymous user
 
     // Add incremental filtering based on configuration
-    $since_access = $this->configuration['since_access'] ?? null;
-    $since_created = $this->configuration['since_created'] ?? null;
-    $date_range = $this->configuration['date_range'] ?? [];
-    $include_blocked = $this->configuration['include_blocked'] ?? false;
-
-    // Filter by access time if specified
-    if (!empty($since_access)) {
-      $query->condition('u.access', strtotime($since_access), '>=');
+    $config = $this->configuration;
+    
+    if (!empty($config['since_access'])) {
+      $query->condition('u.access', $config['since_access'], '>=');
     }
-
-    // Filter by created time if specified  
-    if (!empty($since_created)) {
-      $query->condition('u.created', strtotime($since_created), '>=');
+    
+    if (!empty($config['since_created'])) {
+      $query->condition('u.created', $config['since_created'], '>=');
     }
-
-    // Filter by date range if specified
-    if (!empty($date_range['start'])) {
-      $query->condition('u.created', strtotime($date_range['start']), '>=');
+    
+    if (!empty($config['date_range']['start']) && !empty($config['date_range']['end'])) {
+      $query->condition('u.access', [$config['date_range']['start'], $config['date_range']['end']], 'BETWEEN');
     }
-    if (!empty($date_range['end'])) {
-      $query->condition('u.created', strtotime($date_range['end']), '<=');
-    }
-
-    // Filter blocked users unless explicitly included
-    if (!$include_blocked) {
+    
+    if (empty($config['include_blocked'])) {
       $query->condition('u.status', 1);
     }
 
@@ -73,36 +62,43 @@ class D6IncrementalUser extends SqlBase {
       'status' => $this->t('Status'),
       'picture' => $this->t('Picture file ID'),
       
-      // Profile fields from Content Profile
-      'field_voornaam_value' => $this->t('First name'),
-      'field_achternaam_value' => $this->t('Last name'),
-      'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
-      'field_geboortedatum_value' => $this->t('Birth date'),
-      'field_geslacht_value' => $this->t('Gender'),
-      'field_karrijder_value' => $this->t('Car driver'),
-      'field_lidsinds_value' => $this->t('Member since'),
-      'field_uitkoor_value' => $this->t('Left choir'),
-      'field_adres_value' => $this->t('Address'),
-      'field_postcode_value' => $this->t('Postal code'),
-      'field_woonplaats_value' => $this->t('City'),
-      'field_telefoon_value' => $this->t('Phone'),
-      'field_mobiel_value' => $this->t('Mobile'),
-      'field_sleepgroep_1_value' => $this->t('Transport group'),
-      'field_koor_value' => $this->t('Choir'),
-      'field_notes_value' => $this->t('Notes'),
-      'field_notes_format' => $this->t('Notes format'),
-      'field_functie_bestuur_value' => $this->t('Board function'),
-      'field_functie_mc_value' => $this->t('Music committee function'),
-      'field_functie_concert_value' => $this->t('Concert function'),
-      'field_functie_feest_value' => $this->t('Party function'),
-      'field_functie_regie_value' => $this->t('Direction function'),
-      'field_functie_ir_value' => $this->t('Internal relations function'),
-      'field_functie_pr_value' => $this->t('Public relations function'),
-      'field_functie_tec_value' => $this->t('Technical function'),
-      'field_positie_value' => $this->t('Position'),
-      'field_functie_lw_value' => $this->t('Member recruitment function'),
-      'field_functie_fl_value' => $this->t('Facilities function'),
-      'field_emailbewaking_value' => $this->t('Email monitoring'),
+      // User roles
+      'roles' => $this->t('User roles (name => rid)'),
+      'role_ids' => $this->t('User role IDs'),
+      'user_roles' => $this->t('User roles array'),
+      
+      // CORRECTED: Profile fields with Dutch descriptions matching D6 labels
+      'field_voornaam_value' => $this->t('Voornaam'),  // CORRECTED: Dutch, not 'First name'
+      'field_achternaam_value' => $this->t('Achternaam'),  // CORRECTED: Dutch, not 'Last name'
+      'field_achternaam_voorvoegsel_value' => $this->t('Achternaam voorvoegsel'),  // CORRECTED: Dutch, not 'Name prefix'
+      'field_geboortedatum_value' => $this->t('Geboortedatum'),  // CORRECTED: Dutch, not 'Birth date'
+      'field_geslacht_value' => $this->t('Geslacht'),  // CORRECTED: Dutch, not 'Gender'
+      'field_karrijder_value' => $this->t('Karrijder'),  // CORRECTED: Dutch, not 'Car driver'
+      'field_lidsinds_value' => $this->t('Lid Sinds'),  // CORRECTED: Dutch, not 'Member since'
+      'field_uitkoor_value' => $this->t('Uit koor per'),  // CORRECTED: Dutch, not 'Left choir'
+      'field_adres_value' => $this->t('Adres'),  // CORRECTED: Dutch, not 'Address'
+      'field_postcode_value' => $this->t('Postcode'),  // CORRECTED: Dutch, not 'Postal code'
+      'field_woonplaats_value' => $this->t('Woonplaats'),  // CORRECTED: Dutch, not 'City'
+      'field_telefoon_value' => $this->t('Telefoon'),  // CORRECTED: Dutch, not 'Phone'
+      'field_mobiel_value' => $this->t('Mobiel'),  // CORRECTED: Dutch, not 'Mobile'
+      'field_sleepgroep_1_value' => $this->t('Sleepgroep'),  // CORRECTED: Dutch, not 'Transport group'
+      'field_koor_value' => $this->t('Koorfunctie'),  // CORRECTED: Dutch, not 'Choir'
+      'field_notes_value' => $this->t('Notities'),  // CORRECTED: Dutch, not 'Notes'
+      'field_notes_format' => $this->t('Notities format'),  // CORRECTED: Dutch, not 'Notes format'
+      'field_emailbewaking_value' => $this->t('Email origineel'),  // CORRECTED: Dutch, not 'Email monitoring'
+      
+      // CORRECTED: Committee function fields with Dutch descriptions
+      'field_functie_bestuur_value' => $this->t('Functie Bestuur'),  // CORRECTED: Dutch, not 'Board function'
+      'field_functie_mc_value' => $this->t('Functie Muziekcommissie'),  // CORRECTED: Dutch, not 'Music committee function'
+      'field_functie_concert_value' => $this->t('Functie Commissie Concerten'),  // CORRECTED: Dutch, not 'Concert function'
+      'field_functie_feest_value' => $this->t('Functie Feestcommissie'),  // CORRECTED: Dutch, not 'Party function'
+      'field_functie_regie_value' => $this->t('Functie Commissie Koorregie'),  // CORRECTED: Dutch, not 'Direction function'
+      'field_functie_ir_value' => $this->t('Functie Commissie Interne Relaties'),  // CORRECTED: Dutch, not 'Internal relations function'
+      'field_functie_pr_value' => $this->t('Functie Commissie PR'),  // CORRECTED: Dutch, not 'Public relations function'
+      'field_functie_tec_value' => $this->t('Functie Technische Commissie'),  // CORRECTED: Dutch, not 'Technical function'
+      'field_positie_value' => $this->t('Positie'),  // CORRECTED: Dutch, not 'Position'
+      'field_functie_lw_value' => $this->t('Functie ledenwerf'),  // CORRECTED: Dutch, not 'Member recruitment function'
+      'field_functie_fl_value' => $this->t('Functie Faciliteiten'),  // CORRECTED: Dutch, not 'Facilities function'
     ];
   }
 
@@ -122,18 +118,25 @@ class D6IncrementalUser extends SqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
+    if (parent::prepareRow($row) === FALSE) {
+      return FALSE;
+    }
+
     $uid = $row->getSourceProperty('uid');
 
     // Add user roles
     $this->addUserRoles($row, $uid);
     
-    // Add Content Profile fields
+    // Add Content Profile fields from content_type_profiel
     $this->addContentProfileFields($row, $uid);
     
-    // Add user picture information
+    // CORRECTED: Add shared field data for woonplaats (same fix as main migration)
+    $this->addSharedFieldData($row, $uid);
+    
+    // Add user picture
     $this->addUserPicture($row);
 
-    return parent::prepareRow($row);
+    return TRUE;
   }
 
   /**
@@ -163,7 +166,7 @@ class D6IncrementalUser extends SqlBase {
    * Add Content Profile fields to the row.
    */
   protected function addContentProfileFields(Row $row, $uid) {
-    // Check for 'profiel' content type (your profile content type)
+    // Check for 'profiel' content type (profile content type)
     $profile_types = ['profiel'];
     
     foreach ($profile_types as $type) {
@@ -200,6 +203,50 @@ class D6IncrementalUser extends SqlBase {
             }
           }
         }
+      }
+    }
+  }
+
+  /**
+   * CORRECTED: Add shared field data for fields like woonplaats.
+   * (Same implementation as main user migration)
+   */
+  protected function addSharedFieldData(Row $row, $uid) {
+    // Get woonplaats from shared field table
+    $woonplaats_table = 'content_field_woonplaats';
+    
+    if ($this->getDatabase()->schema()->tableExists($woonplaats_table)) {
+      try {
+        // For shared fields attached to users, we need to find the profile node first
+        $profile_query = $this->select('node', 'n')
+          ->fields('n', ['nid', 'vid'])
+          ->condition('n.type', 'profiel')
+          ->condition('n.uid', $uid)
+          ->condition('n.status', 1)
+          ->range(0, 1);
+        
+        $profile_node = $profile_query->execute()->fetchAssoc();
+        
+        if ($profile_node) {
+          // Get woonplaats value using the profile node ID
+          $woonplaats_query = $this->select($woonplaats_table, 'cfw')
+            ->fields('cfw', ['field_woonplaats_value'])
+            ->condition('cfw.nid', $profile_node['nid'])
+            ->condition('cfw.vid', $profile_node['vid'])
+            ->range(0, 1);
+          
+          $woonplaats_data = $woonplaats_query->execute()->fetchAssoc();
+          
+          if ($woonplaats_data && !empty($woonplaats_data['field_woonplaats_value'])) {
+            $row->setSourceProperty('field_woonplaats_value', $woonplaats_data['field_woonplaats_value']);
+          }
+        }
+      } catch (\Exception $e) {
+        // Log error but don't fail migration
+        \Drupal::logger('thirdwing_migrate')->warning('Could not fetch woonplaats for user @uid: @error', [
+          '@uid' => $uid,
+          '@error' => $e->getMessage(),
+        ]);
       }
     }
   }

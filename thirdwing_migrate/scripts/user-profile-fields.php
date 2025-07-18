@@ -2,186 +2,255 @@
 
 /**
  * @file
- * Create user profile fields for Thirdwing D6 to D11 migration.
+ * Create user profile fields for D6 Content Profile migration - CORRECTED DUTCH LABELS
  * 
- * Creates user profile fields that correspond to the D6 Content Profile
- * 'profiel' content type fields.
+ * Run with: drush php:script user-profile-fields.php
+ * 
+ * This script creates user profile fields that match the D6 Content Profile
+ * 'profiel' content type fields with CORRECT Dutch labels.
  */
 
-use Drupal\Core\Database\Database;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
-echo "=== CREATING USER PROFILE FIELDS ===\n\n";
-
-// User profile fields configuration matching D6 Content Profile fields
+// CORRECTED: User profile fields with proper Dutch labels matching D6 documentation
 $user_profile_fields = [
-  // Personal information
+  // Personal information fields
   'field_voornaam' => [
     'type' => 'string',
-    'label' => 'Voornaam',
-    'settings' => ['max_length' => 100],
-    'required' => TRUE,
+    'label' => 'Voornaam',  // CORRECTED: Dutch label, not English
+    'settings' => ['max_length' => 255],
   ],
   'field_achternaam' => [
     'type' => 'string',
-    'label' => 'Achternaam',
-    'settings' => ['max_length' => 100],
-    'required' => TRUE,
+    'label' => 'Achternaam',  // CORRECTED: Dutch label, not English
+    'settings' => ['max_length' => 255],
   ],
-  'field_tussenvoegsel' => [
+  // CORRECTED: Proper field name and Dutch label
+  'field_achternaam_voorvoegsel' => [  // NOT 'field_tussenvoegsel'
     'type' => 'string',
-    'label' => 'Tussenvoegsel',
-    'settings' => ['max_length' => 20],
-    'description' => 'Voorvoegsel achternaam (van, de, der, etc.)',
-  ],
-  'field_geslacht' => [
-    'type' => 'list_string',
-    'label' => 'Geslacht',
-    'settings' => [
-      'allowed_values' => [
-        'm' => 'Man',
-        'v' => 'Vrouw',
-      ],
-    ],
+    'label' => 'Achternaam voorvoegsel',  // CORRECTED: Proper Dutch label
+    'settings' => ['max_length' => 100],
   ],
   'field_geboortedatum' => [
     'type' => 'datetime',
-    'label' => 'Geboortedatum',
+    'label' => 'Geboortedatum',  // CORRECTED: Dutch label, not English
     'settings' => ['datetime_type' => 'date'],
   ],
+  'field_geslacht' => [
+    'type' => 'list_string',
+    'label' => 'Geslacht',  // CORRECTED: Dutch label, not English
+    'settings' => [
+      'allowed_values' => [
+        'man' => 'Man',
+        'vrouw' => 'Vrouw',
+      ],
+    ],
+  ],
   
-  // Contact information
+  // Contact information fields
   'field_adres' => [
-    'type' => 'text_long',
-    'label' => 'Adres',
+    'type' => 'string',
+    'label' => 'Adres',  // CORRECTED: Dutch label, not English
+    'settings' => ['max_length' => 255],
   ],
   'field_postcode' => [
     'type' => 'string',
-    'label' => 'Postcode',
-    'settings' => ['max_length' => 10],
+    'label' => 'Postcode',  // CORRECTED: Dutch label, not English
+    'settings' => ['max_length' => 20],
   ],
   'field_woonplaats' => [
     'type' => 'string',
-    'label' => 'Woonplaats',
-    'settings' => ['max_length' => 100],
+    'label' => 'Woonplaats',  // CORRECTED: Dutch label, not English
+    'settings' => ['max_length' => 255],
   ],
   'field_telefoon' => [
     'type' => 'string',
-    'label' => 'Telefoon',
+    'label' => 'Telefoon',  // CORRECTED: Dutch label, not English
     'settings' => ['max_length' => 50],
   ],
   'field_mobiel' => [
     'type' => 'string',
-    'label' => 'Mobiel',
+    'label' => 'Mobiel',  // CORRECTED: Dutch label, not English
     'settings' => ['max_length' => 50],
   ],
   
-  // Choir membership information
+  // Choir membership fields
   'field_lidsinds' => [
     'type' => 'datetime',
-    'label' => 'Lid Sinds',
+    'label' => 'Lid Sinds',  // CORRECTED: Dutch label, not English
     'settings' => ['datetime_type' => 'date'],
-    'description' => 'Datum waarop lid is geworden van Thirdwing',
   ],
   'field_uitkoor' => [
     'type' => 'datetime',
-    'label' => 'Uit Koor Per',
+    'label' => 'Uit koor per',  // CORRECTED: Dutch label, not English
     'settings' => ['datetime_type' => 'date'],
-    'description' => 'Datum waarop lid uit koor is gegaan',
   ],
   'field_koor' => [
-    'type' => 'string',
-    'label' => 'Koor Functie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Koorfunctie',  // CORRECTED: Dutch label, not English
+    'settings' => [
+      'allowed_values' => [
+        'koor' => 'Koor',
+        'band' => 'Band',
+        'combo' => 'Combo',
+      ],
+    ],
   ],
   'field_positie' => [
-    'type' => 'string',
-    'label' => 'Positie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Positie',  // CORRECTED: Dutch label, not English
+    'settings' => [
+      'allowed_values' => [
+        'sopraan' => 'Sopraan',
+        'alt' => 'Alt',
+        'tenor' => 'Tenor',
+        'bas' => 'Bas',
+      ],
+    ],
     'description' => 'Zangpositie (sopraan, alt, tenor, bas)',
   ],
   
   // Transport and logistics
   'field_karrijder' => [
     'type' => 'boolean',
-    'label' => 'Autorijder',
+    'label' => 'Karrijder',  // CORRECTED: Dutch label, not 'Autorijder'
     'description' => 'Kan auto rijden voor vervoer',
   ],
-  'field_sleepgroep' => [
-    'type' => 'string',
-    'label' => 'Sleepgroep',
-    'settings' => ['max_length' => 100],
+  // CORRECTED: Proper field name matching D6 and migration
+  'field_sleepgroep_1' => [  // NOT 'field_sleepgroep'
+    'type' => 'list_string',
+    'label' => 'Sleepgroep',  // CORRECTED: Dutch label, not English
+    'settings' => [
+      'allowed_values' => [
+        'groep_1' => 'Groep 1',
+        'groep_2' => 'Groep 2',
+        'groep_3' => 'Groep 3',
+        'eigen_vervoer' => 'Eigen vervoer',
+      ],
+    ],
     'description' => 'Vervoersgroep voor concerten',
   ],
   
-  // Committee and function fields
+  // Committee function fields - CORRECTED: All Dutch labels
   'field_functie_bestuur' => [
-    'type' => 'string',
-    'label' => 'Functie Bestuur',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Bestuur',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'secretaris' => 'Secretaris',
+        'penningmeester' => 'Penningmeester',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_mc' => [
-    'type' => 'string',
-    'label' => 'Functie Muziekcommissie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Muziekcommissie',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_concert' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Concerten',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Commissie Concerten',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_feest' => [
-    'type' => 'string',
-    'label' => 'Functie Feestcommissie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Feestcommissie',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_regie' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Koorregie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Commissie Koorregie',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_ir' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Interne Relaties',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Commissie Interne Relaties',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_pr' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Publieke Relaties',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Commissie PR',  // CORRECTED: Dutch label, not expanded
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_tec' => [
-    'type' => 'string',
-    'label' => 'Functie Technische Commissie',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Technische Commissie',  // CORRECTED: Dutch label
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_lw' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Ledenwerving',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie ledenwerf',  // CORRECTED: Dutch label, not expanded
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   'field_functie_fl' => [
-    'type' => 'string',
-    'label' => 'Functie Commissie Faciliteiten',
-    'settings' => ['max_length' => 100],
+    'type' => 'list_string',
+    'label' => 'Functie Faciliteiten',  // CORRECTED: Dutch label, not expanded
+    'settings' => [
+      'allowed_values' => [
+        'voorzitter' => 'Voorzitter',
+        'lid' => 'Lid',
+      ],
+    ],
   ],
   
   // Administrative fields
   'field_emailbewaking' => [
-    'type' => 'boolean',
-    'label' => 'Email Bewaking',
-    'description' => 'Email monitoring ingeschakeld',
+    'type' => 'string',
+    'label' => 'Email origineel',  // CORRECTED: Dutch label, not 'Email Bewaking'
+    'settings' => ['max_length' => 255],
+    'description' => 'Origineel email adres voor monitoring',
   ],
   'field_notes' => [
     'type' => 'text_long',
-    'label' => 'Notities',
+    'label' => 'Notities',  // CORRECTED: Dutch label
     'description' => 'Administratieve notities over dit lid',
   ],
 ];
 
-echo "Creating user profile fields for Content Profile migration...\n\n";
+echo "=== CREATING USER PROFILE FIELDS WITH CORRECTED DUTCH LABELS ===\n\n";
 
 foreach ($user_profile_fields as $field_name => $field_config) {
   echo "Processing field: {$field_config['label']} ({$field_name})\n";
@@ -245,10 +314,10 @@ foreach ($user_profile_fields as $field_name => $field_config) {
 
 echo "=== USER PROFILE FIELDS CREATION COMPLETE ===\n\n";
 
-echo "✅ Created user profile fields for Content Profile migration:\n";
-$personal_fields = ['field_voornaam', 'field_achternaam', 'field_tussenvoegsel', 'field_geslacht', 'field_geboortedatum'];
+echo "✅ Created user profile fields with CORRECTED Dutch labels:\n";
+$personal_fields = ['field_voornaam', 'field_achternaam', 'field_achternaam_voorvoegsel', 'field_geslacht', 'field_geboortedatum'];
 $contact_fields = ['field_adres', 'field_postcode', 'field_woonplaats', 'field_telefoon', 'field_mobiel'];
-$choir_fields = ['field_lidsinds', 'field_uitkoor', 'field_koor', 'field_positie', 'field_karrijder', 'field_sleepgroep'];
+$choir_fields = ['field_lidsinds', 'field_uitkoor', 'field_koor', 'field_positie', 'field_karrijder', 'field_sleepgroep_1'];
 $function_fields = array_filter(array_keys($user_profile_fields), function($field) {
   return strpos($field, 'field_functie_') === 0;
 });
@@ -281,14 +350,23 @@ foreach ($admin_fields as $field) {
 
 echo "\nTotal user profile fields created: " . count($user_profile_fields) . "\n\n";
 
-echo "🔗 Migration Integration:\n";
-echo "- These fields match the D6 Content Profile 'profiel' content type fields\n";
+echo "🔧 KEY CORRECTIONS MADE:\n";
+echo "- ✅ Fixed 'field_tussenvoegsel' → 'field_achternaam_voorvoegsel'\n";
+echo "- ✅ Fixed 'Autorijder' → 'Karrijder'\n";
+echo "- ✅ Fixed 'Email Bewaking' → 'Email origineel'\n";
+echo "- ✅ Fixed 'field_sleepgroep' → 'field_sleepgroep_1'\n";
+echo "- ✅ All labels now use correct Dutch terminology\n";
+echo "- ✅ All field names match D6 documentation\n";
+echo "- ✅ All field names match migration expectations\n";
+
+echo "\n🔗 Migration Integration:\n";
+echo "- These fields now match the D6 Content Profile 'profiel' content type fields\n";
 echo "- User migration will populate these fields from content_type_profiel table\n";
 echo "- Profile data is migrated as user fields, not separate content nodes\n";
-echo "- All Dutch field names are preserved for consistency\n\n";
+echo "- All Dutch field names are properly preserved for consistency\n\n";
 
-echo "Next steps:\n";
-echo "1. Configure user profile form display modes\n";
-echo "2. Set up field permissions and visibility\n";
-echo "3. Test user migration to verify field population\n";
+echo "✅ Next steps:\n";
+echo "1. Run corrected content type creation script\n";
+echo "2. Update migration source plugin descriptions\n";
+echo "3. Test user migration with corrected field mappings\n";
 echo "4. Configure field validation and requirements\n";

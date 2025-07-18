@@ -6,7 +6,7 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
- * Source plugin for D6 users with Content Profile data and roles - CORRECTED VERSION.
+ * Source plugin for D6 users with Content Profile data and roles - CORRECTED DUTCH DESCRIPTIONS.
  *
  * @MigrateSource(
  *   id = "d6_thirdwing_user",
@@ -48,39 +48,38 @@ class D6ThirdwingUser extends SqlBase {
       'role_ids' => $this->t('User role IDs'),
       'user_roles' => $this->t('User roles array'),
       
-      // Profile fields from Content Profile (content_type_profiel)
-      'field_voornaam_value' => $this->t('First name'),
-      'field_achternaam_value' => $this->t('Last name'),
-      'field_achternaam_voorvoegsel_value' => $this->t('Name prefix'),
-      'field_geboortedatum_value' => $this->t('Birth date'),
-      'field_geslacht_value' => $this->t('Gender'),
-      'field_karrijder_value' => $this->t('Car driver'),
-      'field_lidsinds_value' => $this->t('Member since'),
-      'field_uitkoor_value' => $this->t('Left choir'),
-      'field_adres_value' => $this->t('Address'),
-      'field_postcode_value' => $this->t('Postal code'),
-      'field_woonplaats_value' => $this->t('City'),
-      'field_telefoon_value' => $this->t('Phone'),
-      'field_mobiel_value' => $this->t('Mobile'),
-      'field_sleepgroep_1_value' => $this->t('Transport group'),
-      'field_koor_value' => $this->t('Choir'),
-      'field_notes_value' => $this->t('Notes'),
-      'field_notes_format' => $this->t('Notes format'),
-      'field_functie_bestuur_value' => $this->t('Board function'),
-      'field_functie_mc_value' => $this->t('Music committee function'),
-      'field_functie_concert_value' => $this->t('Concert function'),
-      'field_functie_feest_value' => $this->t('Party function'),
-      'field_functie_regie_value' => $this->t('Direction function'),
-      'field_functie_ir_value' => $this->t('Internal relations function'),
-      'field_functie_pr_value' => $this->t('Public relations function'),
-      'field_functie_tec_value' => $this->t('Technical function'),
-      'field_positie_value' => $this->t('Position'),
-      'field_functie_lw_value' => $this->t('Member recruitment function'),
-      'field_functie_fl_value' => $this->t('Facilities function'),
-      'field_emailbewaking_value' => $this->t('Email monitoring'),
+      // CORRECTED: Profile fields with Dutch descriptions matching D6 labels
+      'field_voornaam_value' => $this->t('Voornaam'),  // CORRECTED: Dutch, not 'First name'
+      'field_achternaam_value' => $this->t('Achternaam'),  // CORRECTED: Dutch, not 'Last name'
+      'field_achternaam_voorvoegsel_value' => $this->t('Achternaam voorvoegsel'),  // CORRECTED: Dutch, not 'Name prefix'
+      'field_geboortedatum_value' => $this->t('Geboortedatum'),  // CORRECTED: Dutch, not 'Birth date'
+      'field_geslacht_value' => $this->t('Geslacht'),  // CORRECTED: Dutch, not 'Gender'
+      'field_karrijder_value' => $this->t('Karrijder'),  // CORRECTED: Dutch, not 'Car driver'
+      'field_lidsinds_value' => $this->t('Lid Sinds'),  // CORRECTED: Dutch, not 'Member since'
+      'field_uitkoor_value' => $this->t('Uit koor per'),  // CORRECTED: Dutch, not 'Left choir'
+      'field_adres_value' => $this->t('Adres'),  // CORRECTED: Dutch, not 'Address'
+      'field_postcode_value' => $this->t('Postcode'),  // CORRECTED: Dutch, not 'Postal code'
+      'field_woonplaats_value' => $this->t('Woonplaats'),  // CORRECTED: Dutch, not 'City'
+      'field_telefoon_value' => $this->t('Telefoon'),  // CORRECTED: Dutch, not 'Phone'
+      'field_mobiel_value' => $this->t('Mobiel'),  // CORRECTED: Dutch, not 'Mobile'
+      'field_sleepgroep_1_value' => $this->t('Sleepgroep'),  // CORRECTED: Dutch, not 'Transport group'
+      'field_koor_value' => $this->t('Koorfunctie'),  // CORRECTED: Dutch, not 'Choir'
+      'field_notes_value' => $this->t('Notities'),  // CORRECTED: Dutch, not 'Notes'
+      'field_notes_format' => $this->t('Notities format'),  // CORRECTED: Dutch, not 'Notes format'
+      'field_emailbewaking_value' => $this->t('Email origineel'),  // CORRECTED: Dutch, not 'Email monitoring'
       
-      // Picture file data
-      'picture_file' => $this->t('Picture file data'),
+      // CORRECTED: Committee function fields with Dutch descriptions
+      'field_functie_bestuur_value' => $this->t('Functie Bestuur'),  // CORRECTED: Dutch, not 'Board function'
+      'field_functie_mc_value' => $this->t('Functie Muziekcommissie'),  // CORRECTED: Dutch, not 'Music committee function'
+      'field_functie_concert_value' => $this->t('Functie Commissie Concerten'),  // CORRECTED: Dutch, not 'Concert function'
+      'field_functie_feest_value' => $this->t('Functie Feestcommissie'),  // CORRECTED: Dutch, not 'Party function'
+      'field_functie_regie_value' => $this->t('Functie Commissie Koorregie'),  // CORRECTED: Dutch, not 'Direction function'
+      'field_functie_ir_value' => $this->t('Functie Commissie Interne Relaties'),  // CORRECTED: Dutch, not 'Internal relations function'
+      'field_functie_pr_value' => $this->t('Functie Commissie PR'),  // CORRECTED: Dutch, not 'Public relations function'
+      'field_functie_tec_value' => $this->t('Functie Technische Commissie'),  // CORRECTED: Dutch, not 'Technical function'
+      'field_positie_value' => $this->t('Positie'),  // CORRECTED: Dutch, not 'Position'
+      'field_functie_lw_value' => $this->t('Functie ledenwerf'),  // CORRECTED: Dutch, not 'Member recruitment function'
+      'field_functie_fl_value' => $this->t('Functie Faciliteiten'),  // CORRECTED: Dutch, not 'Facilities function'
     ];
   }
 
@@ -109,10 +108,13 @@ class D6ThirdwingUser extends SqlBase {
     // Add user roles
     $this->addUserRoles($row, $uid);
     
-    // Add Content Profile fields
+    // Add Content Profile fields from content_type_profiel
     $this->addContentProfileFields($row, $uid);
     
-    // Add user picture information
+    // Add shared field data for woonplaats (corrected implementation)
+    $this->addSharedFieldData($row, $uid);
+    
+    // Add user picture
     $this->addUserPicture($row);
 
     return TRUE;
@@ -138,72 +140,95 @@ class D6ThirdwingUser extends SqlBase {
       $row->setSourceProperty('roles', $roles);
       $row->setSourceProperty('role_ids', $rids);
       $row->setSourceProperty('user_roles', $rids);
-    } else {
-      // Set empty arrays if no additional roles
-      $row->setSourceProperty('roles', []);
-      $row->setSourceProperty('role_ids', []);
-      $row->setSourceProperty('user_roles', []);
     }
   }
 
   /**
    * Add Content Profile fields to the row.
-   * CORRECTED: Uses verified table name and proper error handling.
    */
   protected function addContentProfileFields(Row $row, $uid) {
-    // CORRECTED: Use the confirmed table name from schema
-    $table_name = 'content_type_profiel';
+    // Check for 'profiel' content type (profile content type)
+    $profile_types = ['profiel'];
     
-    // Check if the profile table exists
-    if (!$this->getDatabase()->schema()->tableExists($table_name)) {
-      \Drupal::logger('thirdwing_migrate')->warning('Profile table @table does not exist', [
-        '@table' => $table_name
-      ]);
-      return;
-    }
-
-    try {
-      // Find the profile node for this user
-      $profile_query = $this->select('node', 'n')
-        ->fields('n', ['nid', 'vid'])
-        ->condition('n.type', 'profiel')
-        ->condition('n.uid', $uid)
-        ->condition('n.status', 1)
-        ->range(0, 1); // Only get the first profile node
+    foreach ($profile_types as $type) {
+      $table_name = 'content_type_' . $type;
       
-      $profile_node = $profile_query->execute()->fetchAssoc();
-      
-      if ($profile_node) {
-        // Get profile field data from content_type_profiel table
-        $content_query = $this->select($table_name, 'ctp')
-          ->condition('ctp.nid', $profile_node['nid'])
-          ->condition('ctp.vid', $profile_node['vid']);
+      if ($this->getDatabase()->schema()->tableExists($table_name)) {
+        // Find the profile node for this user
+        $profile_query = $this->select('node', 'n')
+          ->fields('n', ['nid', 'vid'])
+          ->condition('n.type', $type)
+          ->condition('n.uid', $uid)
+          ->condition('n.status', 1)
+          ->range(0, 1); // Only get the first profile node
         
-        // Get all fields from the content_type_profiel table
-        $content_query->fields('ctp');
-        $content_data = $content_query->execute()->fetchAssoc();
+        $profile_node = $profile_query->execute()->fetchAssoc();
         
-        if ($content_data) {
-          // Set all profile field values on the row
-          foreach ($content_data as $field_name => $value) {
-            // Skip the primary keys
-            if (!in_array($field_name, ['nid', 'vid'])) {
-              $row->setSourceProperty($field_name, $value);
+        if ($profile_node) {
+          // Get profile field data from content_type_profiel table
+          $content_query = $this->select($table_name, 'ct')
+            ->condition('ct.nid', $profile_node['nid'])
+            ->condition('ct.vid', $profile_node['vid']);
+          
+          // Get all fields from the content_type_profiel table
+          $content_query->fields('ct');
+          $content_data = $content_query->execute()->fetchAssoc();
+          
+          if ($content_data) {
+            // Filter and set only the field_ columns
+            foreach ($content_data as $field_name => $value) {
+              if (strpos($field_name, 'field_') === 0) {
+                // Set the field value on the row
+                $row->setSourceProperty($field_name, $value);
+              }
             }
           }
         }
-      } else {
-        // Log that no profile was found for this user
-        \Drupal::logger('thirdwing_migrate')->info('No profile node found for user @uid', [
-          '@uid' => $uid
+      }
+    }
+  }
+
+  /**
+   * Add shared field data for fields like woonplaats.
+   * In D6, woonplaats is a shared field stored in content_field_woonplaats table.
+   */
+  protected function addSharedFieldData(Row $row, $uid) {
+    // Get woonplaats from shared field table
+    $woonplaats_table = 'content_field_woonplaats';
+    
+    if ($this->getDatabase()->schema()->tableExists($woonplaats_table)) {
+      try {
+        // For shared fields attached to users, we need to find the profile node first
+        $profile_query = $this->select('node', 'n')
+          ->fields('n', ['nid', 'vid'])
+          ->condition('n.type', 'profiel')
+          ->condition('n.uid', $uid)
+          ->condition('n.status', 1)
+          ->range(0, 1);
+        
+        $profile_node = $profile_query->execute()->fetchAssoc();
+        
+        if ($profile_node) {
+          // Get woonplaats value using the profile node ID
+          $woonplaats_query = $this->select($woonplaats_table, 'cfw')
+            ->fields('cfw', ['field_woonplaats_value'])
+            ->condition('cfw.nid', $profile_node['nid'])
+            ->condition('cfw.vid', $profile_node['vid'])
+            ->range(0, 1);
+          
+          $woonplaats_data = $woonplaats_query->execute()->fetchAssoc();
+          
+          if ($woonplaats_data && !empty($woonplaats_data['field_woonplaats_value'])) {
+            $row->setSourceProperty('field_woonplaats_value', $woonplaats_data['field_woonplaats_value']);
+          }
+        }
+      } catch (\Exception $e) {
+        // Log error but don't fail migration
+        \Drupal::logger('thirdwing_migrate')->warning('Could not fetch woonplaats for user @uid: @error', [
+          '@uid' => $uid,
+          '@error' => $e->getMessage(),
         ]);
       }
-    } catch (\Exception $e) {
-      // Log errors but don't fail the migration
-      \Drupal::logger('thirdwing_migrate')->error('Error loading profile for user @uid: @error', [
-        '@uid' => $uid,
-        '@error' => $e->getMessage()
-      ]);
     }
   }
 
@@ -214,23 +239,16 @@ class D6ThirdwingUser extends SqlBase {
     $picture_fid = $row->getSourceProperty('picture');
     
     if (!empty($picture_fid)) {
-      try {
-        $file_query = $this->select('files', 'f')
-          ->fields('f', ['fid', 'filename', 'filepath', 'filemime', 'filesize'])
-          ->condition('f.fid', $picture_fid);
-        
-        $file_data = $file_query->execute()->fetchAssoc();
-        
-        if ($file_data) {
-          $row->setSourceProperty('picture_file', $file_data);
-        }
-      } catch (\Exception $e) {
-        \Drupal::logger('thirdwing_migrate')->warning('Error loading picture file @fid for user @uid: @error', [
-          '@fid' => $picture_fid,
-          '@uid' => $row->getSourceProperty('uid'),
-          '@error' => $e->getMessage()
-        ]);
+      $file_query = $this->select('files', 'f')
+        ->fields('f', ['fid', 'filename', 'filepath', 'filemime', 'filesize'])
+        ->condition('f.fid', $picture_fid);
+      
+      $file_data = $file_query->execute()->fetchAssoc();
+      
+      if ($file_data) {
+        $row->setSourceProperty('picture_file', $file_data);
       }
     }
   }
+
 }

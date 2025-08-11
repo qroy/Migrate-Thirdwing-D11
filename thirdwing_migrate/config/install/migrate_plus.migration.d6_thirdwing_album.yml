@@ -26,6 +26,7 @@ process:
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
   
   status: status
   created: created
@@ -40,20 +41,22 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Album-specific fields
+  # FIXED: Album-specific fields with proper _value suffix mappings
   field_album_datum: field_album_datum_value
   field_album_locatie: field_album_locatie_value
   field_album_beschrijving: field_album_beschrijving_value
   field_album_photographer: field_album_photographer_value
   
-  # Cover image (single image)
+  # FIXED: Cover image field
   field_cover_image:
     plugin: migration_lookup
     migration: d6_thirdwing_media_image
     source: cover_image/field_cover_image_fid
+    no_stub: true
   
-  # Album images (multiple images)
+  # FIXED: Album images field
   field_media_images:
     plugin: sub_process
     source: images
@@ -62,8 +65,8 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Related activities
   field_gerelateerd_activiteit:
     plugin: sub_process
     source: related_activities
@@ -72,8 +75,8 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_activity
         source: field_gerelateerd_activiteit_nid
+        no_stub: true
 
-  # Taxonomy terms (access control)
   field_toegang:
     plugin: sub_process
     source: taxonomy_terms
@@ -82,6 +85,7 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:

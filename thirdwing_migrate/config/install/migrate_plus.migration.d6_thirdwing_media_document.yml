@@ -1,4 +1,3 @@
-# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_document.yml
 id: d6_thirdwing_media_document
 migration_group: thirdwing_d6
 migration_tags:
@@ -18,11 +17,9 @@ destination:
   default_bundle: document
 
 process:
-  # FIXED: Use file-based IDs to maintain consistency with file entities
   mid: fid
   bundle: constants/bundle
   
-  # Name field migration - use D6 field_files description with filename fallback
   name:
     plugin: thirdwing_file_description
     source:
@@ -43,14 +40,12 @@ process:
   created: timestamp
   changed: timestamp
   
-  # Main document field
   field_media_document/target_id:
     plugin: migration_lookup
     migration: d6_thirdwing_file
     source: fid
     no_stub: true
   
-  # Document classification based on source and file type
   field_document_soort:
     plugin: thirdwing_document_classifier
     source:
@@ -58,7 +53,6 @@ process:
       - file_extension
       - repertoire_attachment
   
-  # Verslag type mapping (only for verslagen)
   field_verslag_type:
     plugin: static_map
     source: verslag_taxonomy_term
@@ -73,21 +67,19 @@ process:
       88: 'overige_vergadering'
       89: 'vergadering_muziekcommissie'
   
-  # Document date (required for verslagen)
   field_datum:
     plugin: format_date
     source: document_date
     from_format: 'Y-m-d H:i:s'
     to_format: 'Y-m-d'
+    bypass: true
   
-  # Related repertoire (required for partituren)
   field_gerelateerd_repertoire:
     plugin: migration_lookup
     migration: d6_thirdwing_repertoire
     source: repertoire_nid
     no_stub: true
   
-  # Access control
   field_toegang:
     plugin: migration_lookup
     migration: d6_thirdwing_taxonomy_term

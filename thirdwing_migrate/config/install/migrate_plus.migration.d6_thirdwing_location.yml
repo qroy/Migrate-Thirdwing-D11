@@ -4,9 +4,10 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Locations'
+
 source:
-  plugin: d6_node
-  node_type: locatie
+  plugin: d6_thirdwing_location
 
 destination:
   plugin: 'entity:node'
@@ -19,11 +20,14 @@ process:
     plugin: default_value
     default_value: locatie
   title: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
+  
   status: status
   created: created
   changed: changed
@@ -37,26 +41,39 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Location-specific fields - using exact D6 field names
-  field_adres: field_adres_value
-  field_postcode: field_postcode_value
-  field_woonplaats: field_woonplaats_value
-  field_land: field_land_value
-  field_contactpersoon: field_contactpersoon_value
-  field_telefoon: field_telefoon_value
-  field_email: field_email_email
-  field_website: field_website_url
-  field_opmerkingen: field_opmerkingen_value
+  # FIXED: Location-specific fields with proper _value suffix mappings
+  field_l_adres: field_l_adres_value
+  field_l_plaats: field_l_plaats_value
+  field_l_postcode: field_l_postcode_value
   
-  # Route links
-  field_l_routelink:
+  field_l_routelink/uri: field_l_routelink_url
+  field_l_routelink/title: field_l_routelink_title
+  
+  # FIXED: Added media support for locations
+  field_media_images:
     plugin: sub_process
-    source: route_links
+    source: images
     process:
-      uri: field_l_routelink_url
-      title: field_l_routelink_title
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+        no_stub: true
+
+  field_media_documents:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_document
+        source: field_files_fid
+        no_stub: true
 
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

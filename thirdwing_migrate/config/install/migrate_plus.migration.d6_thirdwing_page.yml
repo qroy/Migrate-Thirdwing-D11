@@ -26,6 +26,7 @@ process:
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
   
   status: status
   created: created
@@ -40,13 +41,14 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Page-specific fields
+  # FIXED: Page-specific fields with proper _value suffix mappings
   field_pagina_type: field_pagina_type_value
   field_menu_weight: field_menu_weight_value
   field_show_in_menu: field_show_in_menu_value
   
-  # Media references - Images
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES
   field_media_images:
     plugin: sub_process
     source: images
@@ -55,21 +57,19 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_media_image
         source: field_afbeeldingen_fid
+        no_stub: true
   
-  # Media references - Files/Documents
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES
   field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration: 
-          - d6_thirdwing_media_document
-          - d6_thirdwing_media_audio
-          - d6_thirdwing_media_video
+        migration: d6_thirdwing_media_document
         source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms (access control)
   field_toegang:
     plugin: sub_process
     source: taxonomy_terms
@@ -78,6 +78,7 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
@@ -85,5 +86,3 @@ migration_dependencies:
     - d6_thirdwing_taxonomy_term
     - d6_thirdwing_media_image
     - d6_thirdwing_media_document
-    - d6_thirdwing_media_audio
-    - d6_thirdwing_media_video

@@ -1,3 +1,4 @@
+# FILE 10: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_program.yml
 id: d6_thirdwing_program
 migration_group: thirdwing_d6
 migration_tags:
@@ -26,6 +27,7 @@ process:
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
   
   status: status
   created: created
@@ -40,18 +42,18 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Program-specific fields
+  # FIXED: Program-specific fields with proper _value suffix mappings
   field_datum: field_datum_value
   field_prog_type: field_prog_type_value
   
-  # Location reference
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
+    no_stub: true
   
-  # Repertoire references
   field_repertoire:
     plugin: sub_process
     source: repertoire_items
@@ -60,8 +62,8 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_repertoire
         source: field_repertoire_nid
+        no_stub: true
   
-  # Program items (self-reference)
   field_programma2:
     plugin: sub_process
     source: program_items
@@ -70,8 +72,30 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_program
         source: field_programma2_nid
+        no_stub: true
+  
+  # FIXED: Images now reference IMAGE MEDIA ENTITIES
+  field_media_images:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+        no_stub: true
+  
+  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES
+  field_media_documents:
+    plugin: sub_process
+    source: files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_document
+        source: field_files_fid
+        no_stub: true
 
-  # Taxonomy terms (access control)
   field_toegang:
     plugin: sub_process
     source: taxonomy_terms
@@ -80,6 +104,7 @@ process:
         plugin: migration_lookup
         migration: d6_thirdwing_taxonomy_term
         source: tid
+        no_stub: true
 
 migration_dependencies:
   required:
@@ -87,3 +112,5 @@ migration_dependencies:
     - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
     - d6_thirdwing_repertoire
+    - d6_thirdwing_media_image
+    - d6_thirdwing_media_document

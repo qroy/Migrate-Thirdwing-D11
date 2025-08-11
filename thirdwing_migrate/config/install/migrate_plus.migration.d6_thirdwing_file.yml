@@ -34,6 +34,7 @@ process:
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
 
 migration_dependencies:
   required:

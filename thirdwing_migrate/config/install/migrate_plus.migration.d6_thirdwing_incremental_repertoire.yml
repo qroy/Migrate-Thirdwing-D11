@@ -1,4 +1,3 @@
-# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_incremental_repertoire.yml
 id: d6_thirdwing_incremental_repertoire
 migration_group: thirdwing_d6_incremental
 migration_tags:
@@ -32,6 +31,7 @@ process:
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
   
   status: status
   created: created
@@ -46,25 +46,23 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Repertoire-specific fields
-  field_componist: field_componist_value
-  field_arrangeur: field_arrangeur_value
-  field_tekstdichter: field_tekstdichter_value
-  field_uitgever: field_uitgever_value
-  field_genre: field_genre_value
-  field_taal: field_taal_value
-  field_niveau: field_niveau_value
-  field_stemverdeling: field_stemverdeling_value
-  field_duur: field_duur_value
-  field_opmerking: field_opmerking_value
-  field_aankoop_datum: field_aankoop_datum_value
-  field_aankoop_prijs: field_aankoop_prijs_value
-  field_aantal_exemplaren: field_aantal_exemplaren_value
-  field_locatie_partituren: field_locatie_partituren_value
+  # FIXED: Repertoire-specific fields with proper field mapping
+  field_componist: field_rep_componist_value
+  field_componist_jaar: field_rep_componist_jaar_value
+  field_arrangeur: field_rep_arr_value
+  field_arrangeur_jaar: field_rep_arr_jaar_value
+  field_uitvoerende: field_rep_uitv_value
+  field_uitvoerende_jaar: field_rep_uitv_jaar_value
+  field_genre: field_rep_genre_value
+  field_sinds: field_rep_sinds_value
+  field_audio_nummer: field_audio_nummer_value
+  field_audio_seizoen: field_audio_seizoen_value
+  field_klapper: field_klapper_value
   
   # FIXED: Images now reference IMAGE MEDIA ENTITIES
-  field_afbeeldingen:
+  field_media_images:
     plugin: sub_process
     source: images
     process:
@@ -75,7 +73,7 @@ process:
         no_stub: true
   
   # FIXED: Files (sheet music) now reference DOCUMENT MEDIA ENTITIES
-  field_files:
+  field_media_documents:
     plugin: sub_process
     source: files
     process:
@@ -85,8 +83,7 @@ process:
         source: field_files_fid
         no_stub: true
 
-  # Taxonomy terms
-  field_taxonomy:
+  field_toegang:
     plugin: sub_process
     source: taxonomy_terms
     process:

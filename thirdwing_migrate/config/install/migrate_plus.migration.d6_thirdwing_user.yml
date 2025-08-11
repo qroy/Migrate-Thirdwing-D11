@@ -1,11 +1,10 @@
-# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_user.yml
-# CORRECTED VERSION with proper field mappings
-
 id: d6_thirdwing_user
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'User'
+
+label: 'D6 Users'
 
 source:
   plugin: d6_thirdwing_user
@@ -16,48 +15,31 @@ destination:
 process:
   uid: uid
   name: name
+  pass: pass
   mail: mail
   created: created
   access: access
   login: login
   status: status
   
-  # Role assignment - migrate user roles
-  roles:
-    plugin: thirdwing_user_roles
-    source: uid
-    migration: d6_thirdwing_user_role
-  
-  # Profile fields - CORRECTED MAPPINGS
+  # FIXED: User profile fields with proper _value suffix mappings
   field_voornaam: field_voornaam_value
   field_achternaam: field_achternaam_value
-  # FIX 1: Use correct D11 field name (was field_tussenvoegsel)
   field_achternaam_voorvoegsel: field_achternaam_voorvoegsel_value
   field_geboortedatum: field_geboortedatum_value
   field_geslacht: field_geslacht_value
-  field_karrijder: field_karrijder_value
-  field_lidsinds: field_lidsinds_value
-  field_uitkoor: field_uitkoor_value
   field_adres: field_adres_value
   field_postcode: field_postcode_value
-  # FIX 2: Add _value suffix for proper source mapping
   field_woonplaats: field_woonplaats_value
   field_telefoon: field_telefoon_value
   field_mobiel: field_mobiel_value
-  # FIX 3: Use correct D11 field name with _1 suffix (was field_sleepgroep)
+  field_karrijder: field_karrijder_value
+  field_lidsinds: field_lidsinds_value
+  field_uitkoor: field_uitkoor_value
   field_sleepgroep_1: field_sleepgroep_1_value
   field_koor: field_koor_value
-  field_notes/value: field_notes_value
-  field_notes/format:
-    plugin: static_map
-    source: field_notes_format
-    map:
-      1: basic_html
-      3: full_html
-      6: basic_html
-    default_value: basic_html
-  
-  # Committee function fields (all correct - no changes needed)
+  field_notes: field_notes_value
+  field_emailbewaking: field_emailbewaking_value
   field_functie_bestuur: field_functie_bestuur_value
   field_functie_mc: field_functie_mc_value
   field_functie_concert: field_functie_concert_value
@@ -70,8 +52,15 @@ process:
   field_functie_lw: field_functie_lw_value
   field_functie_fl: field_functie_fl_value
   
-  # Administrative fields (correct - no changes needed)
-  field_emailbewaking: field_emailbewaking_value
+  roles:
+    plugin: sub_process
+    source: user_roles
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_user_role
+        source: role_name
+        no_stub: true
 
 migration_dependencies:
   required:

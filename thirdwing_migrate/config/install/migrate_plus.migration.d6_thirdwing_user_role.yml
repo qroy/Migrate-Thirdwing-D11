@@ -2,71 +2,25 @@ id: d6_thirdwing_user_role
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
-  - 'User Role'
+  - 'User'
 
 label: 'D6 User Roles'
 
 source:
   plugin: d6_thirdwing_user_role
-  constants:
-    # Default D11 roles to preserve
-    preserve_roles:
-      - anonymous
-      - authenticated
-      - administrator
 
 destination:
   plugin: 'entity:user_role'
 
 process:
-  id:
-    plugin: thirdwing_role_id_generator
-    source: name
+  id: rid
   label: name
-  weight:
-    plugin: static_map
-    source: rid
-    map:
-      # Core roles get standard weights
-      1: -10  # anonymous user
-      2: -9   # authenticated user
-      
-      # Administrative roles get high weights
-      14: 10  # Admin
-      6: 9    # Beheerder
-      
-      # Board and leadership roles
-      7: 8    # Bestuur
-      22: 7   # Dirigent
-      
-      # Committee roles get medium weights
-      8: 5    # Muziekcommissie
-      13: 5   # Commissie Concerten
-      11: 5   # Commissie Interne Relaties
-      15: 5   # Commissie Koorregie
-      18: 5   # Commissie Ledenwerving
-      17: 5   # Commissie Publieke Relaties
-      19: 5   # Technische Commissie
-      20: 5   # Commissie Faciliteiten en Logistiek
-      10: 5   # Feestcommissie
-      
-      # Member roles
-      3: 2    # Lid
-      16: 2   # Band
-      21: 1   # Aspirant-lid
-      
-      # Author and friend roles
-      12: 3   # Auteur
-      4: 0    # Vriend
-    default_value: 0
-    
-  # Skip D6 anonymous/authenticated - use D11 defaults
-  skip_role:
-    plugin: static_map
-    source: rid
-    map:
-      1: true   # anonymous user - use D11 default
-      2: true   # authenticated user - use D11 default
+  weight: weight
+  is_admin:
+    plugin: default_value
     default_value: false
+  permissions:
+    plugin: default_value
+    default_value: []
 
 migration_dependencies: []

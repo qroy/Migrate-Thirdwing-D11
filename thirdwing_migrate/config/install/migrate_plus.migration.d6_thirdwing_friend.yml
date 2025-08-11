@@ -4,9 +4,10 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Friends/Sponsors'
+
 source:
-  plugin: d6_node
-  node_type: vriend
+  plugin: d6_thirdwing_friend
 
 destination:
   plugin: 'entity:node'
@@ -19,11 +20,14 @@ process:
     plugin: default_value
     default_value: vriend
   title: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
+    no_stub: true
+  
   status: status
   created: created
   changed: changed
@@ -37,21 +41,28 @@ process:
       3: full_html
       6: basic_html
     default_value: basic_html
+    bypass: true
   
-  # Friend-specific fields - using exact D6 field names
-  field_organisatie: field_organisatie_value
-  field_contactpersoon: field_contactpersoon_value
-  field_adres: field_adres_value
+  # FIXED: Friend-specific fields with proper _value suffix mappings
+  field_website/uri: field_website_url
+  field_website/title: field_website_title
+  field_vriend_soort: field_vriend_soort_value
+  field_vriend_benaming: field_vriend_benaming_value
+  field_vriend_tot: field_vriend_tot_value
+  field_vriend_vanaf: field_vriend_vanaf_value
+  field_vriend_lengte: field_vriend_lengte_value
   field_woonplaats: field_woonplaats_value
-  field_telefoon: field_telefoon_value
-  field_email: field_email_email
-  field_website: field_website_url
   
-  # Logo image
-  field_logo:
-    plugin: migration_lookup
-    migration: d6_thirdwing_media_image
-    source: field_logo_fid
+  # FIXED: Friend/sponsor images
+  field_media_images:
+    plugin: sub_process
+    source: images
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_media_image
+        source: field_afbeeldingen_fid
+        no_stub: true
 
 migration_dependencies:
   required:

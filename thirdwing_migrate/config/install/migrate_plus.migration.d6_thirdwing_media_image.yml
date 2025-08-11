@@ -1,4 +1,3 @@
-# File: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_media_image.yml
 id: d6_thirdwing_media_image
 migration_group: thirdwing_d6
 migration_tags:
@@ -9,26 +8,23 @@ migration_tags:
 label: 'D6 Image Media Entities'
 
 source:
-  plugin: d6_file
+  plugin: d6_thirdwing_image_files
   constants:
     bundle: image
-  # Filter for image files
-  type: image
 
 destination:
   plugin: 'entity:media'
   default_bundle: image
 
 process:
-  # FIXED: Use file-based IDs to avoid conflicts with node-based media
   mid: fid
   bundle: constants/bundle
   
-  # Name field migration - use filename or alt text
   name:
-    plugin: callback
-    callable: trim
-    source: filename
+    plugin: thirdwing_file_description
+    source:
+      - field_files_description
+      - filename
   
   uid:
     plugin: author_lookup_with_fallback
@@ -44,31 +40,19 @@ process:
   created: timestamp
   changed: timestamp
   
-  # Main image field
   field_media_image/target_id:
     plugin: migration_lookup
     migration: d6_thirdwing_file
     source: fid
     no_stub: true
   
-  field_media_image/alt:
-    plugin: default_value
-    default_value: ''
-  
-  field_media_image/title:
-    plugin: callback
-    callable: trim
-    source: filename
-  
-  # FIXED: Use proper plugin syntax instead of callback
   field_datum:
-    plugin: extract_exif_date
-    source: 
-      - filepath
-      - field_exif_datetimeoriginal
-      - timestamp
+    plugin: format_date
+    source: image_date
+    from_format: 'Y-m-d H:i:s'
+    to_format: 'Y-m-d'
+    bypass: true
   
-  # Access control
   field_toegang:
     plugin: migration_lookup
     migration: d6_thirdwing_taxonomy_term

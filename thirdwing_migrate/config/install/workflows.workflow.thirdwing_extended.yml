@@ -1,0 +1,163 @@
+# File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_extended.yml
+langcode: nl
+status: true
+dependencies:
+  module:
+    - content_moderation
+id: thirdwing_extended
+label: 'Thirdwing Uitgebreide Workflow'
+type: content_moderation
+type_settings:
+  states:
+    aanmaak:
+      label: '(aanmaak)'
+      published: false
+      default_revision: false
+      weight: -6
+    concept:
+      label: 'Concept'
+      published: false
+      default_revision: false
+      weight: -5
+    prullenmand:
+      label: 'Prullenmand'
+      published: false
+      default_revision: false
+      weight: -4
+    aangeraden:
+      label: 'Aangeraden'
+      published: true
+      default_revision: true
+      weight: 0
+    archief:
+      label: 'Archief'
+      published: false
+      default_revision: true
+      weight: 1
+    geen_archief:
+      label: 'Geen Archief'
+      published: true
+      default_revision: true
+      weight: 2
+    gepubliceerd:
+      label: 'Gepubliceerd'
+      published: true
+      default_revision: true
+      weight: 3
+  transitions:
+    naar_concept:
+      label: 'Naar concept'
+      from:
+        - aanmaak
+        - archief
+        - aangeraden
+        - geen_archief
+        - prullenmand
+        - gepubliceerd
+      to: concept
+      weight: 0
+    archiveren:
+      label: 'Archiveren'
+      from:
+        - aanmaak
+        - concept
+        - aangeraden
+        - geen_archief
+        - prullenmand
+        - gepubliceerd
+      to: archief
+      weight: 1
+    aanbevelen:
+      label: 'Aanbevelen'
+      from:
+        - aanmaak
+        - concept
+        - archief
+        - geen_archief
+        - prullenmand
+        - gepubliceerd
+      to: aangeraden
+      weight: 2
+    geen_archief_markeren:
+      label: 'Geen archief markeren'
+      from:
+        - aanmaak
+        - concept
+        - archief
+        - aangeraden
+        - prullenmand
+        - gepubliceerd
+      to: geen_archief
+      weight: 3
+    naar_prullenmand:
+      label: 'Naar prullenmand'
+      from:
+        - aanmaak
+        - concept
+        - archief
+        - aangeraden
+        - geen_archief
+        - gepubliceerd
+      to: prullenmand
+      weight: 4
+    publiceren:
+      label: 'Publiceren'
+      from:
+        - aanmaak
+        - concept
+        - archief
+        - aangeraden
+        - geen_archief
+        - prullenmand
+      to: gepubliceerd
+      weight: 5
+    aangeraden:
+      label: 'Aangeraden'
+      published: true
+      default_revision: true
+      weight: 3
+  transitions:
+    naar_concept:
+      label: 'Naar concept'
+      from:
+        - creation
+        - prullenmand
+        - archief
+      to: concept
+      weight: 0
+    publiceren:
+      label: 'Publiceren'
+      from:
+        - creation
+        - concept
+        - archief
+        - prullenmand
+      to: gepubliceerd
+      weight: 1
+    aanbevelen:
+      label: 'Aanbevelen'
+      from:
+        - creation
+        - concept
+        - gepubliceerd
+        - archief
+        - prullenmand
+      to: aangeraden
+      weight: 2
+    archiveren:
+      label: 'Archiveren'
+      from:
+        - gepubliceerd
+        - aangeraden
+        - prullenmand
+      to: archief
+      weight: 3
+    naar_prullenmand:
+      label: 'Naar prullenmand'
+      from:
+        - concept
+        - gepubliceerd
+        - aangeraden
+        - archief
+      to: prullenmand
+      weight: 4

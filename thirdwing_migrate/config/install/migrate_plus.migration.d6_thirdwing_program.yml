@@ -45,24 +45,24 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Program content uses Workflow 5 (Simple Featured) - SIDs 21,22,23
-  # OR Workflow 1 (General Content) - SIDs 1,2,3,4,8,9
+  # CORRECTED: Program content uses EXACT D6 workflow labels from documentation
+  # Workflow 5 (Simple Featured) - SIDs 21,22,23 OR Workflow 1 (General) - SIDs 1,2,3,4,8,9
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      # Workflow 5 - Simple Featured Content states
-      21: draft         # (aanmaak) → draft
-      22: published     # Gepubliceerd → published
-      23: published     # Aangeraden → published (featured)
-      # Workflow 1 - General Content states (fallback)
-      1: draft          # (creation) → draft
-      2: draft          # Concept → draft  
-      3: published      # Gepubliceerd → published
-      4: archived       # Archief → archived
-      8: draft          # Prullenmand → draft
-      9: published      # Aangeraden → published
-    default_value: published
+      # Workflow 5 - Simple Featured Content states (EXACT D6 labels)
+      21: aanmaak       # (aanmaak) → aanmaak
+      22: gepubliceerd  # Gepubliceerd → gepubliceerd
+      23: aangeraden    # Aangeraden → aangeraden
+      # Workflow 1 - General Content states (EXACT D6 labels - fallback)
+      1: creation       # (creation) → creation
+      2: concept        # Concept → concept  
+      3: gepubliceerd   # Gepubliceerd → gepubliceerd
+      4: archief        # Archief → archief
+      8: prullenmand    # Prullenmand → prullenmand
+      9: aangeraden     # Aangeraden → aangeraden
+    default_value: gepubliceerd
   
   field_datum: field_datum_value
   field_prog_type: field_prog_type_value

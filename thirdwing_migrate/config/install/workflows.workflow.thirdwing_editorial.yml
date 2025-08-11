@@ -1,0 +1,35 @@
+# File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_editorial.yml
+langcode: nl
+status: true
+dependencies:
+  module:
+    - content_moderation
+id: thirdwing_editorial
+label: 'Thirdwing Redactionele Workflow'
+type: content_moderation
+type_settings:
+  states:
+    creation:
+      label: '(creation)'
+      published: false
+      default_revision: false
+      weight: -6
+    concept:
+      label: 'Concept'
+      published: false
+      default_revision: false
+      weight: -5
+    gepubliceerd:
+      label: 'Gepubliceerd'
+      published: true
+      default_revision: true
+      weight: 0
+    archief:
+      label: 'Archief'
+      published: false
+      default_revision: true
+      weight: 1
+    prullenmand:
+      label: 'Prullenmand'
+      published: false
+      default_revision: false

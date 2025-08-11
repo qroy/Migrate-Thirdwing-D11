@@ -45,26 +45,26 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Activity content uses Workflow 3 (Activity/Event) - SIDs 10,11,12,13
-  # OR Workflow 4 (Extended Content) - SIDs 14,15,16,17,18,19,20
+  # CORRECTED: Activity content uses EXACT D6 workflow labels from documentation
+  # Workflow 3 (Activity/Event) - SIDs 10,11,12,13 AND Workflow 4 (Extended) - SIDs 14,15,16,17,18,19,20
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      # Workflow 3 - Activity/Event states
-      10: draft         # (aanmaak) → draft
-      11: published     # Actief → published
-      12: archived      # Verlopen → archived  
-      13: draft         # Inactief → draft
-      # Workflow 4 - Extended Content states (also used by activities)
-      14: draft         # (aanmaak) → draft
-      15: draft         # Concept → draft
-      16: draft         # Prullenmand → draft
-      17: published     # Aangeraden → published
-      18: archived      # Archief → archived
-      19: published     # Geen Archief → published
-      20: published     # Gepubliceerd → published
-    default_value: published
+      # Workflow 3 - Activity/Event states (EXACT D6 labels)
+      10: aanmaak       # (aanmaak) → aanmaak
+      11: actief        # Actief → actief
+      12: verlopen      # Verlopen → verlopen  
+      13: inactief      # Inactief → inactief
+      # Workflow 4 - Extended Content states (EXACT D6 labels)
+      14: aanmaak       # (aanmaak) → aanmaak
+      15: concept       # Concept → concept
+      16: prullenmand   # Prullenmand → prullenmand
+      17: aangeraden    # Aangeraden → aangeraden
+      18: archief       # Archief → archief
+      19: geen_archief  # Geen Archief → geen_archief
+      20: gepubliceerd  # Gepubliceerd → gepubliceerd
+    default_value: gepubliceerd
   
   field_datum: field_datum
   field_tijd_aanwezig: field_tijd_aanwezig_value

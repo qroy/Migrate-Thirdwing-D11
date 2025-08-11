@@ -45,17 +45,17 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Friend content uses Workflow 3 (Activity/Event) - SIDs 10,11,12,13
-  # Based on the D6 workflow documentation, "vriend" uses the Activity workflow
+  # CORRECTED: Friend content uses EXACT D6 workflow labels from documentation
+  # Workflow 3 (Activity/Event) - SIDs 10,11,12,13
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      10: draft         # (aanmaak) → draft
-      11: published     # Actief → published (active sponsors)
-      12: archived      # Verlopen → archived (expired sponsorship)
-      13: draft         # Inactief → draft (inactive sponsors)
-    default_value: published
+      10: aanmaak       # (aanmaak) → aanmaak
+      11: actief        # Actief → actief (active sponsors)
+      12: verlopen      # Verlopen → verlopen (expired sponsorship)
+      13: inactief      # Inactief → inactief (inactive sponsors)
+    default_value: actief
   
   field_vriend_website: field_vriend_website_url
   field_vriend_telefoon: field_vriend_telefoon_value

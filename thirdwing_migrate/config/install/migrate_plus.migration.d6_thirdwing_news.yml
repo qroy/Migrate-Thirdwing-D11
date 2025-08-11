@@ -45,19 +45,19 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Proper D6 workflow state mapping for news content
+  # CORRECTED: Proper D6 workflow state mapping using EXACT D6 labels
   # News uses Workflow 1 (General Content) - SIDs 1,2,3,4,8,9
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      1: draft          # (creation) → draft
-      2: draft          # Concept → draft  
-      3: published      # Gepubliceerd → published
-      4: archived       # Archief → archived
-      8: draft          # Prullenmand → draft (trash becomes draft)
-      9: published      # Aangeraden → published (featured stays published)
-    default_value: published
+      1: creation      # (creation) → creation
+      2: concept       # Concept → concept  
+      3: gepubliceerd  # Gepubliceerd → gepubliceerd
+      4: archief       # Archief → archief
+      8: prullenmand   # Prullenmand → prullenmand
+      9: aangeraden    # Aangeraden → aangeraden
+    default_value: gepubliceerd
   
   field_datum: field_datum_value
   

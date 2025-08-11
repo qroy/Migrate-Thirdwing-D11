@@ -1,11 +1,15 @@
+# File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_activity.yml
 id: d6_thirdwing_activity
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Activity Content'
+
 source:
   plugin: d6_thirdwing_activity
+  node_type: activiteit
 
 destination:
   plugin: 'entity:node'
@@ -18,12 +22,14 @@ process:
     plugin: default_value
     default_value: activiteit
   title: title
+  
   uid:
     plugin: author_lookup_with_fallback
     migration: d6_thirdwing_user
     source: uid
     fallback_uid: 1
     no_stub: true
+  
   status: status
   created: created
   changed: changed
@@ -39,20 +45,88 @@ process:
     default_value: basic_html
     bypass: true
   
-  # FIXED: Activity-specific fields with proper _value suffix mappings
-  field_datum: field_datum_value
+  # CORRECTED: Activity content uses Workflow 3 (Activity/Event) - SIDs 10,11,12,13
+  # OR Workflow 4 (Extended Content) - SIDs 14,15,16,17,18,19,20
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      # Workflow 3 - Activity/Event states
+      10: draft         # (aanmaak) → draft
+      11: published     # Actief → published
+      12: archived      # Verlopen → archived  
+      13: draft         # Inactief → draft
+      # Workflow 4 - Extended Content states (also used by activities)
+      14: draft         # (aanmaak) → draft
+      15: draft         # Concept → draft
+      16: draft         # Prullenmand → draft
+      17: published     # Aangeraden → published
+      18: archived      # Archief → archived
+      19: published     # Geen Archief → published
+      20: published     # Gepubliceerd → published
+    default_value: published
+  
+  field_datum: field_datum
   field_tijd_aanwezig: field_tijd_aanwezig_value
-  field_keyboard: field_keyboard_value
-  field_gitaar: field_gitaar_value
-  field_basgitaar: field_basgitaar_value
-  field_drums: field_drums_value
+  
+  # CORRECTED: Instrument availability mapping (preserve original D6 values)
+  field_keyboard:
+    plugin: static_map
+    source: field_keyboard_value
+    map:
+      '+': '1'    # Available
+      '?': '0'    # Unknown
+      '-': '3'    # Not available
+      'v': '2'    # Volunteer needed
+    default_value: '0'
+  
+  field_gitaar:
+    plugin: static_map
+    source: field_gitaar_value
+    map:
+      '+': '1'
+      '?': '0'
+      '-': '3'
+      'v': '2'
+    default_value: '0'
+  
+  field_basgitaar:
+    plugin: static_map
+    source: field_basgitaar_value
+    map:
+      '+': '1'
+      '?': '0'
+      '-': '3'
+      'v': '2'
+    default_value: '0'
+  
+  field_drums:
+    plugin: static_map
+    source: field_drums_value
+    map:
+      '+': '1'
+      '?': '0'
+      '-': '3'
+      'v': '2'
+    default_value: '0'
+  
   field_vervoer: field_vervoer_value
-  field_sleepgroep: field_sleepgroep_value
+  
+  # CORRECTED: Sleep group mapping (preserve Roman numerals → numbers)
+  field_sleepgroep:
+    plugin: static_map
+    source: field_sleepgroep_value
+    map:
+      'I': '1'
+      'II': '2'
+      'III': '3'
+      'IV': '4'
+      'V': '5'
+      '*': '9'    # All groups
+    default_value: '1'
+  
   field_sleepgroep_aanwezig: field_sleepgroep_aanwezig_value
-  field_sleepgroep_terug: field_sleepgroep_terug_value
   field_kledingcode: field_kledingcode_value
-  field_l_bijzonderheden: field_l_bijzonderheden_value
-  field_bijzonderheden: field_bijzonderheden_value
   
   field_locatie:
     plugin: migration_lookup
@@ -60,13 +134,11 @@ process:
     source: field_locatie_nid
     no_stub: true
   
-  field_programma2:
-    plugin: migration_lookup
-    migration: d6_thirdwing_repertoire
-    source: field_programma2_nid
-    no_stub: true
+  field_l_bijzonderheden: field_l_bijzonderheden_value
+  field_ledeninfo: field_ledeninfo_value
+  field_bijzonderheden: field_bijzonderheden_value
   
-  # FIXED: Images now reference IMAGE MEDIA ENTITIES
+  # Images reference IMAGE MEDIA ENTITIES
   field_media_images:
     plugin: sub_process
     source: images
@@ -83,7 +155,7 @@ process:
     source: field_background_fid
     no_stub: true
   
-  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES
+  # Files reference DOCUMENT MEDIA ENTITIES
   field_media_documents:
     plugin: sub_process
     source: files
@@ -94,10 +166,20 @@ process:
         source: field_files_fid
         no_stub: true
 
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy_terms
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: d6_thirdwing_taxonomy_term
+        source: tid
+        no_stub: true
+
 migration_dependencies:
   required:
     - d6_thirdwing_user
+    - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
-    - d6_thirdwing_repertoire
     - d6_thirdwing_media_image
     - d6_thirdwing_media_document

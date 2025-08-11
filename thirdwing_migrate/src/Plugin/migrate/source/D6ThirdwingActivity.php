@@ -94,41 +94,15 @@ class D6ThirdwingActivity extends SqlBase {
       return FALSE;
     }
 
-    // Transform instrument status values (+/?/-/v → 1/0/3/2)
-    $search = ['+', '?', '-', 'v'];
-    $replace = ['1', '0', '3', '2'];
+    // REMOVED: No longer transform instrument values in source plugin
+    // The migration YAML will handle the proper mapping using static_map plugin
     
-    foreach (['field_keyboard_value', 'field_gitaar_value', 'field_basgitaar_value', 'field_drums_value'] as $field) {
-      $value = $row->getSourceProperty($field);
-      if ($value) {
-        $row->setSourceProperty($field, str_replace($search, $replace, $value));
-      }
-    }
+    // REMOVED: No longer transform sleep group values in source plugin  
+    // The migration YAML will handle the proper mapping using static_map plugin
 
-    // Transform sleep group values (I/II/III/IV/V/* → 1/2/3/4/5/9)
-    $sleepgroup_map = [
-      'I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, 'V' => 5, '*' => 9,
-    ];
-    
-    $sleepgroup = $row->getSourceProperty('field_sleepgroep_value');
-    if (isset($sleepgroup_map[$sleepgroup])) {
-      $row->setSourceProperty('field_sleepgroep_value', $sleepgroup_map[$sleepgroup]);
-    }
-
-    // Transform workflow states
-    $workflow_map = [
-      15 => 2, // Concept
-      20 => 3, // Published  
-      17 => 4, // Recommended
-      18 => 5, // Archive
-      19 => 6, // No Archive
-      16 => 7, // Trash
-    ];
-    
-    $workflow_state = $row->getSourceProperty('workflow_stateid');
-    if (isset($workflow_map[$workflow_state])) {
-      $row->setSourceProperty('workflow_stateid', $workflow_map[$workflow_state]);
-    }
+    // REMOVED: Incorrect workflow state transformation
+    // We preserve the original D6 workflow state IDs (10,11,12,13,14,15,16,17,18,19,20)
+    // The migration YAML will handle the proper mapping to D11 content moderation states
 
     $this->getRelatedMedia($row);
     $this->getRelatedProgram($row);
@@ -137,10 +111,14 @@ class D6ThirdwingActivity extends SqlBase {
     return TRUE;
   }
 
+  /**
+   * Get related media files for the activity.
+   */
   protected function getRelatedMedia(Row $row) {
     $nid = $row->getSourceProperty('nid');
     $vid = $row->getSourceProperty('vid');
 
+    // Get images
     $image_query = $this->select('content_field_afbeeldingen', 'cfa')
       ->fields('cfa', ['field_afbeeldingen_fid', 'field_afbeeldingen_data'])
       ->condition('nid', $nid)
@@ -148,6 +126,7 @@ class D6ThirdwingActivity extends SqlBase {
     $images = $image_query->execute()->fetchAll();
     $row->setSourceProperty('images', $images);
 
+    // Get files
     $file_query = $this->select('content_field_files', 'cff')
       ->fields('cff', ['field_files_fid', 'field_files_data'])
       ->condition('nid', $nid)
@@ -155,12 +134,16 @@ class D6ThirdwingActivity extends SqlBase {
     $files = $file_query->execute()->fetchAll();
     $row->setSourceProperty('files', $files);
 
+    // Get background image
     $background_fid = $row->getSourceProperty('field_background_fid');
     if ($background_fid) {
-      $row->setSourceProperty('background_image', $background_fid);
+      $row->setSourceProperty('field_background_fid', $background_fid);
     }
   }
 
+  /**
+   * Get related program references.
+   */
   protected function getRelatedProgram(Row $row) {
     $nid = $row->getSourceProperty('nid');
     $vid = $row->getSourceProperty('vid');
@@ -169,21 +152,20 @@ class D6ThirdwingActivity extends SqlBase {
       ->fields('cfp', ['field_programma2_nid'])
       ->condition('nid', $nid)
       ->condition('vid', $vid);
-    $program_items = $program_query->execute()->fetchCol();
-    $row->setSourceProperty('program_items', $program_items);
+    $programs = $program_query->execute()->fetchAll();
+    $row->setSourceProperty('program_items', $programs);
   }
 
+  /**
+   * Get taxonomy terms for access control.
+   */
   protected function getAccessTerms(Row $row) {
     $nid = $row->getSourceProperty('nid');
-    $vid = $row->getSourceProperty('vid');
 
     $term_query = $this->select('term_node', 'tn')
       ->fields('tn', ['tid'])
-      ->condition('nid', $nid)
-      ->condition('vid', $vid);
-    $term_query->leftJoin('term_data', 'td', 'tn.tid = td.tid');
-    $term_query->condition('td.vid', 4);
-    $terms = $term_query->execute()->fetchCol();
-    $row->setSourceProperty('access_terms', $terms);
+      ->condition('nid', $nid);
+    $terms = $term_query->execute()->fetchAll();
+    $row->setSourceProperty('taxonomy_terms', $terms);
   }
 }

@@ -76,37 +76,27 @@
 
 ## Content Types with Workflow Configuration
 
-The following content types have workflow settings enabled:
-
-1. **activiteit** (Activities/Performances/Rehearsals)
-2. **audiovideo** (Audio/Video content)
-3. **image** (Images)
-4. **knipsel** (News clippings)
-5. **locatie** (Locations)
-6. **nieuws** (News)
-7. **nieuwsbrief** (Newsletter)
-8. **node_gallery_gallery** (Image galleries)
-9. **node_gallery_image** (Gallery images)
-10. **pagina** (Pages)
-11. **positie** (Positions)
-12. **prikker** (Bulletins/Notices)
-13. **profiel** (User profiles)
-14. **programma** (Programs)
-15. **repertoire** (Song repertoire)
-16. **verslag** (Meeting minutes/Reports)
-17. **vriend** (Friends/Sponsors)
+1. **activiteit** - Activities/performances/rehearsals
+2. **audiovideo** - Audio/video content
+3. **image** - Images
+4. **knipsel** - News clippings
+5. **locatie** - Locations
+6. **nieuws** - News
+7. **nieuwsbrief** - Newsletter
+8. **node_gallery_gallery** - Image galleries
+9. **node_gallery_image** - Gallery images
+10. **pagina** - Pages
+11. **positie** - Positions
+12. **prikker** - Bulletins/notices
+13. **profiel** - User profiles
+14. **programma** - Programs
+15. **repertoire** - Song repertoire
+16. **verslag** - Meeting minutes/reports
+17. **vriend** - Friends/sponsors
 
 ## Role-Based Permissions
 
 The workflow transitions are controlled by role IDs:
 - **author** - Content authors
-- **6** - Likely site administrators or editors
-- **12** - Possibly moderators or reviewers
-
-## Key Features
-
-- **Multiple workflow types** for different content categories
-- **Comprehensive state management** including drafts, published, archived, featured, and trash states
-- **Flexible transitions** allowing content to move between various states
-- **Role-based access control** for state transitions
-- **Special states** like "Aangeraden" (Recommended/Featured) for content promotion
+- **6** - Site administrators/editors
+- **12** - Moderators/reviewers

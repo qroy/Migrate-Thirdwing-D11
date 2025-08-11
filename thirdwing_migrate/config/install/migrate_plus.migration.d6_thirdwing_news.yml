@@ -1,13 +1,15 @@
+# File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_news.yml
 id: d6_thirdwing_news
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Content'
 
-label: 'D6 News'
+label: 'D6 News Content'
 
 source:
   plugin: d6_thirdwing_news
+  node_type: nieuws
 
 destination:
   plugin: 'entity:node'
@@ -43,9 +45,23 @@ process:
     default_value: basic_html
     bypass: true
   
+  # CORRECTED: Proper D6 workflow state mapping for news content
+  # News uses Workflow 1 (General Content) - SIDs 1,2,3,4,8,9
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      1: draft          # (creation) → draft
+      2: draft          # Concept → draft  
+      3: published      # Gepubliceerd → published
+      4: archived       # Archief → archived
+      8: draft          # Prullenmand → draft (trash becomes draft)
+      9: published      # Aangeraden → published (featured stays published)
+    default_value: published
+  
   field_datum: field_datum_value
   
-  # FIXED: Media references use proper media entity migrations
+  # Images now reference IMAGE MEDIA ENTITIES
   field_media_images:
     plugin: sub_process
     source: images
@@ -56,16 +72,14 @@ process:
         source: field_afbeeldingen_fid
         no_stub: true
   
+  # Files now reference DOCUMENT MEDIA ENTITIES
   field_media_documents:
     plugin: sub_process
     source: files
     process:
       target_id:
         plugin: migration_lookup
-        migration:
-          - d6_thirdwing_media_document
-          - d6_thirdwing_media_audio
-          - d6_thirdwing_media_video
+        migration: d6_thirdwing_media_document
         source: field_files_fid
         no_stub: true
 
@@ -85,5 +99,3 @@ migration_dependencies:
     - d6_thirdwing_taxonomy_term
     - d6_thirdwing_media_image
     - d6_thirdwing_media_document
-    - d6_thirdwing_media_audio
-    - d6_thirdwing_media_video

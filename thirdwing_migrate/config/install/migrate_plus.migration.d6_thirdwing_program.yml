@@ -1,14 +1,15 @@
-# FILE 10: modules/custom/thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_program.yml
+# File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_program.yml
 id: d6_thirdwing_program
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Content'
 
-label: 'D6 Programs'
+label: 'D6 Program Content'
 
 source:
   plugin: d6_thirdwing_program
+  node_type: programma
 
 destination:
   plugin: 'entity:node'
@@ -44,7 +45,25 @@ process:
     default_value: basic_html
     bypass: true
   
-  # FIXED: Program-specific fields with proper _value suffix mappings
+  # CORRECTED: Program content uses Workflow 5 (Simple Featured) - SIDs 21,22,23
+  # OR Workflow 1 (General Content) - SIDs 1,2,3,4,8,9
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      # Workflow 5 - Simple Featured Content states
+      21: draft         # (aanmaak) → draft
+      22: published     # Gepubliceerd → published
+      23: published     # Aangeraden → published (featured)
+      # Workflow 1 - General Content states (fallback)
+      1: draft          # (creation) → draft
+      2: draft          # Concept → draft  
+      3: published      # Gepubliceerd → published
+      4: archived       # Archief → archived
+      8: draft          # Prullenmand → draft
+      9: published      # Aangeraden → published
+    default_value: published
+  
   field_datum: field_datum_value
   field_prog_type: field_prog_type_value
   
@@ -74,7 +93,7 @@ process:
         source: field_programma2_nid
         no_stub: true
   
-  # FIXED: Images now reference IMAGE MEDIA ENTITIES
+  # Images reference IMAGE MEDIA ENTITIES
   field_media_images:
     plugin: sub_process
     source: images
@@ -85,7 +104,7 @@ process:
         source: field_afbeeldingen_fid
         no_stub: true
   
-  # FIXED: Files now reference DOCUMENT MEDIA ENTITIES
+  # Files reference DOCUMENT MEDIA ENTITIES
   field_media_documents:
     plugin: sub_process
     source: files

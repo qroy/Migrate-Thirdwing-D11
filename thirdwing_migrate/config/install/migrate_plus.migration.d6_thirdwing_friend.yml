@@ -1,13 +1,15 @@
+# File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_friend.yml
 id: d6_thirdwing_friend
 migration_group: thirdwing_d6
 migration_tags:
   - 'Drupal 6'
   - 'Content'
 
-label: 'D6 Friends/Sponsors'
+label: 'D6 Friend/Sponsor Content'
 
 source:
   plugin: d6_thirdwing_friend
+  node_type: vriend
 
 destination:
   plugin: 'entity:node'
@@ -43,17 +45,35 @@ process:
     default_value: basic_html
     bypass: true
   
-  # FIXED: Friend-specific fields with proper _value suffix mappings
-  field_website/uri: field_website_url
-  field_website/title: field_website_title
-  field_vriend_soort: field_vriend_soort_value
-  field_vriend_benaming: field_vriend_benaming_value
-  field_vriend_tot: field_vriend_tot_value
-  field_vriend_vanaf: field_vriend_vanaf_value
-  field_vriend_lengte: field_vriend_lengte_value
-  field_woonplaats: field_woonplaats_value
+  # CORRECTED: Friend content uses Workflow 3 (Activity/Event) - SIDs 10,11,12,13
+  # Based on the D6 workflow documentation, "vriend" uses the Activity workflow
+  moderation_state:
+    plugin: static_map
+    source: workflow_stateid
+    map:
+      10: draft         # (aanmaak) → draft
+      11: published     # Actief → published (active sponsors)
+      12: archived      # Verlopen → archived (expired sponsorship)
+      13: draft         # Inactief → draft (inactive sponsors)
+    default_value: published
   
-  # FIXED: Friend/sponsor images
+  field_vriend_website: field_vriend_website_url
+  field_vriend_telefoon: field_vriend_telefoon_value
+  field_vriend_email: field_vriend_email_email
+  field_vriend_adres: field_vriend_adres_value
+  field_vriend_woonplaats: field_vriend_woonplaats_value
+  
+  # CORRECTED: Friend designation mapping (preserve Dutch terms)
+  field_vriend_benaming:
+    plugin: static_map
+    source: field_vriend_benaming_value
+    map:
+      'vriend': '1'       # Male friend/sponsor
+      'vriendin': '2'     # Female friend/sponsor  
+      'vrienden': '3'     # Multiple friends/sponsors
+    default_value: '1'
+  
+  # Images reference IMAGE MEDIA ENTITIES
   field_media_images:
     plugin: sub_process
     source: images

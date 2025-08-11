@@ -1,4 +1,6 @@
 # File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_extended.yml
+# FIXED: Removed duplicate transitions section and corrected structure
+
 langcode: nl
 status: true
 dependencies:
@@ -111,53 +113,3 @@ type_settings:
         - prullenmand
       to: gepubliceerd
       weight: 5
-    aangeraden:
-      label: 'Aangeraden'
-      published: true
-      default_revision: true
-      weight: 3
-  transitions:
-    naar_concept:
-      label: 'Naar concept'
-      from:
-        - creation
-        - prullenmand
-        - archief
-      to: concept
-      weight: 0
-    publiceren:
-      label: 'Publiceren'
-      from:
-        - creation
-        - concept
-        - archief
-        - prullenmand
-      to: gepubliceerd
-      weight: 1
-    aanbevelen:
-      label: 'Aanbevelen'
-      from:
-        - creation
-        - concept
-        - gepubliceerd
-        - archief
-        - prullenmand
-      to: aangeraden
-      weight: 2
-    archiveren:
-      label: 'Archiveren'
-      from:
-        - gepubliceerd
-        - aangeraden
-        - prullenmand
-      to: archief
-      weight: 3
-    naar_prullenmand:
-      label: 'Naar prullenmand'
-      from:
-        - concept
-        - gepubliceerd
-        - aangeraden
-        - archief
-      to: prullenmand
-      weight: 4

@@ -27,7 +27,6 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@plugin.manager.migration'
-      - '@migrate.executable'
       - '@database'
       - '@logger.factory'
       - '@state'
@@ -103,7 +102,6 @@ services:
     class: Drupal\thirdwing_migrate\Service\ThirdwingMigrationHelperService
     arguments:
       - '@plugin.manager.migration'
-      - '@migrate.executable'
       - '@database'
       - '@entity_type.manager'
       - '@logger.factory'

@@ -60,7 +60,7 @@ services:
   # NEW: Field Display Commands
   # =============================================================================
 
-  # Field Display Commands (NEW - hybrid display system)
+  # Field Display Commands (NEW - hybrid field display system)
   thirdwing_migrate.commands.field_display:
     class: Drupal\thirdwing_migrate\Commands\ThirdwingFieldDisplayCommands
     arguments:
@@ -80,7 +80,7 @@ services:
       - { name: event_subscriber }
 
   # =============================================================================
-  # Queue Workers (NEW - for reliable field display configuration)
+  # Queue Workers (FIXED - corrected YAML syntax)
   # =============================================================================
 
   # Field Display Configuration Queue Worker
@@ -91,7 +91,7 @@ services:
       - '@thirdwing_migrate.field_display'
       - '@logger.factory'
     tags:
-      - { name: queue_worker, cron: { time: 60 } }
+      - { name: queue_worker, cron: 60 }
 
   # =============================================================================
   # Migration Helper Services (NEW - supporting services)
@@ -202,19 +202,3 @@ services:
       - '@state'
     tags:
       - { name: migrate.source }
-
-  # =============================================================================
-  # FUTURE: Commented Services for Future Implementation
-  # =============================================================================
-
-  # Custom process plugins (if you add any in the future)
-  # thirdwing_migrate.process.custom_plugin:
-  #   class: Drupal\thirdwing_migrate\Plugin\migrate\process\CustomPlugin
-  #   tags:
-  #     - { name: migrate.process }
-
-  # Custom destination plugins would go here if needed
-  # thirdwing_migrate.destination.custom:
-  #   class: Drupal\thirdwing_migrate\Plugin\migrate\destination\CustomDestination
-  #   tags:
-  #     - { name: migrate.destination }

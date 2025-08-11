@@ -1,0 +1,76 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.activiteit.body
+    - field.field.node.activiteit.field_afbeeldingen
+    - field.field.node.activiteit.field_datum
+    - field.field.node.activiteit.field_files
+    - field.field.node.activiteit.field_programma2
+    - field.field.node.activiteit.field_view
+    - node.type.activiteit
+  module:
+    - datetime
+    - entity_reference
+    - file
+    - text
+    - user
+id: node.activiteit.default
+targetEntityType: node
+bundle: activiteit
+mode: default
+content:
+  body:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_datum:
+    type: datetime_default
+    label: above
+    settings:
+      format_type: medium
+      timezone_override: ''
+    third_party_settings: {  }
+    weight: -5
+    region: content
+  field_afbeeldingen:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 20
+    region: content
+  field_files:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: compact
+      link: true
+    third_party_settings: {  }
+    weight: 30
+    region: content
+  field_programma2:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: teaser
+      link: true
+    third_party_settings: {  }
+    weight: 40
+    region: content
+  field_view:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 120
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

@@ -1,17 +1,211 @@
 services:
-  # Drush commands for incremental migration
+  # =============================================================================
+  # Thirdwing Migration Services
+  # =============================================================================
+  # 
+  # Complete service definitions for the Thirdwing D6 to D11 migration system
+  # including hybrid field display configuration, incremental sync, and content
+  # validation services.
+  # =============================================================================
+
+  # Field Display Service (Hybrid Approach)
+  # Provides automated default display configuration with manual customization options
+  thirdwing_migrate.field_display:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService
+    arguments: 
+      - '@entity_type.manager'
+      - '@entity_field.manager'
+      - '@entity_display.repository'
+      - '@logger.factory'
+    tags:
+      - { name: service }
+
+  # Incremental Sync Service
+  # Handles regular content synchronization from D6 source to D11 target
+  thirdwing_migrate.incremental_sync:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingIncrementalSyncService
+    arguments:
+      - '@entity_type.manager'
+      - '@plugin.manager.migration'
+      - '@migrate.executable'
+      - '@database'
+      - '@logger.factory'
+      - '@state'
+    tags:
+      - { name: service }
+
+  # Content Validator Service
+  # Validates migrated content integrity and field configurations
+  thirdwing_migrate.content_validator:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingContentValidatorService
+    arguments:
+      - '@entity_type.manager'
+      - '@entity_field.manager'
+      - '@logger.factory'
+    tags:
+      - { name: service }
+
+  # =============================================================================
+  # Existing Drush Commands (CORRECTED)
+  # =============================================================================
+
+  # EXISTING: Migration Sync Commands (preserve existing implementation)
   thirdwing_migrate.commands:
     class: Drupal\thirdwing_migrate\Commands\MigrationSyncCommands
     arguments: ['@plugin.manager.migration']
     tags:
       - { name: drush.command }
 
-  # Event subscriber for migration author fix
+  # =============================================================================
+  # NEW: Field Display Commands
+  # =============================================================================
+
+  # Field Display Commands (NEW - hybrid display system)
+  thirdwing_migrate.commands.field_display:
+    class: Drupal\thirdwing_migrate\Commands\ThirdwingFieldDisplayCommands
+    arguments:
+      - '@thirdwing_migrate.field_display'
+    tags:
+      - { name: drush.command }
+
+  # =============================================================================
+  # Event Subscribers (EXISTING - preserve current implementation)
+  # =============================================================================
+
+  # EXISTING: Event subscriber for migration author fix
   thirdwing_migrate.migration_author_fix_subscriber:
     class: Drupal\thirdwing_migrate\EventSubscriber\MigrationAuthorFixSubscriber
     arguments: ['@entity_type.manager', '@logger.factory']
     tags:
       - { name: event_subscriber }
+
+  # =============================================================================
+  # Queue Workers (NEW - for reliable field display configuration)
+  # =============================================================================
+
+  # Field Display Configuration Queue Worker
+  # Processes queued field display configuration tasks
+  thirdwing_migrate.queue_worker.display_config:
+    class: Drupal\thirdwing_migrate\Plugin\QueueWorker\ThirdwingDisplayConfigQueueWorker
+    arguments:
+      - '@thirdwing_migrate.field_display'
+      - '@logger.factory'
+    tags:
+      - { name: queue_worker, cron: { time: 60 } }
+
+  # =============================================================================
+  # Migration Helper Services (NEW - supporting services)
+  # =============================================================================
+
+  # Migration Helper Service
+  # Provides utility functions for migration processes
+  thirdwing_migrate.migration_helper:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingMigrationHelperService
+    arguments:
+      - '@plugin.manager.migration'
+      - '@migrate.executable'
+      - '@database'
+      - '@entity_type.manager'
+      - '@logger.factory'
+      - '@state'
+    tags:
+      - { name: service }
+
+  # Media Migration Service
+  # Handles conversion of D6 files to D11 media entities
+  thirdwing_migrate.media_migration:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingMediaMigrationService
+    arguments:
+      - '@entity_type.manager'
+      - '@file_system'
+      - '@database'
+      - '@logger.factory'
+      - '@stream_wrapper_manager'
+    tags:
+      - { name: service }
+
+  # Workflow Migration Service
+  # Preserves D6 workflow states in D11 content moderation
+  thirdwing_migrate.workflow_migration:
+    class: Drupal\thirdwing_migrate\Service\ThirdwingWorkflowMigrationService
+    arguments:
+      - '@entity_type.manager'
+      - '@plugin.manager.migration'
+      - '@database'
+      - '@logger.factory'
+    tags:
+      - { name: service }
+
+  # =============================================================================
+  # Custom Process Plugins (referenced in migration configs)
+  # =============================================================================
+
+  # Author Lookup with Fallback Process Plugin
+  # Used in migration configs: plugin: author_lookup_with_fallback
+  thirdwing_migrate.process.author_lookup_with_fallback:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\process\AuthorLookupWithFallback
+    arguments:
+      - '@entity_type.manager'
+      - '@plugin.manager.migration'
+    tags:
+      - { name: migrate.process }
+
+  # Workflow State Process Plugin
+  # Converts D6 workflow states to D11 content moderation
+  thirdwing_migrate.process.workflow_state:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\process\ThirdwingWorkflowState
+    tags:
+      - { name: migrate.process }
+
+  # Media Reference Process Plugin
+  # Converts file references to media entity references
+  thirdwing_migrate.process.media_reference:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\process\ThirdwingMediaReference
+    arguments:
+      - '@entity_type.manager'
+      - '@thirdwing_migrate.media_migration'
+    tags:
+      - { name: migrate.process }
+
+  # =============================================================================
+  # Source Plugins (custom source plugins for D6 data)
+  # =============================================================================
+
+  # D6 Thirdwing Activity Source (referenced in migration configs)
+  thirdwing_migrate.source.d6_thirdwing_activity:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\source\D6ThirdwingActivity
+    arguments:
+      - '@database'
+      - '@migrate.lookup'
+      - '@plugin.manager.migration'
+    tags:
+      - { name: migrate.source }
+
+  # D6 Thirdwing Friend Source (referenced in migration configs)
+  thirdwing_migrate.source.d6_thirdwing_friend:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\source\D6ThirdwingFriend
+    arguments:
+      - '@database'
+      - '@migrate.lookup'
+      - '@plugin.manager.migration'
+    tags:
+      - { name: migrate.source }
+
+  # D6 Incremental Node Source
+  # Custom source plugin for incremental node migration
+  thirdwing_migrate.source.d6_incremental_node:
+    class: Drupal\thirdwing_migrate\Plugin\migrate\source\D6IncrementalNode
+    arguments:
+      - '@database'
+      - '@migrate.lookup'
+      - '@plugin.manager.migration'
+      - '@state'
+    tags:
+      - { name: migrate.source }
+
+  # =============================================================================
+  # FUTURE: Commented Services for Future Implementation
+  # =============================================================================
 
   # Custom process plugins (if you add any in the future)
   # thirdwing_migrate.process.custom_plugin:
@@ -19,7 +213,6 @@ services:
   #   tags:
   #     - { name: migrate.process }
 
-  # Custom source plugins are auto-discovered via annotations
   # Custom destination plugins would go here if needed
   # thirdwing_migrate.destination.custom:
   #   class: Drupal\thirdwing_migrate\Plugin\migrate\destination\CustomDestination

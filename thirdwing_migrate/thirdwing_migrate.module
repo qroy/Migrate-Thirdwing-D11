@@ -6,12 +6,24 @@
  * 
  * Provides custom migration plugins and configurations for migrating
  * a Drupal 6 choir/band website to Drupal 11.
+ * 
+ * Features:
+ * - Custom migration source plugins for D6 content
+ * - Hybrid field display configuration system
+ * - Incremental sync capabilities
+ * - Content moderation workflow preservation
+ * - Media-first architecture for file handling
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\NodeTypeInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Implements hook_migration_plugins_alter().
+ * 
+ * Removes default D6 and D7 migrations that conflict with our custom implementation.
  */
 function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
   
@@ -95,6 +107,231 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_insert() for node_type.
+ * 
+ * Automatically configure field displays when Thirdwing content types are created.
+ * Part of the hybrid field display approach: automated defaults + manual customization.
+ */
+function thirdwing_migrate_node_type_insert(EntityInterface $entity) {
+  /** @var \Drupal\node\NodeTypeInterface $entity */
+  if ($entity instanceof NodeTypeInterface) {
+    $content_type = $entity->id();
+    
+    // Only configure displays for Thirdwing content types
+    $thirdwing_types = [
+      'activiteit',
+      'foto',
+      'locatie', 
+      'nieuws',
+      'pagina',
+      'programma',
+      'repertoire',
+      'persoon',
+      'vriend',
+    ];
+    
+    if (in_array($content_type, $thirdwing_types)) {
+      try {
+        /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
+        $display_service = \Drupal::service('thirdwing_migrate.field_display');
+        
+        // Configure displays for all view modes
+        $view_modes = ['default', 'teaser', 'full', 'search_result'];
+        foreach ($view_modes as $view_mode) {
+          $display_service->configureContentTypeDisplay($content_type, $view_mode);
+        }
+        
+        \Drupal::logger('thirdwing_migrate')->info(
+          'Automatically configured field displays for content type @type',
+          ['@type' => $content_type]
+        );
+        
+      } catch (\Exception $e) {
+        \Drupal::logger('thirdwing_migrate')->error(
+          'Failed to automatically configure displays for @type: @error',
+          ['@type' => $content_type, '@error' => $e->getMessage()]
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert() for field_config.
+ * 
+ * Automatically update field displays when new fields are added to Thirdwing content types.
+ * Ensures new fields are properly displayed without manual configuration.
+ */
+function thirdwing_migrate_field_config_insert(EntityInterface $entity) {
+  /** @var \Drupal\field\FieldConfigInterface $entity */
+  if ($entity->getTargetEntityTypeId() === 'node') {
+    $content_type = $entity->getTargetBundle();
+    
+    // Only update displays for Thirdwing content types
+    $thirdwing_types = [
+      'activiteit',
+      'foto', 
+      'locatie',
+      'nieuws',
+      'pagina',
+      'programma',
+      'repertoire',
+      'persoon',
+      'vriend',
+    ];
+    
+    if (in_array($content_type, $thirdwing_types)) {
+      try {
+        /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
+        $display_service = \Drupal::service('thirdwing_migrate.field_display');
+        
+        // Reconfigure displays to include the new field
+        $view_modes = ['default', 'teaser', 'full', 'search_result'];
+        foreach ($view_modes as $view_mode) {
+          $display_service->configureContentTypeDisplay($content_type, $view_mode);
+        }
+        
+        \Drupal::logger('thirdwing_migrate')->info(
+          'Updated field displays for @type after adding field @field',
+          ['@type' => $content_type, '@field' => $entity->getName()]
+        );
+        
+      } catch (\Exception $e) {
+        \Drupal::logger('thirdwing_migrate')->error(
+          'Failed to update displays for @type after adding field @field: @error',
+          [
+            '@type' => $content_type,
+            '@field' => $entity->getName(),
+            '@error' => $e->getMessage()
+          ]
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_modules_installed().
+ * 
+ * Configure field displays when the thirdwing_migrate module is installed.
+ * Uses queue system to ensure all dependencies are properly loaded.
+ */
+function thirdwing_migrate_modules_installed($modules) {
+  if (in_array('thirdwing_migrate', $modules)) {
+    // Delay the display configuration to ensure all dependencies are ready
+    \Drupal::service('module_installer')->installModulesDependencies(['thirdwing_migrate']);
+    
+    // Queue the display configuration for the next request
+    $queue = \Drupal::queue('thirdwing_migrate_display_config');
+    $queue->createItem(['action' => 'configure_all_displays']);
+    
+    \Drupal::logger('thirdwing_migrate')->info('Queued field display configuration for next request');
+  }
+}
+
+/**
+ * Implements hook_cron().
+ * 
+ * Process queued display configuration tasks.
+ * Ensures reliable field display setup even if initial configuration fails.
+ */
+function thirdwing_migrate_cron() {
+  $queue = \Drupal::queue('thirdwing_migrate_display_config');
+  
+  while ($item = $queue->claimItem()) {
+    try {
+      if ($item->data['action'] === 'configure_all_displays') {
+        /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
+        $display_service = \Drupal::service('thirdwing_migrate.field_display');
+        $results = $display_service->configureAllDisplays();
+        
+        $success_count = 0;
+        foreach ($results as $content_type => $view_modes) {
+          foreach ($view_modes as $status) {
+            if ($status === 'success') {
+              $success_count++;
+            }
+          }
+        }
+        
+        \Drupal::logger('thirdwing_migrate')->info(
+          'Configured @count field displays via cron',
+          ['@count' => $success_count]
+        );
+      }
+      
+      $queue->deleteItem($item);
+      
+    } catch (\Exception $e) {
+      \Drupal::logger('thirdwing_migrate')->error(
+        'Failed to process display configuration queue item: @error',
+        ['@error' => $e->getMessage()]
+      );
+      
+      // Release the item so it can be tried again later
+      $queue->releaseItem($item);
+    }
+  }
+}
+
+/**
+ * Implements hook_help().
+ * 
+ * Provide comprehensive help information about the Thirdwing migration system.
+ */
+function thirdwing_migrate_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.thirdwing_migrate':
+      $output = '<h2>' . t('Thirdwing Migration Module') . '</h2>';
+      $output .= '<p>' . t('Complete migration system for Thirdwing website from Drupal 6 to Drupal 11.') . '</p>';
+      
+      $output .= '<h3>' . t('Field Display Configuration (Hybrid Approach)') . '</h3>';
+      $output .= '<p>' . t('The Thirdwing migration module uses a hybrid approach for field display configuration:') . '</p>';
+      
+      $output .= '<h4>' . t('Automated Default Displays') . '</h4>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('<strong>Default view mode:</strong> Complete field layout with proper ordering') . '</li>';
+      $output .= '<li>' . t('<strong>Teaser view mode:</strong> Summary displays for listings and previews') . '</li>';
+      $output .= '<li>' . t('<strong>Full view mode:</strong> Detailed content display') . '</li>';
+      $output .= '<li>' . t('<strong>Search result mode:</strong> Optimized for search listings') . '</li>';
+      $output .= '</ul>';
+      
+      $output .= '<h4>' . t('Manual Customization Options') . '</h4>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Field reordering and grouping') . '</li>';
+      $output .= '<li>' . t('Custom display formatters') . '</li>';
+      $output .= '<li>' . t('Responsive display settings') . '</li>';
+      $output .= '<li>' . t('Field-specific styling and layouts') . '</li>';
+      $output .= '<li>' . t('Advanced view mode configurations') . '</li>';
+      $output .= '</ul>';
+      
+      $output .= '<h3>' . t('Drush Commands') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li><code>drush thirdwing:setup-displays</code> - ' . t('Configure all field displays') . '</li>';
+      $output .= '<li><code>drush thirdwing:validate-displays</code> - ' . t('Validate existing displays') . '</li>';
+      $output .= '<li><code>drush thirdwing:setup-display-type [type]</code> - ' . t('Configure specific content type') . '</li>';
+      $output .= '</ul>';
+      
+      $output .= '<h3>' . t('Migration Features') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('<strong>Content Types:</strong> 9 content types migrated from D6') . '</li>';
+      $output .= '<li>' . t('<strong>Media Bundles:</strong> 4 media bundles replacing deprecated content types') . '</li>';
+      $output .= '<li>' . t('<strong>Workflow Preservation:</strong> All 5 D6 workflows mapped to D11 content moderation') . '</li>';
+      $output .= '<li>' . t('<strong>Incremental Sync:</strong> Regular content updates from source site') . '</li>';
+      $output .= '</ul>';
+      
+      $output .= '<h3>' . t('Manual Customization') . '</h3>';
+      $output .= '<p>' . t('After the automated setup, you can customize displays at:') . '</p>';
+      $output .= '<p><strong>' . t('Structure > Content types > [Type] > Manage display') . '</strong></p>';
+      
+      $output .= '<h3>' . t('Installation Strategy') . '</h3>';
+      $output .= '<p>' . t('The module is designed for installation on a clean Drupal 11 site while the old D6 site remains active as a backup until migration is complete.') . '</p>';
+      
+      return $output;
+  }
+}
+
+/**
  * Get the last incremental sync timestamp.
  *
  * @return int
@@ -155,133 +392,107 @@ function thirdwing_migrate_add_sync_history($entry) {
  */
 function thirdwing_migrate_check_source_database() {
   try {
-    $database = Database::getConnection('default', 'migrate');
-    $user_count = $database->query('SELECT COUNT(*) FROM {users}')->fetchField();
-    return is_numeric($user_count) && $user_count > 0;
+    $source_db = Database::getConnection('default', 'migrate');
+    $result = $source_db->query('SELECT 1')->fetchField();
+    return $result == 1;
   } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Source database check failed: @error', ['@error' => $e->getMessage()]);
+    \Drupal::logger('thirdwing_migrate')->error('Source database check failed: @error', [
+      '@error' => $e->getMessage()
+    ]);
     return FALSE;
   }
 }
 
 /**
- * Get content change statistics from source database.
- *
- * @param int $since_timestamp
- *   Unix timestamp to check changes since.
- * @param array $content_types
- *   Array of content types to check, or empty for all.
+ * Get migration statistics.
  *
  * @return array
- *   Array of content type statistics.
+ *   Array of migration statistics.
  */
-function thirdwing_migrate_get_change_statistics($since_timestamp = NULL, array $content_types = []) {
-  try {
-    $database = Database::getConnection('default', 'migrate');
-    $stats = [];
-    
-    // Default content types if none specified
-    if (empty($content_types)) {
-      $content_types = ['activiteit', 'nieuws', 'pagina', 'repertoire', 'foto', 'locatie', 'vriend'];
-    }
-    
-    foreach ($content_types as $type) {
-      $query = $database->select('node', 'n')
-        ->condition('n.type', $type);
-      
-      if ($since_timestamp) {
-        $query->condition('n.changed', $since_timestamp, '>=');
-      }
-      
-      $count = $query->countQuery()->execute()->fetchField();
-      $stats[$type] = $count;
-    }
-    
-    return $stats;
-  } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Failed to get change statistics: @error', ['@error' => $e->getMessage()]);
-    return [];
-  }
-}
-
-/**
- * Get user activity statistics from source database.
- *
- * @param int $since_timestamp
- *   Unix timestamp to check activity since.
- *
- * @return array
- *   Array with user activity statistics.
- */
-function thirdwing_migrate_get_user_activity_statistics($since_timestamp = NULL) {
-  try {
-    $database = Database::getConnection('default', 'migrate');
-    $stats = [];
-    
-    // Users who logged in since timestamp
-    $login_query = $database->select('users', 'u')
-      ->condition('u.uid', 0, '>')
-      ->condition('u.status', 1);
-    
-    if ($since_timestamp) {
-      $login_query->condition('u.login', $since_timestamp, '>=');
-    }
-    
-    $stats['logins'] = $login_query->countQuery()->execute()->fetchField();
-    
-    // Users who accessed site since timestamp
-    $access_query = $database->select('users', 'u')
-      ->condition('u.uid', 0, '>')
-      ->condition('u.status', 1);
-    
-    if ($since_timestamp) {
-      $access_query->condition('u.access', $since_timestamp, '>=');
-    }
-    
-    $stats['access'] = $access_query->countQuery()->execute()->fetchField();
-    
-    // New user registrations
-    $new_query = $database->select('users', 'u')
-      ->condition('u.uid', 0, '>')
-      ->condition('u.status', 1);
-    
-    if ($since_timestamp) {
-      $new_query->condition('u.created', $since_timestamp, '>=');
-    }
-    
-    $stats['new_users'] = $new_query->countQuery()->execute()->fetchField();
-    
-    return $stats;
-  } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Failed to get user activity statistics: @error', ['@error' => $e->getMessage()]);
-    return [];
-  }
-}
-
-/**
- * Implements hook_cron().
- * 
- * Optionally run incremental sync during cron (if enabled).
- */
-function thirdwing_migrate_cron() {
-  // Check if automatic sync is enabled
-  $auto_sync = \Drupal::config('thirdwing_migrate.settings')->get('auto_sync_enabled');
+function thirdwing_migrate_get_statistics() {
+  $stats = [];
   
-  if ($auto_sync) {
-    $interval = \Drupal::config('thirdwing_migrate.settings')->get('auto_sync_interval', 86400); // Default 24 hours
-    $last_sync = thirdwing_migrate_get_last_sync();
+  try {
+    /** @var \Drupal\migrate_plus\Entity\MigrationGroupInterface $group */
+    $group = \Drupal::entityTypeManager()
+      ->getStorage('migration_group')
+      ->load('thirdwing');
     
-    if ((time() - $last_sync) >= $interval) {
-      \Drupal::logger('thirdwing_migrate')->info('Running automatic incremental sync via cron.');
+    if ($group) {
+      $migration_manager = \Drupal::service('plugin.manager.migration');
+      $migrations = $migration_manager->createInstancesByTag('thirdwing');
       
-      try {
-        // Run a basic incremental sync
-        $migration_manager = \Drupal::service('plugin.manager.migration');
-        // Implementation would call the sync commands programmatically
-        // This is a placeholder - full implementation would be more complex
-      } catch (\Exception $e) {
-        \Drupal::logger('thirdwing_migrate')->error('Automatic sync failed: @error', ['@error' => $e->getMessage()]);
+      foreach ($migrations as $migration_id => $migration) {
+        $source = $migration->getSourcePlugin();
+        $stats[$migration_id] = [
+          'label' => $migration->label(),
+          'source_count' => $source->count(),
+          'imported' => $migration->getIdMap()->importedCount(),
+          'updated' => $migration->getIdMap()->updateCount(),
+          'ignored' => $migration->getIdMap()->ignoredCount(),
+          'failed' => $migration->getIdMap()->errorCount(),
+        ];
       }
     }
+  } catch (\Exception $e) {
+    \Drupal::logger('thirdwing_migrate')->error('Failed to get migration statistics: @error', [
+      '@error' => $e->getMessage()
+    ]);
   }
+  
+  return $stats;
+}
+
+/**
+ * Validate field display configuration for all content types.
+ *
+ * @return array
+ *   Array of validation results.
+ */
+function thirdwing_migrate_validate_field_displays() {
+  try {
+    /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
+    $display_service = \Drupal::service('thirdwing_migrate.field_display');
+    return $display_service->validateDisplays();
+  } catch (\Exception $e) {
+    \Drupal::logger('thirdwing_migrate')->error('Field display validation failed: @error', [
+      '@error' => $e->getMessage()
+    ]);
+    return [];
+  }
+}
+
+/**
+ * Get list of all Thirdwing content types.
+ *
+ * @return array
+ *   Array of content type machine names.
+ */
+function thirdwing_migrate_get_content_types() {
+  return [
+    'activiteit',
+    'foto',
+    'locatie',
+    'nieuws',
+    'pagina',
+    'programma',
+    'repertoire',
+    'persoon',
+    'vriend',
+  ];
+}
+
+/**
+ * Get list of all Thirdwing media bundles.
+ *
+ * @return array
+ *   Array of media bundle machine names.
+ */
+function thirdwing_migrate_get_media_bundles() {
+  return [
+    'image',
+    'document',
+    'audio',
+    'video',
+  ];
 }

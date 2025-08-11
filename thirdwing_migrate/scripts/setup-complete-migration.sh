@@ -259,7 +259,6 @@ install_modules() {
         "datetime"
         "link"
         "field"
-        "entity_reference"
         "text"
         "options"
         "taxonomy"

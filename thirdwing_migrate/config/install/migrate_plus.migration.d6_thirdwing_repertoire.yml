@@ -4,6 +4,8 @@ migration_tags:
   - 'Drupal 6'
   - 'Content'
 
+label: 'D6 Repertoire Content'
+
 source:
   plugin: d6_thirdwing_repertoire
 
@@ -40,17 +42,18 @@ process:
     bypass: true
   
   # FIXED: Corrected field name mappings D6 source → D11 target
-  field_componist: field_rep_componist_value
-  field_componist_jaar: field_rep_componist_jaar_value
-  field_arrangeur: field_rep_arr_value
-  field_arrangeur_jaar: field_rep_arr_jaar_value
-  field_uitvoerende: field_rep_uitv_value
-  field_uitvoerende_jaar: field_rep_uitv_jaar_value
-  field_genre: field_rep_genre_value
-  field_sinds: field_rep_sinds_value
+  field_rep_componist: field_rep_componist_value
+  field_rep_componist_jaar: field_rep_componist_jaar_value
+  field_rep_arr: field_rep_arr_value
+  field_rep_arr_jaar: field_rep_arr_jaar_value
+  field_rep_uitv: field_rep_uitv_value
+  field_rep_uitv_jaar: field_rep_uitv_jaar_value
+  field_rep_genre: field_rep_genre_value
+  field_rep_sinds: field_rep_sinds_value
   field_audio_nummer: field_audio_nummer_value
   field_audio_seizoen: field_audio_seizoen_value
   field_klapper: field_klapper_value
+  field_positie: field_positie_value
   
   # FIXED: Sheet music files now reference DOCUMENT MEDIA ENTITIES
   field_partij_band:

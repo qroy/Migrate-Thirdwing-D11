@@ -11,14 +11,14 @@ source:
 
 destination:
   plugin: 'entity:node'
-  default_bundle: album
+  default_bundle: foto  # FIXED: Changed from 'album' to 'foto' to match D11 content type
 
 process:
   nid: nid
   vid: vid
   type:
     plugin: default_value
-    default_value: album
+    default_value: foto  # FIXED: Changed from 'album' to 'foto'
   title: title
   
   uid:

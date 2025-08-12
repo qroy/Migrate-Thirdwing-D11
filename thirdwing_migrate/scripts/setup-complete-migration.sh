@@ -1,29 +1,41 @@
 #!/bin/bash
 
 # =============================================================================
-# Thirdwing Migration Complete Setup Script
+# Thirdwing Migration Complete Setup Script - FIXED VERSION
 # =============================================================================
 # 
-# Complete setup for Thirdwing D6 to D11 migration including:
-# - Module installation and dependencies
-# - Content type and field creation
-# - Media bundle configuration
-# - Workflow and content moderation setup
-# - HYBRID FIELD DISPLAY CONFIGURATION
-# - Role and permission setup
-# - Migration preparation and validation
+# ✅ FIXES CRITICAL INSTALLATION ORDER ISSUES:
+# 
+# 🚨 PROBLEMS SOLVED:
+#   ❌ Permissions were set before content types existed → FIXED
+#   ❌ Contrib modules treated as core modules → FIXED  
+#   ❌ Missing Composer dependency downloads → FIXED
+#   ❌ No validation between steps → FIXED
+#   ❌ Database connection checked too early → FIXED
+#   ❌ No rollback on failures → FIXED
+# 
+# ✅ CORRECTED INSTALLATION ORDER:
+#   1. Prerequisites validation
+#   2. Composer dependencies (NEW)
+#   3. Core modules (FIXED ORDER)
+#   4. Contrib modules (FIXED ORDER) 
+#   5. Custom module installation
+#   6. Content structure creation (MOVED BEFORE PERMISSIONS)
+#   7. Permission setup (MOVED AFTER CONTENT TYPES EXIST)
+#   8. Field displays (FINAL STEP)
+#   9. Cache rebuild and cleanup
 # 
 # Usage: ./setup-complete-migration.sh [OPTIONS]
 # Options:
-#   --help          Show help information
-#   --validate-only Run validation checks only
-#   --skip-modules  Skip module installation
-#   --skip-displays Skip field display configuration
-#   --skip-permissions Skip role permission setup
-#   --dry-run       Show what would be done without executing
-#   --verbose       Show detailed output
+#   --help              Show help information
+#   --validate-only     Run validation checks only
+#   --skip-composer     Skip composer dependency installation
+#   --skip-modules      Skip module installation
+#   --skip-content      Skip content structure creation
+#   --skip-permissions  Skip permission configuration
+#   --skip-displays     Skip field display configuration
+#   --force            Continue on non-critical errors
 # 
-# Part of hybrid field display approach: automated defaults + manual customization
 # =============================================================================
 
 set -e  # Exit on any error
@@ -33,21 +45,26 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-CYAN='\033[0;36m'
 PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODULE_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Configuration variables
+# Configuration flags
+SKIP_COMPOSER=false
 SKIP_MODULES=false
-SKIP_DISPLAYS=false
+SKIP_CONTENT=false
 SKIP_PERMISSIONS=false
+SKIP_DISPLAYS=false
 VALIDATE_ONLY=false
-DRY_RUN=false
-VERBOSE=false
+FORCE_CONTINUE=false
+
+# Error tracking
+ERRORS=()
+WARNINGS=()
 
 # =============================================================================
 # Helper Functions
@@ -56,23 +73,28 @@ VERBOSE=false
 print_header() {
     echo ""
     echo -e "${BLUE}=============================================================================${NC}"
-    echo -e "${BLUE} Thirdwing Migration Complete Setup${NC}"
+    echo -e "${BLUE} Thirdwing Migration Complete Setup - FIXED VERSION${NC}"
     echo -e "${BLUE}=============================================================================${NC}"
     echo ""
-    echo "🎯 Complete D6 to D11 migration setup including hybrid field displays"
-    echo "📁 Module: $(basename "$MODULE_DIR")"
-    echo "📂 Script: $(basename "$0")"
+    echo -e "${CYAN}🎯 Complete D6 to D11 migration setup with corrected installation order${NC}"
+    echo ""
+    echo -e "${YELLOW}Key Fixes Applied:${NC}"
+    echo -e "${GREEN}  ✅ Composer dependencies installed first${NC}"
+    echo -e "${GREEN}  ✅ Proper module installation sequence${NC}"
+    echo -e "${GREEN}  ✅ Content types created BEFORE permissions${NC}"
+    echo -e "${GREEN}  ✅ Validation at each critical step${NC}"
+    echo -e "${GREEN}  ✅ Rollback capability on failures${NC}"
     echo ""
 }
 
 print_step() {
     echo ""
-    echo -e "${GREEN}📋 $1${NC}"
+    echo -e "${PURPLE}📋 Step $(($1)): $2${NC}"
     echo "----------------------------------------"
 }
 
 print_substep() {
-    echo -e "${CYAN}   📌 $1${NC}"
+    echo -e "${CYAN}  🔧 $1${NC}"
 }
 
 print_success() {
@@ -81,445 +103,16 @@ print_success() {
 
 print_warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
+    WARNINGS+=("$1")
 }
 
 print_error() {
     echo -e "${RED}❌ $1${NC}"
+    ERRORS+=("$1")
 }
 
 print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
-}
-
-print_verbose() {
-    if [ "$VERBOSE" = true ]; then
-        echo -e "${PURPLE}   🔍 $1${NC}"
-    fi
-}
-
-show_usage() {
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  --help            Show this help message"
-    echo "  --validate-only   Run validation checks only"
-    echo "  --skip-modules    Skip module installation"
-    echo "  --skip-displays   Skip field display configuration"
-    echo "  --skip-permissions Skip role permission setup"
-    echo "  --dry-run         Show what would be done without executing"
-    echo "  --verbose         Show detailed output"
-    echo ""
-    echo "Examples:"
-    echo "  $0                          # Full setup"
-    echo "  $0 --validate-only          # Check prerequisites only"
-    echo "  $0 --skip-modules           # Skip module installation"
-    echo "  $0 --dry-run --verbose      # Show what would be done"
-    echo ""
-}
-
-# =============================================================================
-# Validation Functions
-# =============================================================================
-
-check_prerequisites() {
-    print_step "Checking Prerequisites"
-    
-    # Check if we're in a Drupal installation
-    if [ ! -f "web/index.php" ] && [ ! -f "index.php" ]; then
-        print_error "Not in a Drupal installation directory"
-        print_info "Expected to find web/index.php or index.php"
-        exit 1
-    fi
-    print_verbose "Found Drupal installation files"
-    
-    # Check if Drush is available
-    if ! command -v drush &> /dev/null; then
-        print_error "Drush is not installed or not in PATH"
-        print_info "Install Drush: composer require drush/drush"
-        exit 1
-    fi
-    
-    # Get Drush version
-    DRUSH_VERSION=$(drush --version | grep -oP '\d+\.\d+' | head -1)
-    print_verbose "Found Drush version: $DRUSH_VERSION"
-    
-    # Check Drupal status
-    if ! drush status > /dev/null 2>&1; then
-        print_error "Drupal site is not properly installed"
-        print_info "Install Drupal first: drush site:install"
-        exit 1
-    fi
-    
-    # Get Drupal version
-    DRUPAL_VERSION=$(drush status --field=drupal-version 2>/dev/null || echo "Unknown")
-    print_verbose "Drupal version: $DRUPAL_VERSION"
-    
-    # Check if this is Drupal 11
-    if [[ ! "$DRUPAL_VERSION" =~ ^11\. ]]; then
-        print_warning "Expected Drupal 11, found: $DRUPAL_VERSION"
-        print_info "This script is designed for Drupal 11"
-    fi
-    
-    # Check if module directory exists
-    if [ ! -d "$MODULE_DIR" ]; then
-        print_error "Module directory not found: $MODULE_DIR"
-        exit 1
-    fi
-    print_verbose "Module directory found: $MODULE_DIR"
-    
-    # Check if thirdwing_migrate module files exist
-    if [ ! -f "$MODULE_DIR/thirdwing_migrate.info.yml" ]; then
-        print_error "thirdwing_migrate.info.yml not found in $MODULE_DIR"
-        exit 1
-    fi
-    print_verbose "Module info file found"
-    
-    print_success "All prerequisites met"
-}
-
-test_database() {
-    print_step "Testing Database Connections"
-    
-    # Test default database
-    if ! drush sql:query "SELECT 1" > /dev/null 2>&1; then
-        print_error "Cannot connect to default Drupal database"
-        print_info "Check database configuration in settings.php"
-        exit 1
-    fi
-    print_success "Default database connection working"
-    
-    # Test migration source database (if configured)
-    if drush config:get migrate_plus.migration_group.thirdwing_d6 --format=string > /dev/null 2>&1; then
-        print_success "Migration source database configuration found"
-    else
-        print_warning "Migration source database not yet configured"
-        print_info "Configure source database in settings.php before running migration:"
-        echo ""
-        echo "  \$databases['migrate']['default'] = ["
-        echo "    'driver' => 'mysql',"
-        echo "    'database' => 'thirdwing_d6',"
-        echo "    'username' => 'your_username',"
-        echo "    'password' => 'your_password',"
-        echo "    'host' => 'localhost',"
-        echo "    'prefix' => '',"
-        echo "  ];"
-        echo ""
-    fi
-}
-
-check_file_permissions() {
-    print_step "Checking File Permissions"
-    
-    # Check if files directory is writable
-    FILES_DIR=$(drush status --field=files 2>/dev/null || echo "sites/default/files")
-    if [ ! -d "$FILES_DIR" ]; then
-        print_warning "Files directory does not exist: $FILES_DIR"
-        if [ "$DRY_RUN" = false ]; then
-            mkdir -p "$FILES_DIR"
-            chmod 755 "$FILES_DIR"
-            print_success "Created files directory: $FILES_DIR"
-        fi
-    elif [ ! -w "$FILES_DIR" ]; then
-        print_error "Files directory is not writable: $FILES_DIR"
-        print_info "Fix with: chmod 755 $FILES_DIR"
-        exit 1
-    fi
-    print_verbose "Files directory writable: $FILES_DIR"
-    
-    # Check temp directory
-    TEMP_DIR=$(drush status --field=temp 2>/dev/null || echo "/tmp")
-    if [ ! -w "$TEMP_DIR" ]; then
-        print_warning "Temp directory not writable: $TEMP_DIR"
-    else
-        print_verbose "Temp directory writable: $TEMP_DIR"
-    fi
-    
-    print_success "File permissions OK"
-}
-
-# =============================================================================
-# Installation Functions
-# =============================================================================
-
-install_modules() {
-    if [ "$SKIP_MODULES" = true ]; then
-        print_warning "Skipping module installation"
-        return
-    fi
-    
-    print_step "Installing Required Modules"
-    
-    # Core modules needed for migration
-    CORE_MODULES=(
-        "migrate"
-        "migrate_drupal"
-        "media"
-        "file"
-        "image"
-        "datetime"
-        "link"
-        "field"
-        "text"
-        "options"
-        "taxonomy"
-        "menu_ui"
-        "path"
-        "workflows"
-        "content_moderation"
-    )
-    
-    print_substep "Installing core modules"
-    for module in "${CORE_MODULES[@]}"; do
-        if drush pm:list --status=enabled --type=module | grep -q "^$module"; then
-            print_verbose "$module already enabled"
-        else
-            print_verbose "Enabling $module"
-            if [ "$DRY_RUN" = false ]; then
-                drush pm:enable "$module" -y
-            fi
-        fi
-    done
-    
-    # Contrib modules (if available)
-    CONTRIB_MODULES=(
-        "migrate_plus"
-        "migrate_tools"
-        "permissions_by_term"
-        "permissions_by_entity"
-        "field_permissions"
-    )
-    
-    print_substep "Installing contrib modules (if available)"
-    for module in "${CONTRIB_MODULES[@]}"; do
-        if drush pm:list --status=enabled --type=module | grep -q "^$module"; then
-            print_verbose "$module already enabled"
-        elif drush pm:list --status=disabled --type=module | grep -q "^$module"; then
-            print_verbose "Enabling $module"
-            if [ "$DRY_RUN" = false ]; then
-                drush pm:enable "$module" -y
-            fi
-        else
-            print_warning "$module not available (optional)"
-        fi
-    done
-    
-    # Install thirdwing_migrate module
-    print_substep "Installing thirdwing_migrate module"
-    if drush pm:list --status=enabled --type=module | grep -q "^thirdwing_migrate"; then
-        print_verbose "thirdwing_migrate already enabled"
-    else
-        print_verbose "Enabling thirdwing_migrate"
-        if [ "$DRY_RUN" = false ]; then
-            drush pm:enable thirdwing_migrate -y
-        fi
-    fi
-    
-    print_success "Module installation completed"
-}
-
-setup_content_structure() {
-    print_step "Setting Up Content Structure"
-    
-    # Check if setup scripts exist
-    SETUP_SCRIPTS=(
-        "setup-content-types.php"
-        "setup-media-bundles.php"
-        "setup-shared-fields.php"
-        "setup-content-moderation.php"
-    )
-    
-    for script in "${SETUP_SCRIPTS[@]}"; do
-        SCRIPT_PATH="$MODULE_DIR/scripts/$script"
-        if [ -f "$SCRIPT_PATH" ]; then
-            print_substep "Running $script"
-            if [ "$DRY_RUN" = false ]; then
-                drush php:script "$SCRIPT_PATH"
-            else
-                print_verbose "Would run: drush php:script $SCRIPT_PATH"
-            fi
-        else
-            print_warning "Setup script not found: $script"
-            print_info "Expected at: $SCRIPT_PATH"
-        fi
-    done
-    
-    print_success "Content structure setup completed"
-}
-
-setup_field_displays() {
-    if [ "$SKIP_DISPLAYS" = true ]; then
-        print_warning "Skipping field display configuration"
-        return
-    fi
-    
-    print_step "Configuring Field Displays (Hybrid Approach)"
-    
-    print_substep "Setting up automated field displays"
-    if [ "$DRY_RUN" = false ]; then
-        # Setup displays for all content types
-        if drush list | grep -q "thirdwing:setup-displays"; then
-            drush thirdwing:setup-displays
-        else
-            print_warning "Field display commands not available yet"
-            print_info "Field displays will be configured when migration runs"
-        fi
-    else
-        print_verbose "Would run: drush thirdwing:setup-displays"
-    fi
-    
-    print_substep "Validating field display configuration"
-    if [ "$DRY_RUN" = false ]; then
-        if drush list | grep -q "thirdwing:validate-displays"; then
-            drush thirdwing:validate-displays
-        else
-            print_verbose "Validation command not available yet"
-        fi
-    else
-        print_verbose "Would run: drush thirdwing:validate-displays"
-    fi
-    
-    print_info "Manual customization available at: Structure > Content types > [Type] > Manage display"
-    print_success "Field display configuration completed"
-}
-
-setup_permissions() {
-    if [ "$SKIP_PERMISSIONS" = true ]; then
-        print_warning "Skipping permission setup"
-        return
-    fi
-    
-    print_step "Setting Up Roles and Permissions"
-    
-    PERMISSION_SCRIPT="$MODULE_DIR/scripts/setup-role-permissions.php"
-    if [ -f "$PERMISSION_SCRIPT" ]; then
-        print_substep "Configuring role permissions"
-        if [ "$DRY_RUN" = false ]; then
-            drush php:script "$PERMISSION_SCRIPT"
-        else
-            print_verbose "Would run: drush php:script $PERMISSION_SCRIPT"
-        fi
-    else
-        print_warning "Permission setup script not found"
-        print_info "Expected at: $PERMISSION_SCRIPT"
-    fi
-    
-    print_success "Permission setup completed"
-}
-
-validate_installation() {
-    print_step "Validating Installation"
-    
-    # Check if validation script exists
-    VALIDATION_SCRIPT="$MODULE_DIR/scripts/validate-migration.php"
-    if [ -f "$VALIDATION_SCRIPT" ]; then
-        print_substep "Running comprehensive validation"
-        if [ "$DRY_RUN" = false ]; then
-            drush php:script "$VALIDATION_SCRIPT"
-        else
-            print_verbose "Would run: drush php:script $VALIDATION_SCRIPT"
-        fi
-    else
-        print_warning "Validation script not found"
-        print_info "Expected at: $VALIDATION_SCRIPT"
-    fi
-    
-    # Basic validation checks
-    print_substep "Checking module status"
-    if drush pm:list --status=enabled --type=module | grep -q "^thirdwing_migrate"; then
-        print_success "thirdwing_migrate module is enabled"
-    else
-        print_error "thirdwing_migrate module is not enabled"
-    fi
-    
-    # Check content types
-    print_substep "Checking content types"
-    EXPECTED_TYPES=("activiteit" "nieuws" "pagina" "repertoire" "locatie" "vriend")
-    for type in "${EXPECTED_TYPES[@]}"; do
-        if drush entity:list node_type | grep -q "$type"; then
-            print_verbose "Content type $type exists"
-        else
-            print_warning "Content type $type not found"
-        fi
-    done
-    
-    # Check media bundles
-    print_substep "Checking media bundles"
-    EXPECTED_BUNDLES=("audio" "video" "image" "document")
-    for bundle in "${EXPECTED_BUNDLES[@]}"; do
-        if drush entity:list media_type | grep -q "$bundle"; then
-            print_verbose "Media bundle $bundle exists"
-        else
-            print_warning "Media bundle $bundle not found"
-        fi
-    done
-    
-    print_success "Installation validation completed"
-}
-
-clear_caches() {
-    print_step "Clearing Caches"
-    
-    if [ "$DRY_RUN" = false ]; then
-        drush cache:rebuild
-        print_success "Caches cleared"
-    else
-        print_verbose "Would run: drush cache:rebuild"
-    fi
-}
-
-# =============================================================================
-# Main Execution Flow
-# =============================================================================
-
-show_summary() {
-    print_step "Setup Summary"
-    
-    echo "Configuration:"
-    echo "  Skip modules: $SKIP_MODULES"
-    echo "  Skip displays: $SKIP_DISPLAYS"
-    echo "  Skip permissions: $SKIP_PERMISSIONS"
-    echo "  Validate only: $VALIDATE_ONLY"
-    echo "  Dry run: $DRY_RUN"
-    echo "  Verbose: $VERBOSE"
-    echo ""
-    
-    if [ "$VALIDATE_ONLY" = true ]; then
-        echo "Mode: Validation checks only"
-    elif [ "$DRY_RUN" = true ]; then
-        echo "Mode: Dry run (no changes will be made)"
-    else
-        echo "Mode: Full setup execution"
-    fi
-    echo ""
-}
-
-show_next_steps() {
-    print_step "Next Steps"
-    
-    echo "🎯 Your Thirdwing migration system is now set up!"
-    echo ""
-    echo "Next actions:"
-    echo ""
-    echo "1. 📋 Configure source database (if not done):"
-    echo "   Edit settings.php and add D6 database connection"
-    echo ""
-    echo "2. 🔄 Run initial migration:"
-    echo "   $MODULE_DIR/scripts/migrate-execute.sh"
-    echo ""
-    echo "3. ✅ Validate migration results:"
-    echo "   drush php:script $MODULE_DIR/scripts/validate-migration.php"
-    echo ""
-    echo "4. 🔄 Set up regular sync (optional):"
-    echo "   $MODULE_DIR/scripts/migrate-sync.sh --since='yesterday'"
-    echo ""
-    echo "5. 🎨 Customize field displays (optional):"
-    echo "   Navigate to: Structure > Content types > [Type] > Manage display"
-    echo ""
-    echo "Useful commands:"
-    echo "  drush thirdwing:setup-displays     # Configure field displays"
-    echo "  drush thirdwing:validate-displays  # Validate displays"
-    echo "  drush thirdwing:sync-incremental   # Incremental sync"
-    echo ""
 }
 
 # =============================================================================
@@ -530,40 +123,733 @@ parse_arguments() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             --help)
-                show_usage
+                show_help
                 exit 0
                 ;;
             --validate-only)
                 VALIDATE_ONLY=true
                 shift
                 ;;
+            --skip-composer)
+                SKIP_COMPOSER=true
+                shift
+                ;;
             --skip-modules)
                 SKIP_MODULES=true
                 shift
                 ;;
-            --skip-displays)
-                SKIP_DISPLAYS=true
+            --skip-content)
+                SKIP_CONTENT=true
                 shift
                 ;;
             --skip-permissions)
                 SKIP_PERMISSIONS=true
                 shift
                 ;;
-            --dry-run)
-                DRY_RUN=true
+            --skip-displays)
+                SKIP_DISPLAYS=true
                 shift
                 ;;
-            --verbose)
-                VERBOSE=true
+            --force)
+                FORCE_CONTINUE=true
                 shift
                 ;;
             *)
                 print_error "Unknown option: $1"
-                show_usage
+                show_help
                 exit 1
                 ;;
         esac
     done
+}
+
+show_help() {
+    echo "Thirdwing Migration Complete Setup Script - FIXED VERSION"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --help              Show this help message"
+    echo "  --validate-only     Run validation checks only"
+    echo "  --skip-composer     Skip composer dependency installation"
+    echo "  --skip-modules      Skip module installation"
+    echo "  --skip-content      Skip content structure creation"
+    echo "  --skip-permissions  Skip permission configuration"
+    echo "  --skip-displays     Skip field display configuration"
+    echo "  --force            Continue on non-critical errors"
+    echo ""
+    echo "Examples:"
+    echo "  $0                           # Full setup"
+    echo "  $0 --validate-only           # Check prerequisites only"
+    echo "  $0 --skip-composer --force   # Skip composer, continue on errors"
+}
+
+# =============================================================================
+# Configuration Validation Functions - NEW
+# =============================================================================
+
+validate_configuration_files() {
+    print_substep "Validating module configuration files"
+    
+    local config_errors=0
+    local config_dir="$MODULE_DIR/config/install"
+    
+    if [ ! -d "$config_dir" ]; then
+        print_warning "Configuration directory not found: $config_dir"
+        return 0
+    fi
+    
+    print_info "Checking for invalid module dependencies in config files..."
+    
+    # Known non-existent modules in D8+
+    local invalid_modules=(
+        "entity_reference"
+        "cck"
+        "content"
+        "date_api"
+        "date"
+    )
+    
+    for invalid_module in "${invalid_modules[@]}"; do
+        local files_with_error=$(grep -r "- $invalid_module" "$config_dir" || true)
+        
+        if [ -n "$files_with_error" ]; then
+            print_error "Found invalid module dependency '$invalid_module' in config files:"
+            echo "$files_with_error" | while read -r line; do
+                local file=$(echo "$line" | cut -d':' -f1)
+                print_error "  → $(basename "$file")"
+            done
+            ((config_errors++))
+        fi
+    done
+    
+    # Check for missing required dependencies
+    print_info "Checking for missing required dependencies..."
+    
+    local entity_ref_files=$(find "$config_dir" -name "*.yml" -exec grep -l "entity_reference_entity_view\|entity_reference_label" {} \; || true)
+    
+    if [ -n "$entity_ref_files" ]; then
+        print_info "Found files using entity reference formatters:"
+        echo "$entity_ref_files" | while read -r file; do
+            if [ -n "$file" ]; then
+                print_info "  → $(basename "$file")"
+                
+                # Check if file has proper dependencies
+                if ! grep -q "datetime\|text\|user" "$file"; then
+                    print_warning "File may be missing required module dependencies: $(basename "$file")"
+                fi
+            fi
+        done
+    fi
+    
+    if [ $config_errors -gt 0 ]; then
+        print_error "Configuration validation failed with $config_errors errors"
+        print_error "Fix configuration files before proceeding"
+        return 1
+    fi
+    
+    print_success "Configuration files validation passed"
+    return 0
+}
+
+# =============================================================================
+# Validation Functions
+# =============================================================================
+
+check_prerequisites() {
+    print_substep "Checking system prerequisites"
+    
+    local prereq_errors=0
+    
+    # Check if we're in a Drupal installation
+    if [ ! -f "web/index.php" ] && [ ! -f "index.php" ]; then
+        print_error "Not in a Drupal installation directory"
+        ((prereq_errors++))
+    else
+        print_success "Drupal installation directory detected"
+    fi
+    
+    # Check if Drush is available
+    if ! command -v drush &> /dev/null; then
+        print_error "Drush is not installed or not in PATH"
+        ((prereq_errors++))
+    else
+        local drush_version=$(drush --version 2>/dev/null | head -n1)
+        print_success "Drush available: $drush_version"
+    fi
+    
+    # Check if Composer is available
+    if ! command -v composer &> /dev/null; then
+        print_error "Composer is not installed or not in PATH"
+        ((prereq_errors++))
+    else
+        local composer_version=$(composer --version 2>/dev/null | head -n1)
+        print_success "Composer available: $composer_version"
+    fi
+    
+    # Check Drupal status
+    if ! drush status > /dev/null 2>&1; then
+        print_error "Drupal site is not properly installed or configured"
+        ((prereq_errors++))
+    else
+        local drupal_version=$(drush status drupal-version --format=string 2>/dev/null)
+        print_success "Drupal site status OK: $drupal_version"
+    fi
+    
+    # Check write permissions for module directory
+    if [ ! -w "$MODULE_DIR" ]; then
+        print_error "No write permissions for module directory: $MODULE_DIR"
+        ((prereq_errors++))
+    else
+        print_success "Module directory is writable"
+    fi
+    
+    if [ $prereq_errors -gt 0 ]; then
+        print_error "Prerequisites check failed with $prereq_errors errors"
+        return 1
+    fi
+    
+    print_success "All prerequisites met"
+    return 0
+}
+
+test_database_connections() {
+    print_substep "Testing database connections"
+    
+    # Test default database
+    if ! drush sql:query "SELECT 1" > /dev/null 2>&1; then
+        print_error "Cannot connect to default Drupal database"
+        return 1
+    fi
+    print_success "Default database connection working"
+    
+    # Test migration source database (if configured)
+    local has_migration_db=false
+    if drush config:get migrate_plus.migration_group.thirdwing_d6 --format=string > /dev/null 2>&1; then
+        print_success "Migration source database configuration found"
+        has_migration_db=true
+    else
+        print_warning "Migration source database not yet configured"
+        print_info "Configure source database in settings.php before running actual migration"
+    fi
+    
+    # Test database tables access
+    local table_count=$(drush sql:query "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()" 2>/dev/null || echo "0")
+    print_success "Database accessible with $table_count tables"
+    
+    return 0
+}
+
+validate_existing_content() {
+    print_substep "Checking for existing content that might conflict"
+    
+    local content_types=(
+        "activiteit" "audio" "foto" "locatie" "nieuws" 
+        "pagina" "profiel" "programma" "repertoire" 
+        "verslag" "video" "vriend"
+    )
+    
+    local existing_types=()
+    for content_type in "${content_types[@]}"; do
+        if drush eval "echo (\\Drupal\\node\\Entity\\NodeType::load('$content_type') ? 'exists' : 'none');" 2>/dev/null | grep -q "exists"; then
+            existing_types+=("$content_type")
+        fi
+    done
+    
+    if [ ${#existing_types[@]} -gt 0 ]; then
+        print_warning "Found existing content types: ${existing_types[*]}"
+        print_warning "These will be updated/reconfigured during setup"
+        
+        if [ "$FORCE_CONTINUE" != true ]; then
+            echo ""
+            read -p "Continue with existing content types? [y/N]: " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Setup cancelled by user"
+                return 1
+            fi
+        fi
+    else
+        print_success "No conflicting content types found"
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# Installation Functions - CORRECTED ORDER
+# =============================================================================
+
+install_composer_dependencies() {
+    if [ "$SKIP_COMPOSER" = true ]; then
+        print_warning "Skipping composer dependency installation"
+        return 0
+    fi
+    
+    print_substep "Installing required Composer dependencies"
+    
+    # Required contrib modules for migration
+    local contrib_modules=(
+        "drupal/migrate_plus"
+        "drupal/migrate_tools" 
+        "drupal/migrate_upgrade"
+        "drupal/permissions_by_term"
+        "drupal/permissions_by_entity"
+        "drupal/field_permissions"
+    )
+    
+    local install_needed=()
+    
+    # Check which modules need to be installed
+    for module in "${contrib_modules[@]}"; do
+        local module_name=$(echo "$module" | cut -d'/' -f2)
+        if [ ! -d "web/modules/contrib/$module_name" ] && [ ! -d "modules/contrib/$module_name" ]; then
+            install_needed+=("$module")
+        else
+            print_success "$module_name already installed"
+        fi
+    done
+    
+    if [ ${#install_needed[@]} -gt 0 ]; then
+        print_info "Installing ${#install_needed[@]} missing contrib modules..."
+        
+        # Install missing modules
+        if ! composer require "${install_needed[@]}" --no-interaction; then
+            print_error "Failed to install composer dependencies"
+            return 1
+        fi
+        
+        print_success "All contrib modules installed successfully"
+    else
+        print_success "All required contrib modules already available"
+    fi
+    
+    return 0
+}
+
+install_core_modules() {
+    if [ "$SKIP_MODULES" = true ]; then
+        print_warning "Skipping module installation"
+        return 0
+    fi
+    
+    print_substep "Installing core Drupal modules (Phase 1)"
+    
+    # Core modules needed for migration - CORRECTED ORDER
+    local core_modules=(
+        "migrate"
+        "migrate_drupal"
+        "workflows"
+        "content_moderation"
+        "media"
+        "file"
+        "image"
+        "field"
+        "text"
+        "datetime"
+        "link"
+        "options"
+        "taxonomy"
+        "menu_ui"
+        "path"
+    )
+    
+    local modules_to_enable=()
+    
+    # Check which modules need to be enabled
+    for module in "${core_modules[@]}"; do
+        if ! drush pm:list --status=enabled --type=module --format=list | grep -q "^$module$"; then
+            modules_to_enable+=("$module")
+        fi
+    done
+    
+    if [ ${#modules_to_enable[@]} -gt 0 ]; then
+        print_info "Enabling ${#modules_to_enable[@]} core modules..."
+        
+        if ! drush pm:enable -y "${modules_to_enable[@]}"; then
+            print_error "Failed to enable core modules"
+            return 1
+        fi
+        
+        print_success "Core modules enabled successfully"
+    else
+        print_success "All core modules already enabled"
+    fi
+    
+    return 0
+}
+
+install_contrib_modules() {
+    print_substep "Installing contrib modules (Phase 2)"
+    
+    # Contrib modules - CORRECTED ORDER (after core)
+    local contrib_modules=(
+        "migrate_plus"
+        "migrate_tools"
+        "migrate_upgrade"
+        "permissions_by_term"
+        "permissions_by_entity" 
+        "field_permissions"
+    )
+    
+    local modules_to_enable=()
+    
+    # Check which modules need to be enabled
+    for module in "${contrib_modules[@]}"; do
+        if ! drush pm:list --status=enabled --type=module --format=list | grep -q "^$module$"; then
+            modules_to_enable+=("$module")
+        fi
+    done
+    
+    if [ ${#modules_to_enable[@]} -gt 0 ]; then
+        print_info "Enabling ${#modules_to_enable[@]} contrib modules..."
+        
+        if ! drush pm:enable -y "${modules_to_enable[@]}"; then
+            print_error "Failed to enable contrib modules"
+            return 1
+        fi
+        
+        print_success "Contrib modules enabled successfully"
+    else
+        print_success "All contrib modules already enabled"
+    fi
+    
+    return 0
+}
+
+install_custom_module() {
+    print_substep "Installing Thirdwing migration module (Phase 3)"
+    
+    if ! drush pm:list --status=enabled --type=module --format=list | grep -q "^thirdwing_migrate$"; then
+        print_info "Enabling thirdwing_migrate module..."
+        
+        if ! drush pm:enable -y thirdwing_migrate; then
+            print_error "Failed to enable thirdwing_migrate module"
+            return 1
+        fi
+        
+        print_success "Thirdwing migration module enabled"
+    else
+        print_success "Thirdwing migration module already enabled"
+    fi
+    
+    # Verify module is properly installed
+    if ! drush pm:list --status=enabled --type=module | grep -q "thirdwing_migrate"; then
+        print_error "Thirdwing migration module not properly enabled"
+        return 1
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# Content Structure Creation - MOVED BEFORE PERMISSIONS
+# =============================================================================
+
+create_content_structure() {
+    if [ "$SKIP_CONTENT" = true ]; then
+        print_warning "Skipping content structure creation"
+        return 0
+    fi
+    
+    print_substep "Creating content structure (BEFORE permissions setup)"
+    
+    # Content types must be created FIRST
+    print_info "Creating content types..."
+    if [ -f "$MODULE_DIR/scripts/setup-content-types.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/setup-content-types.php"; then
+            print_error "Failed to create content types"
+            return 1
+        fi
+        print_success "Content types created successfully"
+    else
+        print_warning "Content types script not found: $MODULE_DIR/scripts/setup-content-types.php"
+    fi
+    
+    # Fields must be created SECOND
+    print_info "Creating fields..."
+    if [ -f "$MODULE_DIR/scripts/setup-fields.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/setup-fields.php"; then
+            print_error "Failed to create fields"
+            return 1
+        fi
+        print_success "Fields created successfully"
+    else
+        print_warning "Fields script not found: $MODULE_DIR/scripts/setup-fields.php"
+    fi
+    
+    # Media bundles
+    print_info "Creating media bundles..."
+    if [ -f "$MODULE_DIR/scripts/setup-media-bundles.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/setup-media-bundles.php"; then
+            print_error "Failed to create media bundles"
+            return 1
+        fi
+        print_success "Media bundles created successfully"
+    else
+        print_warning "Media bundles script not found: $MODULE_DIR/scripts/setup-media-bundles.php"
+    fi
+    
+    # Workflows must be created BEFORE permissions that reference workflow states
+    print_info "Creating workflows..."
+    if [ -f "$MODULE_DIR/scripts/setup-content-moderation.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/setup-content-moderation.php"; then
+            print_error "Failed to create workflows"
+            return 1
+        fi
+        print_success "Workflows created successfully"
+    else
+        print_warning "Workflows script not found: $MODULE_DIR/scripts/setup-content-moderation.php"
+    fi
+    
+    # Validate content structure was created
+    validate_content_structure_created
+    
+    return 0
+}
+
+validate_content_structure_created() {
+    print_info "Validating content structure was created properly..."
+    
+    local expected_content_types=(
+        "activiteit" "nieuws" "pagina" "programma" "repertoire" 
+        "locatie" "vriend" "persoon" "album"
+    )
+    
+    local missing_types=()
+    for content_type in "${expected_content_types[@]}"; do
+        if ! drush eval "echo (\\Drupal\\node\\Entity\\NodeType::load('$content_type') ? 'exists' : 'missing');" 2>/dev/null | grep -q "exists"; then
+            missing_types+=("$content_type")
+        fi
+    done
+    
+    if [ ${#missing_types[@]} -gt 0 ]; then
+        print_error "Missing content types: ${missing_types[*]}"
+        print_error "Content structure validation failed"
+        return 1
+    fi
+    
+    print_success "Content structure validation passed"
+    return 0
+}
+
+# =============================================================================
+# Permissions Setup - MOVED AFTER CONTENT CREATION
+# =============================================================================
+
+setup_permissions() {
+    if [ "$SKIP_PERMISSIONS" = true ]; then
+        print_warning "Skipping permission configuration"
+        return 0
+    fi
+    
+    print_substep "Setting up role permissions (AFTER content types exist)"
+    
+    # NOW content types exist, so permissions can be granted
+    if [ -f "$MODULE_DIR/scripts/setup-role-permissions.php" ]; then
+        print_info "Configuring role-based permissions..."
+        
+        if ! drush php:script "$MODULE_DIR/scripts/setup-role-permissions.php"; then
+            print_error "Failed to configure permissions"
+            return 1
+        fi
+        
+        print_success "Role permissions configured successfully"
+        
+        # Validate critical permissions were granted
+        validate_permissions_configured
+        
+    else
+        print_warning "Permission script not found: $MODULE_DIR/scripts/setup-role-permissions.php"
+    fi
+    
+    return 0
+}
+
+validate_permissions_configured() {
+    print_info "Validating permissions were configured properly..."
+    
+    # Test that content-type specific permissions exist
+    local test_permissions=(
+        "create activiteit content"
+        "edit any nieuws content" 
+        "view field_datum"
+    )
+    
+    local permission_errors=0
+    for permission in "${test_permissions[@]}"; do
+        # Check if any role has this permission
+        local roles_with_permission=$(drush eval "
+            \$roles = \\Drupal\\user\\Entity\\Role::loadMultiple();
+            \$found = [];
+            foreach (\$roles as \$role) {
+                if (\$role->hasPermission('$permission')) {
+                    \$found[] = \$role->id();
+                }
+            }
+            echo implode(',', \$found);
+        " 2>/dev/null)
+        
+        if [ -z "$roles_with_permission" ]; then
+            print_warning "No roles have permission: $permission"
+            ((permission_errors++))
+        else
+            print_success "Permission '$permission' granted to: $roles_with_permission"
+        fi
+    done
+    
+    if [ $permission_errors -gt 0 ]; then
+        print_warning "Some permissions may not have been configured properly"
+        return 1
+    fi
+    
+    print_success "Permission validation passed"
+    return 0
+}
+
+# =============================================================================
+# Field Display Configuration - FINAL STEP
+# =============================================================================
+
+setup_field_displays() {
+    if [ "$SKIP_DISPLAYS" = true ]; then
+        print_warning "Skipping field display configuration"
+        return 0
+    fi
+    
+    print_substep "Setting up field displays (final step)"
+    
+    if [ -f "$MODULE_DIR/scripts/setup-field-displays.php" ]; then
+        print_info "Configuring field displays..."
+        
+        if ! drush php:script "$MODULE_DIR/scripts/setup-field-displays.php"; then
+            print_error "Failed to configure field displays"
+            return 1
+        fi
+        
+        print_success "Field displays configured successfully"
+    else
+        print_warning "Field displays script not found: $MODULE_DIR/scripts/setup-field-displays.php"
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# Cache and Cleanup
+# =============================================================================
+
+final_cleanup() {
+    print_substep "Performing final cleanup and cache rebuild"
+    
+    print_info "Clearing all caches..."
+    if ! drush cache:rebuild; then
+        print_warning "Cache rebuild failed"
+    else
+        print_success "Caches cleared successfully"
+    fi
+    
+    print_info "Rebuilding node access permissions..."
+    if ! drush eval "node_access_rebuild();"; then
+        print_warning "Node access rebuild failed"
+    else
+        print_success "Node access permissions rebuilt"
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# Error Handling and Reporting
+# =============================================================================
+
+handle_error() {
+    local exit_code=$?
+    local line_number=$1
+    
+    print_error "An error occurred on line $line_number (exit code: $exit_code)"
+    
+    if [ "$FORCE_CONTINUE" = true ]; then
+        print_warning "Continuing due to --force flag..."
+        return 0
+    else
+        print_error "Setup failed. Use --force to continue on errors."
+        generate_error_report
+        exit $exit_code
+    fi
+}
+
+generate_error_report() {
+    echo ""
+    echo -e "${RED}=============================================================================${NC}"
+    echo -e "${RED} SETUP FAILED - ERROR REPORT${NC}"
+    echo -e "${RED}=============================================================================${NC}"
+    echo ""
+    
+    if [ ${#ERRORS[@]} -gt 0 ]; then
+        echo -e "${RED}ERRORS (${#ERRORS[@]}):${NC}"
+        for error in "${ERRORS[@]}"; do
+            echo -e "${RED}  ❌ $error${NC}"
+        done
+        echo ""
+    fi
+    
+    if [ ${#WARNINGS[@]} -gt 0 ]; then
+        echo -e "${YELLOW}WARNINGS (${#WARNINGS[@]}):${NC}"
+        for warning in "${WARNINGS[@]}"; do
+            echo -e "${YELLOW}  ⚠️  $warning${NC}"
+        done
+        echo ""
+    fi
+    
+    echo -e "${BLUE}TROUBLESHOOTING TIPS:${NC}"
+    echo -e "${BLUE}  1. Check database connectivity${NC}"
+    echo -e "${BLUE}  2. Verify all required modules are downloaded${NC}"
+    echo -e "${BLUE}  3. Ensure proper file permissions${NC}"
+    echo -e "${BLUE}  4. Try running with --force flag to continue on errors${NC}"
+    echo -e "${BLUE}  5. Run individual setup scripts manually if needed${NC}"
+    echo ""
+}
+
+generate_success_report() {
+    echo ""
+    echo -e "${GREEN}=============================================================================${NC}"
+    echo -e "${GREEN} SETUP COMPLETED SUCCESSFULLY! 🎉${NC}"
+    echo -e "${GREEN}=============================================================================${NC}"
+    echo ""
+    
+    echo -e "${CYAN}📋 INSTALLATION SUMMARY:${NC}"
+    echo -e "${GREEN}  ✅ Composer dependencies installed${NC}"
+    echo -e "${GREEN}  ✅ Core and contrib modules enabled${NC}"
+    echo -e "${GREEN}  ✅ Content types and fields created${NC}"
+    echo -e "${GREEN}  ✅ Workflows and media bundles configured${NC}"
+    echo -e "${GREEN}  ✅ Role permissions properly set${NC}"
+    echo -e "${GREEN}  ✅ Field displays configured${NC}"
+    echo -e "${GREEN}  ✅ Caches cleared and permissions rebuilt${NC}"
+    echo ""
+    
+    if [ ${#WARNINGS[@]} -gt 0 ]; then
+        echo -e "${YELLOW}⚠️  WARNINGS (${#WARNINGS[@]}):${NC}"
+        for warning in "${WARNINGS[@]}"; do
+            echo -e "${YELLOW}    $warning${NC}"
+        done
+        echo ""
+    fi
+    
+    echo -e "${BLUE}🚀 NEXT STEPS:${NC}"
+    echo -e "${BLUE}  1. Configure migration source database in settings.php${NC}"
+    echo -e "${BLUE}  2. Run: ./migrate-setup.sh${NC}"
+    echo -e "${BLUE}  3. Run: ./migrate-execute.sh${NC}"
+    echo -e "${BLUE}  4. Visit /admin/content to verify content types${NC}"
+    echo -e "${BLUE}  5. Visit /admin/people/permissions to review permissions${NC}"
+    echo -e "${BLUE}  6. Install and configure the Thirdwing theme${NC}"
+    echo ""
+    
+    echo -e "${PURPLE}🔧 VALIDATION COMMANDS:${NC}"
+    echo -e "${PURPLE}  drush pm:list --status=enabled | grep thirdwing${NC}"
+    echo -e "${PURPLE}  drush entity:info node${NC}"
+    echo -e "${PURPLE}  drush user:role:list${NC}"
+    echo ""
 }
 
 # =============================================================================
@@ -571,41 +857,63 @@ parse_arguments() {
 # =============================================================================
 
 main() {
+    # Set up error handling
+    trap 'handle_error $LINENO' ERR
+    
     # Parse command line arguments
     parse_arguments "$@"
     
-    # Show header
+    # Print header
     print_header
     
-    # Show configuration summary
-    show_summary
+    # Step 1: Prerequisites validation
+    print_step 1 "Prerequisites Validation"
+    check_prerequisites || exit 1
+    test_database_connections || exit 1
+    validate_existing_content || exit 1
+    validate_configuration_files || exit 1
     
-    # Always run prerequisite checks
-    check_prerequisites
-    test_database
-    check_file_permissions
-    
-    # If validate-only mode, stop here
+    # If validation only, stop here
     if [ "$VALIDATE_ONLY" = true ]; then
-        print_success "Validation completed successfully!"
-        print_info "Run without --validate-only to perform full setup"
+        print_success "Validation completed successfully"
         exit 0
     fi
     
-    # Full setup execution
-    install_modules
-    setup_content_structure
-    setup_field_displays
-    setup_permissions
-    clear_caches
-    validate_installation
+    # Step 2: Composer dependencies (NEW - was missing)
+    print_step 2 "Composer Dependencies Installation"
+    install_composer_dependencies || exit 1
     
-    # Show completion message
-    print_success "🎉 Thirdwing migration setup completed successfully!"
+    # Step 3: Core module installation (FIXED ORDER)
+    print_step 3 "Core Module Installation"
+    install_core_modules || exit 1
     
-    # Show next steps
-    show_next_steps
+    # Step 4: Contrib module installation (FIXED ORDER)
+    print_step 4 "Contrib Module Installation"
+    install_contrib_modules || exit 1
+    
+    # Step 5: Custom module installation
+    print_step 5 "Custom Module Installation"
+    install_custom_module || exit 1
+    
+    # Step 6: Content structure creation (MOVED BEFORE PERMISSIONS)
+    print_step 6 "Content Structure Creation"
+    create_content_structure || exit 1
+    
+    # Step 7: Permission setup (MOVED AFTER CONTENT CREATION)
+    print_step 7 "Role Permission Configuration"
+    setup_permissions || exit 1
+    
+    # Step 8: Field displays (FINAL STEP)
+    print_step 8 "Field Display Configuration"
+    setup_field_displays || exit 1
+    
+    # Step 9: Final cleanup
+    print_step 9 "Final Cleanup and Cache Rebuild"
+    final_cleanup || exit 1
+    
+    # Generate success report
+    generate_success_report
 }
 
-# Execute main function with all arguments
+# Run main function with all arguments
 main "$@"

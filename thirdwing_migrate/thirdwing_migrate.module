@@ -112,52 +112,49 @@ function thirdwing_migrate_migration_plugins_alter(array &$migrations) {
  * Automatically configure field displays when Thirdwing content types are created.
  * Part of the hybrid field display approach: automated defaults + manual customization.
  */
-function thirdwing_migrate_node_type_insert(EntityInterface $entity) {
-  /** @var \Drupal\node\NodeTypeInterface $entity */
-  if ($entity instanceof NodeTypeInterface) {
-    $content_type = $entity->id();
-    
-    // Only configure displays for Thirdwing content types
-    $thirdwing_types = [
-      'activiteit',
-      'foto',
-      'locatie', 
-      'nieuws',
-      'pagina',
-      'programma',
-      'repertoire',
-      'persoon',
-      'vriend',
-    ];
-    
-    if (in_array($content_type, $thirdwing_types)) {
-      try {
-        /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
-        $display_service = \Drupal::service('thirdwing_migrate.field_display');
-        
-        // Configure displays for all view modes
-        $view_modes = ['default', 'teaser', 'full', 'search_result'];
-        foreach ($view_modes as $view_mode) {
-          $display_service->configureContentTypeDisplay($content_type, $view_mode);
-        }
-        
-        \Drupal::logger('thirdwing_migrate')->info(
-          'Automatically configured field displays for content type @type',
-          ['@type' => $content_type]
-        );
-        
-      } catch (\Exception $e) {
-        \Drupal::logger('thirdwing_migrate')->error(
-          'Failed to automatically configure displays for @type: @error',
-          ['@type' => $content_type, '@error' => $e->getMessage()]
-        );
+function thirdwing_migrate_node_type_insert(NodeTypeInterface $node_type) {
+  $content_type = $node_type->id();
+  
+  // Only auto-configure displays for Thirdwing content types
+  $thirdwing_types = [
+    'activiteit',
+    'foto', 
+    'locatie',
+    'nieuws',
+    'pagina',
+    'programma',
+    'repertoire',
+    'persoon',
+    'vriend',
+  ];
+  
+  if (in_array($content_type, $thirdwing_types)) {
+    try {
+      /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
+      $display_service = \Drupal::service('thirdwing_migrate.field_display');
+      
+      // Configure displays for all view modes
+      $view_modes = ['default', 'teaser', 'full', 'search_result'];
+      foreach ($view_modes as $view_mode) {
+        $display_service->configureContentTypeDisplay($content_type, $view_mode);
       }
+      
+      \Drupal::logger('thirdwing_migrate')->info(
+        'Auto-configured field displays for new content type: @type',
+        ['@type' => $content_type]
+      );
+      
+    } catch (\Exception $e) {
+      \Drupal::logger('thirdwing_migrate')->error(
+        'Failed to auto-configure displays for content type @type: @error',
+        ['@type' => $content_type, '@error' => $e->getMessage()]
+      );
     }
   }
 }
 
 /**
- * Implements hook_ENTITY_TYPE_insert() for field_config.
+ * Implements hook_field_config_insert().
  * 
  * Automatically update field displays when new fields are added to Thirdwing content types.
  * Ensures new fields are properly displayed without manual configuration.
@@ -214,18 +211,15 @@ function thirdwing_migrate_field_config_insert(EntityInterface $entity) {
  * Implements hook_modules_installed().
  * 
  * Configure field displays when the thirdwing_migrate module is installed.
- * Uses queue system to ensure all dependencies are properly loaded.
+ * FIXED: Removed invalid installModulesDependencies() call.
  */
 function thirdwing_migrate_modules_installed($modules) {
   if (in_array('thirdwing_migrate', $modules)) {
-    // Delay the display configuration to ensure all dependencies are ready
-    \Drupal::service('module_installer')->installModulesDependencies(['thirdwing_migrate']);
-    
     // Queue the display configuration for the next request
     $queue = \Drupal::queue('thirdwing_migrate_display_config');
     $queue->createItem(['action' => 'configure_all_displays']);
     
-    \Drupal::logger('thirdwing_migrate')->info('Queued field display configuration for next request');
+    \Drupal::logger('thirdwing_migrate')->info('Queued field display configuration for thirdwing_migrate module installation');
   }
 }
 
@@ -366,133 +360,4 @@ function thirdwing_migrate_set_last_sync($timestamp = NULL) {
 function thirdwing_migrate_get_sync_history($limit = 10) {
   $history = \Drupal::state()->get('thirdwing_migrate.sync_history', []);
   return array_slice($history, -$limit);
-}
-
-/**
- * Add entry to sync history.
- *
- * @param array $entry
- *   Sync history entry to add.
- */
-function thirdwing_migrate_add_sync_history($entry) {
-  $history = \Drupal::state()->get('thirdwing_migrate.sync_history', []);
-  $history[] = $entry;
-  
-  // Keep only last 20 entries
-  $history = array_slice($history, -20);
-  
-  \Drupal::state()->set('thirdwing_migrate.sync_history', $history);
-}
-
-/**
- * Check if source database is accessible.
- *
- * @return bool
- *   TRUE if source database is accessible, FALSE otherwise.
- */
-function thirdwing_migrate_check_source_database() {
-  try {
-    $source_db = Database::getConnection('default', 'migrate');
-    $result = $source_db->query('SELECT 1')->fetchField();
-    return $result == 1;
-  } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Source database check failed: @error', [
-      '@error' => $e->getMessage()
-    ]);
-    return FALSE;
-  }
-}
-
-/**
- * Get migration statistics.
- *
- * @return array
- *   Array of migration statistics.
- */
-function thirdwing_migrate_get_statistics() {
-  $stats = [];
-  
-  try {
-    /** @var \Drupal\migrate_plus\Entity\MigrationGroupInterface $group */
-    $group = \Drupal::entityTypeManager()
-      ->getStorage('migration_group')
-      ->load('thirdwing');
-    
-    if ($group) {
-      $migration_manager = \Drupal::service('plugin.manager.migration');
-      $migrations = $migration_manager->createInstancesByTag('thirdwing');
-      
-      foreach ($migrations as $migration_id => $migration) {
-        $source = $migration->getSourcePlugin();
-        $stats[$migration_id] = [
-          'label' => $migration->label(),
-          'source_count' => $source->count(),
-          'imported' => $migration->getIdMap()->importedCount(),
-          'updated' => $migration->getIdMap()->updateCount(),
-          'ignored' => $migration->getIdMap()->ignoredCount(),
-          'failed' => $migration->getIdMap()->errorCount(),
-        ];
-      }
-    }
-  } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Failed to get migration statistics: @error', [
-      '@error' => $e->getMessage()
-    ]);
-  }
-  
-  return $stats;
-}
-
-/**
- * Validate field display configuration for all content types.
- *
- * @return array
- *   Array of validation results.
- */
-function thirdwing_migrate_validate_field_displays() {
-  try {
-    /** @var \Drupal\thirdwing_migrate\Service\ThirdwingFieldDisplayService $display_service */
-    $display_service = \Drupal::service('thirdwing_migrate.field_display');
-    return $display_service->validateDisplays();
-  } catch (\Exception $e) {
-    \Drupal::logger('thirdwing_migrate')->error('Field display validation failed: @error', [
-      '@error' => $e->getMessage()
-    ]);
-    return [];
-  }
-}
-
-/**
- * Get list of all Thirdwing content types.
- *
- * @return array
- *   Array of content type machine names.
- */
-function thirdwing_migrate_get_content_types() {
-  return [
-    'activiteit',
-    'foto',
-    'locatie',
-    'nieuws',
-    'pagina',
-    'programma',
-    'repertoire',
-    'persoon',
-    'vriend',
-  ];
-}
-
-/**
- * Get list of all Thirdwing media bundles.
- *
- * @return array
- *   Array of media bundle machine names.
- */
-function thirdwing_migrate_get_media_bundles() {
-  return [
-    'image',
-    'document',
-    'audio',
-    'video',
-  ];
 }

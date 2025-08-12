@@ -524,14 +524,14 @@ create_content_structure() {
     
     print_substep "Creating content structure (Content types, media bundles, and fields)"
     
-    # STEP 1: Create content types AND fields (this script does both)
-    print_info "Creating content types and fields..."
+    # STEP 1: Create content types AND basic fields (no media dependencies)
+    print_info "Creating content types and basic fields..."
     if [ -f "$MODULE_DIR/scripts/create-content-types-and-fields.php" ]; then
         if ! drush php:script "$MODULE_DIR/scripts/create-content-types-and-fields.php"; then
-            print_error "Failed to create content types and fields"
+            print_error "Failed to create content types and basic fields"
             return 1
         fi
-        print_success "Content types and fields created successfully"
+        print_success "Content types and basic fields created successfully"
     else
         print_warning "Content types and fields script not found: $MODULE_DIR/scripts/create-content-types-and-fields.php"
         print_info "Trying configuration import as fallback..."
@@ -542,7 +542,7 @@ create_content_structure() {
         fi
     fi
     
-    # STEP 2: Create media bundles (depends on media types being available)
+    # STEP 2: Create media bundles (must be after core modules, before media-dependent fields)
     print_info "Creating media bundles..."
     if [ -f "$MODULE_DIR/scripts/create-media-bundles-and-fields.php" ]; then
         if ! drush php:script "$MODULE_DIR/scripts/create-media-bundles-and-fields.php"; then
@@ -554,17 +554,30 @@ create_content_structure() {
         print_warning "Media bundles script not found: $MODULE_DIR/scripts/create-media-bundles-and-fields.php"
     fi
     
-    # STEP 3: Import workflows and other configurations that depend on content types existing
+    # STEP 3: Add media-dependent fields (must be after media bundles exist)
+    print_info "Adding media-dependent fields to content types..."
+    if [ -f "$MODULE_DIR/scripts/add-media-dependent-fields.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/add-media-dependent-fields.php"; then
+            print_error "Failed to add media-dependent fields"
+            return 1
+        fi
+        print_success "Media-dependent fields added successfully"
+    else
+        print_warning "Media-dependent fields script not found: $MODULE_DIR/scripts/add-media-dependent-fields.php"
+        print_info "Media fields will need to be created manually"
+    fi
+    
+    # STEP 4: Import workflows and other configurations that depend on content types existing
     print_info "Importing workflows and additional configurations..."
     if ! drush config:import --partial --source="$MODULE_DIR/config/install" -y 2>/dev/null; then
         print_info "Some configurations may have been imported already"
     fi
     
-    # STEP 4: Clear caches after all structure creation
+    # STEP 5: Clear caches after all structure creation
     print_info "Clearing caches after content structure creation..."
     drush cache:rebuild
     
-    # STEP 5: Validate everything was created properly
+    # STEP 6: Validate everything was created properly
     validate_content_structure_created
     
     return 0

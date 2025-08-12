@@ -19,9 +19,12 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 function createContentTypesAndFields() {
   echo "🚀 Creating Content Types and Fields (CORRECTED VERSION)...\n\n";
   
-  // Step 1: Create shared field storages first
-  echo "📋 Creating shared field storages...\n";
-  createSharedFieldStorages();
+  echo "⚠️  NOTE: This script creates content types and basic fields only.\n";
+  echo "   Media-dependent fields will be created after media bundles exist.\n\n";
+  
+  // Step 1: Create basic shared field storages first (no media dependencies)
+  echo "📋 Creating basic shared field storages...\n";
+  createBasicSharedFieldStorages();
   
   // Step 2: Create content types
   echo "\n📦 Creating content types...\n";
@@ -34,12 +37,164 @@ function createContentTypesAndFields() {
   echo "\n🔧 Creating content-type specific fields...\n";
   createContentTypeSpecificFields();
   
-  // Step 4: Attach shared fields to content types
-  echo "\n🔗 Attaching shared fields to content types...\n";
-  attachSharedFieldsToContentTypes();
+  // Step 4: Attach basic shared fields to content types
+  echo "\n🔗 Attaching basic shared fields to content types...\n";
+  attachBasicSharedFieldsToContentTypes();
   
-  echo "\n✅ Content types and fields creation complete!\n";
+  // Step 5: Create node-reference fields (after all content types exist)
+  echo "\n🔗 Creating node-reference shared fields...\n";
+  createNodeReferenceSharedFields();
+  
+  // Step 6: Attach node-reference fields to content types
+  echo "\n🔗 Attaching node-reference fields to content types...\n";
+  attachNodeReferenceFieldsToContentTypes();
+  
+  echo "\n✅ Content types and basic fields creation complete!\n";
+  echo "⏭️  Next: Run create-media-bundles-and-fields.php\n";
+  echo "⏭️  Then: Run this script again to add media-dependent fields\n\n";
   printSummary();
+}
+
+/**
+ * Create basic shared field storages (no media dependencies).
+ */
+function createBasicSharedFieldStorages() {
+  $shared_fields = getSharedFieldDefinitions();
+  
+  foreach ($shared_fields as $field_name => $field_config) {
+    echo "  Creating shared field storage: {$field_name}\n";
+    
+    $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+    if (!$field_storage) {
+      $storage_config = [
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $field_config['type'],
+        'cardinality' => $field_config['cardinality'] ?? 1,
+      ];
+      
+      if (isset($field_config['settings'])) {
+        $storage_config['settings'] = $field_config['settings'];
+      }
+      
+      $field_storage = FieldStorageConfig::create($storage_config);
+      $field_storage->save();
+      echo "    ✓ Created: {$field_config['label']}\n";
+    } else {
+      echo "    - Already exists: {$field_name}\n";
+    }
+  }
+}
+
+/**
+ * Create node-reference shared fields.
+ */
+function createNodeReferenceSharedFields() {
+  $node_ref_fields = getNodeReferenceSharedFields();
+  
+  foreach ($node_ref_fields as $field_name => $field_config) {
+    echo "  Creating node-reference field storage: {$field_name}\n";
+    
+    $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+    if (!$field_storage) {
+      $storage_config = [
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $field_config['type'],
+        'cardinality' => $field_config['cardinality'] ?? 1,
+      ];
+      
+      if (isset($field_config['settings'])) {
+        $storage_config['settings'] = $field_config['settings'];
+      }
+      
+      $field_storage = FieldStorageConfig::create($storage_config);
+      $field_storage->save();
+      echo "    ✓ Created: {$field_config['label']}\n";
+    } else {
+      echo "    - Already exists: {$field_name}\n";
+    }
+  }
+}
+
+/**
+ * Create media-dependent shared fields (call this AFTER media bundles exist).
+ */
+function createMediaDependentSharedFields() {
+  echo "📋 Creating media-dependent shared field storages...\n";
+  
+  $media_fields = getMediaDependentSharedFields();
+  
+  foreach ($media_fields as $field_name => $field_config) {
+    echo "  Creating media-dependent field storage: {$field_name}\n";
+    
+    $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+    if (!$field_storage) {
+      $storage_config = [
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $field_config['type'],
+        'cardinality' => $field_config['cardinality'] ?? 1,
+      ];
+      
+      if (isset($field_config['settings'])) {
+        $storage_config['settings'] = $field_config['settings'];
+      }
+      
+      $field_storage = FieldStorageConfig::create($storage_config);
+      $field_storage->save();
+      echo "    ✓ Created: {$field_config['label']}\n";
+    } else {
+      echo "    - Already exists: {$field_name}\n";
+    }
+  }
+}
+
+/**
+ * Attach basic shared fields to content types.
+ */
+function attachBasicSharedFieldsToContentTypes() {
+  $basic_attachments = getBasicSharedFieldAttachments();
+  
+  foreach ($basic_attachments as $content_type => $field_names) {
+    echo "  Attaching basic shared fields to: {$content_type}\n";
+    
+    foreach ($field_names as $field_name) {
+      attachSharedFieldToContentType($content_type, $field_name, getSharedFieldDefinitions());
+    }
+  }
+}
+
+/**
+ * Attach node-reference fields to content types.
+ */
+function attachNodeReferenceFieldsToContentTypes() {
+  $node_ref_attachments = getNodeReferenceFieldAttachments();
+  
+  foreach ($node_ref_attachments as $content_type => $field_names) {
+    echo "  Attaching node-reference fields to: {$content_type}\n";
+    
+    foreach ($field_names as $field_name) {
+      attachSharedFieldToContentType($content_type, $field_name, getNodeReferenceSharedFields());
+    }
+  }
+}
+
+/**
+ * Attach media-dependent fields to content types (call AFTER media bundles exist).
+ */
+function attachMediaDependentFieldsToContentTypes() {
+  echo "🔗 Attaching media-dependent fields to content types...\n";
+  
+  $media_attachments = getMediaDependentFieldAttachments();
+  
+  foreach ($media_attachments as $content_type => $field_names) {
+    echo "  Attaching media fields to: {$content_type}\n";
+    
+    foreach ($field_names as $field_name) {
+      attachSharedFieldToContentType($content_type, $field_name, getMediaDependentSharedFields());
+    }
+  }
 }
 
 /**
@@ -177,15 +332,24 @@ function createFieldForContentType($content_type, $field_name, $field_config) {
 /**
  * Attach a shared field to a content type.
  */
-function attachSharedFieldToContentType($content_type, $field_name) {
-  $shared_fields = getSharedFieldDefinitions();
+function attachSharedFieldToContentType($content_type, $field_name, $field_definitions = null) {
+  if ($field_definitions === null) {
+    // Try all field definition sources
+    $all_fields = array_merge(
+      getSharedFieldDefinitions(),
+      getNodeReferenceSharedFields(),
+      getMediaDependentSharedFields()
+    );
+  } else {
+    $all_fields = $field_definitions;
+  }
   
-  if (!isset($shared_fields[$field_name])) {
-    echo "    ⚠️  Shared field '{$field_name}' not found\n";
+  if (!isset($all_fields[$field_name])) {
+    echo "    ⚠️  Field '{$field_name}' not found in definitions\n";
     return;
   }
   
-  $field_config = $shared_fields[$field_name];
+  $field_config = $all_fields[$field_name];
   $field_storage = FieldStorageConfig::loadByName('node', $field_name);
   
   if (!$field_storage) {
@@ -268,13 +432,6 @@ function getContentTypeConfigurations() {
  */
 function getSharedFieldDefinitions() {
   return [
-    'field_afbeeldingen' => [
-      'type' => 'entity_reference',
-      'label' => 'Afbeeldingen',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => ['target_type' => 'media'],
-      'target_bundles' => ['image']
-    ],
     'field_audio_type' => [
       'type' => 'list_string',
       'label' => 'Type',
@@ -300,59 +457,10 @@ function getSharedFieldDefinitions() {
       'cardinality' => 1,
       'settings' => ['datetime_type' => 'datetime']
     ],
-    'field_files' => [
-      'type' => 'entity_reference',
-      'label' => 'Bestandsbijlages',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => ['target_type' => 'media'],
-      'target_bundles' => ['document']
-    ],
-    'field_inhoud' => [
-      'type' => 'entity_reference',
-      'label' => 'Inhoud',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => ['target_type' => 'node'],
-      'target_bundles' => ['nieuws', 'activiteit', 'programma']
-    ],
     'field_l_routelink' => [
       'type' => 'link',
       'label' => 'Route',
       'cardinality' => 1
-    ],
-    'field_partij_band' => [
-      'type' => 'entity_reference',
-      'label' => 'Bandpartituur',
-      'cardinality' => 1,
-      'settings' => ['target_type' => 'media'],
-      'target_bundles' => ['document']
-    ],
-    'field_partij_koor_l' => [
-      'type' => 'entity_reference',
-      'label' => 'Koorpartituur',
-      'cardinality' => 1,
-      'settings' => ['target_type' => 'media'],
-      'target_bundles' => ['document']
-    ],
-    'field_partij_tekst' => [
-      'type' => 'entity_reference',
-      'label' => 'Tekst / koorregie',
-      'cardinality' => 1,
-      'settings' => ['target_type' => 'media'],
-      'target_bundles' => ['document']
-    ],
-    'field_programma2' => [
-      'type' => 'entity_reference',
-      'label' => 'Programma',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => ['target_type' => 'node'],
-      'target_bundles' => ['programma']
-    ],
-    'field_ref_activiteit' => [
-      'type' => 'entity_reference',
-      'label' => 'Activiteit',
-      'cardinality' => 1,
-      'settings' => ['target_type' => 'node'],
-      'target_bundles' => ['activiteit']
     ],
     'field_repertoire' => [
       'type' => 'entity_reference',
@@ -378,6 +486,79 @@ function getSharedFieldDefinitions() {
       'label' => 'Woonplaats',
       'cardinality' => 1,
       'settings' => ['max_length' => 255]
+    ]
+  ];
+}
+
+/**
+ * Get media-dependent shared field definitions.
+ * These fields reference media entities and must be created AFTER media bundles exist.
+ */
+function getMediaDependentSharedFields() {
+  return [
+    'field_afbeeldingen' => [
+      'type' => 'entity_reference',
+      'label' => 'Afbeeldingen',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => ['target_type' => 'media'],
+      'target_bundles' => ['image']
+    ],
+    'field_files' => [
+      'type' => 'entity_reference',
+      'label' => 'Bestandsbijlages',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => ['target_type' => 'media'],
+      'target_bundles' => ['document']
+    ],
+    'field_partij_band' => [
+      'type' => 'entity_reference',
+      'label' => 'Bandpartituur',
+      'cardinality' => 1,
+      'settings' => ['target_type' => 'media'],
+      'target_bundles' => ['document']
+    ],
+    'field_partij_koor_l' => [
+      'type' => 'entity_reference',
+      'label' => 'Koorpartituur',
+      'cardinality' => 1,
+      'settings' => ['target_type' => 'media'],
+      'target_bundles' => ['document']
+    ],
+    'field_partij_tekst' => [
+      'type' => 'entity_reference',
+      'label' => 'Tekst / koorregie',
+      'cardinality' => 1,
+      'settings' => ['target_type' => 'media'],
+      'target_bundles' => ['document']
+    ]
+  ];
+}
+
+/**
+ * Get node-reference shared field definitions.
+ */
+function getNodeReferenceSharedFields() {
+  return [
+    'field_inhoud' => [
+      'type' => 'entity_reference',
+      'label' => 'Inhoud',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => ['target_type' => 'node'],
+      'target_bundles' => ['nieuws', 'activiteit', 'programma']
+    ],
+    'field_programma2' => [
+      'type' => 'entity_reference',
+      'label' => 'Programma',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => ['target_type' => 'node'],
+      'target_bundles' => ['programma']
+    ],
+    'field_ref_activiteit' => [
+      'type' => 'entity_reference',
+      'label' => 'Activiteit',
+      'cardinality' => 1,
+      'settings' => ['target_type' => 'node'],
+      'target_bundles' => ['activiteit']
     ]
   ];
 }
@@ -497,31 +678,68 @@ function getContentTypeSpecificFields() {
 }
 
 /**
- * Define which shared fields attach to which content types.
+ * Define which basic shared fields attach to which content types.
  */
-function getSharedFieldAttachments() {
+function getBasicSharedFieldAttachments() {
   return [
     'activiteit' => [
-      'field_datum', 'field_afbeeldingen', 'field_files', 'field_programma2'
+      'field_datum'
     ],
     'foto' => [
       'field_video', 'field_repertoire', 'field_audio_uitvoerende', 
-      'field_audio_type', 'field_datum', 'field_ref_activiteit'
+      'field_audio_type', 'field_datum'
     ],
     'nieuws' => [
-      'field_datum', 'field_afbeeldingen', 'field_files'
+      'field_datum'
     ],
     'pagina' => [
-      'field_afbeeldingen', 'field_files', 'field_view'
+      'field_view'
+    ],
+    'vriend' => [
+      'field_woonplaats'
+    ]
+  ];
+}
+
+/**
+ * Define which node-reference fields attach to which content types.
+ */
+function getNodeReferenceFieldAttachments() {
+  return [
+    'activiteit' => [
+      'field_programma2'
+    ],
+    'foto' => [
+      'field_ref_activiteit'
     ],
     'programma' => [
-      'field_afbeeldingen', 'field_files', 'field_ref_activiteit'
+      'field_ref_activiteit'
+    ]
+  ];
+}
+
+/**
+ * Define which media-dependent fields attach to which content types.
+ */
+function getMediaDependentFieldAttachments() {
+  return [
+    'activiteit' => [
+      'field_afbeeldingen', 'field_files'
+    ],
+    'nieuws' => [
+      'field_afbeeldingen', 'field_files'
+    ],
+    'pagina' => [
+      'field_afbeeldingen', 'field_files'
+    ],
+    'programma' => [
+      'field_afbeeldingen', 'field_files'
     ],
     'repertoire' => [
       'field_partij_band', 'field_partij_koor_l', 'field_partij_tekst'
     ],
     'vriend' => [
-      'field_afbeeldingen', 'field_woonplaats'
+      'field_afbeeldingen'
     ]
   ];
 }

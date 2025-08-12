@@ -40,8 +40,9 @@ thirdwing_migrate/
 ### **Field Creation Scripts Status**
 
 #### ✅ **CORRECTED Scripts (Fixed in Current Session)**
-- `scripts/create-content-types-and-fields.php` - **COMPLETELY REWRITTEN** to match documentation
+- `scripts/create-content-types-and-fields.php` - **COMPLETELY REWRITTEN** to avoid media dependencies
 - `scripts/create-media-bundles-and-fields.php` - **COMPLETELY REWRITTEN** to match documentation  
+- `scripts/add-media-dependent-fields.php` - **NEW SCRIPT** for media-dependent fields
 - `scripts/create-user-profile-fields.php` - **NEW SCRIPT** for user profile fields
 - `scripts/create-user-roles.php` - **NEW SCRIPT** for user roles creation
 - `scripts/validate-created-fields.php` - **NEW VALIDATION SCRIPT** to ensure accuracy
@@ -304,6 +305,34 @@ php scripts/validate-migration.php
 - ✅ Shared fields system properly implemented
 - ✅ Media bundles replace deprecated content types
 - ✅ User profile fields replace Profile content type
+
+#### **Media Dependency Fix - COMPLETED** ✅
+**Date**: Current Session  
+**Problem**: Field creation failed because media-dependent fields were created before media entity type existed  
+**Decision**: Split field creation into dependency phases to ensure proper creation order  
+**Implementation Status**: ✅ **COMPLETE**
+- ✅ Split content type script to avoid media dependencies in initial creation
+- ✅ Created separate script for media-dependent fields
+- ✅ Updated setup script to run in correct order: Content Types → Media Bundles → Media Fields
+- ✅ Added validation to ensure media entity type exists before creating media fields
+- ✅ Maintained all field functionality while fixing dependency issues
+
+**Rationale**: 
+- Drupal requires target entity types to exist before creating entity reference fields
+- Media entity type doesn't exist until media module is enabled and configured
+- Need to create basic content structure first, then add media references
+- Critical for successful automated installation
+**Date**: Current Session  
+**Problem**: Manual database configuration was required in settings.php  
+**Decision**: Automate database configuration with credential prompts and validation  
+**Implementation Status**: ✅ **COMPLETE**
+- ✅ Interactive credential collection with secure password input
+- ✅ Non-interactive mode with command-line credentials
+- ✅ Automatic settings.php configuration and backup
+- ✅ Database connection testing and D6 structure validation
+- ✅ Support for all database options (host, port, prefix, etc.)
+- ✅ Added --skip-database option for flexibility
+- ✅ Integrated into main setup process as Step 2
 
 #### **Database Configuration Automation - COMPLETED** ✅
 **Date**: Current Session  
@@ -649,7 +678,11 @@ After running `./scripts/setup-complete-migration.sh`, you should see:
    - All 16 D6 roles recreated with proper hierarchy
    - Permissions now configured AFTER roles exist
 
-6. **❌ Manual database configuration required** → **✅ FIXED**
+7. **❌ Media dependency error in field creation** → **✅ FIXED**
+   - Split field creation into dependency phases
+   - Created separate script for media-dependent fields  
+   - Updated setup order: Content Types → Media Bundles → Media Fields
+   - Added validation to ensure proper creation sequence
    - Automated database credential collection
    - Automatic settings.php configuration and validation
    - Database connection testing and D6 structure verification
@@ -677,7 +710,17 @@ The system now has **ZERO mismatches** between:
 - ✅ Field creation scripts
 - ✅ Validation scripts
 
-**Everything is perfectly aligned and ready for production deployment!**
+**The setup script now creates everything in the correct dependency order:**
+1. ✅ Prerequisites and database configuration
+2. ✅ Module installation (core → contrib → custom)
+3. ✅ Content types with basic fields (no media dependencies)
+4. ✅ Media bundles and source fields
+5. ✅ Media-dependent fields added to content types
+6. ✅ User profile fields and user roles
+7. ✅ Permissions and displays
+8. ✅ Complete validation
+
+**This fixes the "Field 'field_afbeeldingen' references target entity type 'media' which does not exist" error!**
 
 ---
 

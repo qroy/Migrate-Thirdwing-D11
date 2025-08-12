@@ -54,8 +54,17 @@ SKIP_PERMISSIONS=false
 SKIP_DISPLAYS=false
 SKIP_USERFIELDS=false
 SKIP_USERROLES=false
+SKIP_DATABASE=false
 VALIDATE_ONLY=false
 FORCE_CONTINUE=false
+
+# Database configuration variables
+DB_HOST=""
+DB_NAME=""
+DB_USER=""
+DB_PASS=""
+DB_PORT=""
+DB_PREFIX=""
 
 # Error tracking
 ERRORS=()
@@ -73,16 +82,17 @@ print_header() {
     echo ""
     echo -e "${CYAN}📋 CORRECTED INSTALLATION ORDER:${NC}"
     echo "  1. Prerequisites validation"
-    echo "  2. Composer dependencies (automatic download)"
-    echo "  3. Core module installation"
-    echo "  4. Contrib module installation"
-    echo "  5. Custom module installation"
-    echo "  6. Content structure creation (BEFORE permissions)"
-    echo "  7. User profile fields creation"
-    echo "  8. User roles creation (NEW)"
-    echo "  9. Permission setup (AFTER roles exist)"
-    echo "  10. Field display configuration"
-    echo "  11. Final cleanup and validation"
+    echo "  2. Migrate database configuration (NEW)"
+    echo "  3. Composer dependencies (automatic download)"
+    echo "  4. Core module installation"
+    echo "  5. Contrib module installation"
+    echo "  6. Custom module installation"
+    echo "  7. Content structure creation (BEFORE permissions)"
+    echo "  8. User profile fields creation"
+    echo "  9. User roles creation"
+    echo "  10. Permission setup (AFTER roles exist)"
+    echo "  11. Field display configuration"
+    echo "  12. Final cleanup and validation"
 }
 
 print_step() {
@@ -172,6 +182,34 @@ parse_arguments() {
                 SKIP_USERROLES=true
                 shift
                 ;;
+            --skip-database)
+                SKIP_DATABASE=true
+                shift
+                ;;
+            --db-host)
+                DB_HOST="$2"
+                shift 2
+                ;;
+            --db-name)
+                DB_NAME="$2"
+                shift 2
+                ;;
+            --db-user)
+                DB_USER="$2"
+                shift 2
+                ;;
+            --db-pass)
+                DB_PASS="$2"
+                shift 2
+                ;;
+            --db-port)
+                DB_PORT="$2"
+                shift 2
+                ;;
+            --db-prefix)
+                DB_PREFIX="$2"
+                shift 2
+                ;;
             --force)
                 FORCE_CONTINUE=true
                 shift
@@ -200,12 +238,23 @@ show_help() {
     echo "  --skip-displays     Skip field display configuration"
     echo "  --skip-userfields   Skip user profile fields creation"
     echo "  --skip-userroles    Skip user roles creation"
+    echo "  --skip-database     Skip migrate database configuration"
     echo "  --force            Continue on non-critical errors"
     echo ""
+    echo "Database Configuration Options:"
+    echo "  --db-host HOST      Database host (default: localhost)"
+    echo "  --db-name NAME      Database name (required)"
+    echo "  --db-user USER      Database username (required)"
+    echo "  --db-pass PASS      Database password (required)"
+    echo "  --db-port PORT      Database port (default: 3306)"
+    echo "  --db-prefix PREFIX  Database prefix (optional)"
+    echo ""
     echo "Examples:"
-    echo "  $0                           # Full setup"
+    echo "  $0                           # Full setup with interactive prompts"
     echo "  $0 --validate-only           # Check prerequisites only"
     echo "  $0 --skip-composer --force   # Skip composer, continue on errors"
+    echo "  $0 --db-name=thirdwing_d6 --db-user=root --db-pass=secret"
+    echo "  $0 --skip-database           # Skip database configuration"
     echo ""
     echo "Installation Order (CORRECTED):"
     echo "  1. Prerequisites validation"
@@ -221,7 +270,250 @@ show_help() {
 }
 
 # =============================================================================
-# Content Structure Creation - UPDATED WITH USER PROFILE FIELDS
+# Database Configuration - NEW STEP
+# =============================================================================
+
+configure_migrate_database() {
+    if [ "$SKIP_DATABASE" = true ]; then
+        print_warning "Skipping migrate database configuration"
+        return 0
+    fi
+    
+    print_substep "Configuring Drupal 6 source database connection"
+    
+    # Check if settings.php exists and is writable
+    local settings_file=""
+    if [ -f "web/sites/default/settings.php" ]; then
+        settings_file="web/sites/default/settings.php"
+    elif [ -f "sites/default/settings.php" ]; then
+        settings_file="sites/default/settings.php"
+    else
+        print_error "Cannot find settings.php file"
+        return 1
+    fi
+    
+    if [ ! -w "$settings_file" ]; then
+        print_error "Settings file is not writable: $settings_file"
+        print_info "Make it writable: chmod 664 $settings_file"
+        return 1
+    fi
+    
+    # Check if migrate database is already configured
+    if grep -q "databases\['migrate'\]" "$settings_file"; then
+        print_warning "Migrate database already configured in settings.php"
+        
+        if [ "$FORCE_CONTINUE" != true ]; then
+            echo ""
+            read -p "Reconfigure migrate database? [y/N]: " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_info "Skipping database configuration"
+                return 0
+            fi
+        fi
+        
+        # Remove existing migrate database configuration
+        print_info "Removing existing migrate database configuration..."
+        remove_existing_migrate_config "$settings_file"
+    fi
+    
+    # Collect database credentials
+    collect_database_credentials
+    
+    # Add migrate database configuration
+    add_migrate_database_config "$settings_file"
+    
+    # Test the database connection
+    test_migrate_database_connection
+    
+    return 0
+}
+
+collect_database_credentials() {
+    print_info "Please provide Drupal 6 source database credentials:"
+    echo ""
+    
+    # Database host
+    if [ -z "$DB_HOST" ]; then
+        read -p "Database host [localhost]: " DB_HOST
+        DB_HOST=${DB_HOST:-localhost}
+    fi
+    print_success "Host: $DB_HOST"
+    
+    # Database name
+    if [ -z "$DB_NAME" ]; then
+        read -p "Database name: " DB_NAME
+        while [ -z "$DB_NAME" ]; do
+            print_error "Database name is required"
+            read -p "Database name: " DB_NAME
+        done
+    fi
+    print_success "Database: $DB_NAME"
+    
+    # Database username
+    if [ -z "$DB_USER" ]; then
+        read -p "Database username: " DB_USER
+        while [ -z "$DB_USER" ]; do
+            print_error "Database username is required"
+            read -p "Database username: " DB_USER
+        done
+    fi
+    print_success "Username: $DB_USER"
+    
+    # Database password (hidden input)
+    if [ -z "$DB_PASS" ]; then
+        echo -n "Database password: "
+        read -s DB_PASS
+        echo ""
+        while [ -z "$DB_PASS" ]; do
+            print_error "Database password is required"
+            echo -n "Database password: "
+            read -s DB_PASS
+            echo ""
+        done
+    fi
+    print_success "Password: [hidden]"
+    
+    # Database port
+    if [ -z "$DB_PORT" ]; then
+        read -p "Database port [3306]: " DB_PORT
+        DB_PORT=${DB_PORT:-3306}
+    fi
+    print_success "Port: $DB_PORT"
+    
+    # Database prefix
+    if [ -z "$DB_PREFIX" ]; then
+        read -p "Database prefix [empty]: " DB_PREFIX
+        DB_PREFIX=${DB_PREFIX:-""}
+    fi
+    if [ -n "$DB_PREFIX" ]; then
+        print_success "Prefix: $DB_PREFIX"
+    else
+        print_success "Prefix: (none)"
+    fi
+    
+    echo ""
+    print_info "Database configuration summary:"
+    print_info "  Host: $DB_HOST:$DB_PORT"
+    print_info "  Database: $DB_NAME"
+    print_info "  Username: $DB_USER"
+    print_info "  Prefix: ${DB_PREFIX:-'(none)'}"
+    echo ""
+    
+    if [ "$FORCE_CONTINUE" != true ]; then
+        read -p "Is this configuration correct? [Y/n]: " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            print_info "Restarting database configuration..."
+            unset DB_HOST DB_NAME DB_USER DB_PASS DB_PORT DB_PREFIX
+            collect_database_credentials
+            return
+        fi
+    fi
+}
+
+remove_existing_migrate_config() {
+    local settings_file="$1"
+    
+    # Create backup
+    cp "$settings_file" "${settings_file}.backup.$(date +%Y%m%d_%H%M%S)"
+    print_success "Created backup: ${settings_file}.backup.$(date +%Y%m%d_%H%M%S)"
+    
+    # Remove existing migrate database configuration
+    sed -i '/^\$databases\[.migrate.\]/,/^];$/d' "$settings_file"
+    
+    print_success "Removed existing migrate database configuration"
+}
+
+add_migrate_database_config() {
+    local settings_file="$1"
+    
+    print_info "Adding migrate database configuration to settings.php..."
+    
+    # Escape special characters in password for PHP
+    local escaped_password=$(echo "$DB_PASS" | sed "s/'/\\\\'/g")
+    
+    # Create the migrate database configuration
+    cat >> "$settings_file" << EOF
+
+/**
+ * Drupal 6 source database for Thirdwing migration.
+ * Added automatically by setup-complete-migration.sh
+ */
+\$databases['migrate']['default'] = [
+  'driver' => 'mysql',
+  'database' => '$DB_NAME',
+  'username' => '$DB_USER',
+  'password' => '$escaped_password',
+  'host' => '$DB_HOST',
+  'port' => '$DB_PORT',
+  'prefix' => '$DB_PREFIX',
+  'collation' => 'utf8mb4_general_ci',
+  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+];
+EOF
+    
+    print_success "Migrate database configuration added to settings.php"
+}
+
+test_migrate_database_connection() {
+    print_info "Testing migrate database connection..."
+    
+    # Test the connection using Drush
+    if drush eval "
+        try {
+            \$database = \\Drupal\\Core\\Database\\Database::getConnection('default', 'migrate');
+            \$result = \$database->query('SELECT VERSION()')->fetchField();
+            echo 'SUCCESS: Connected to MySQL version: ' . \$result;
+        } catch (Exception \$e) {
+            echo 'ERROR: ' . \$e->getMessage();
+            throw \$e;
+        }
+    " 2>/dev/null; then
+        print_success "Migrate database connection test passed"
+    else
+        print_error "Migrate database connection test failed"
+        print_info "Please check your database credentials and try again"
+        return 1
+    fi
+    
+    # Test if this looks like a Drupal 6 database
+    print_info "Verifying Drupal 6 database structure..."
+    
+    if drush eval "
+        try {
+            \$database = \\Drupal\\Core\\Database\\Database::getConnection('default', 'migrate');
+            
+            // Check for key D6 tables
+            \$d6_tables = ['users', 'node', 'content_type_activiteit', 'content_field_datum'];
+            \$missing_tables = [];
+            
+            foreach (\$d6_tables as \$table) {
+                if (!\$database->schema()->tableExists(\$table)) {
+                    \$missing_tables[] = \$table;
+                }
+            }
+            
+            if (!empty(\$missing_tables)) {
+                echo 'WARNING: Missing expected D6 tables: ' . implode(', ', \$missing_tables);
+            } else {
+                echo 'SUCCESS: Drupal 6 database structure verified';
+            }
+        } catch (Exception \$e) {
+            echo 'ERROR: ' . \$e->getMessage();
+        }
+    " 2>/dev/null; then
+        print_success "Drupal 6 database verification completed"
+    else
+        print_warning "Could not verify Drupal 6 database structure"
+        print_info "Migration may still work if database is valid"
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# Content Structure Creation - UPDATED POSITION
 # =============================================================================
 
 create_content_structure() {
@@ -521,7 +813,7 @@ generate_success_report() {
     fi
     
     echo -e "${PURPLE}🚀 NEXT STEPS:${NC}"
-    echo -e "${BLUE}  1. Configure D6 database connection in settings.php${NC}"
+    echo -e "${BLUE}  1. Database is configured and tested${NC}"
     echo -e "${BLUE}  2. Run: ./migrate-setup.sh${NC}"
     echo -e "${BLUE}  3. Run: ./migrate-execute.sh${NC}"
     echo -e "${BLUE}  4. Visit /admin/content to verify content types${NC}"
@@ -577,44 +869,48 @@ main() {
         exit 0
     fi
     
-    # Step 2: Composer dependencies
-    print_step 2 "Composer Dependencies Installation"
+    # Step 2: Migrate database configuration (NEW)
+    print_step 2 "Migrate Database Configuration"
+    configure_migrate_database || exit 1
+    
+    # Step 3: Composer dependencies
+    print_step 3 "Composer Dependencies Installation"
     install_composer_dependencies || exit 1
     
-    # Step 3: Core module installation
-    print_step 3 "Core Module Installation"
+    # Step 4: Core module installation
+    print_step 4 "Core Module Installation"
     install_core_modules || exit 1
     
-    # Step 4: Contrib module installation
-    print_step 4 "Contrib Module Installation"
+    # Step 5: Contrib module installation
+    print_step 5 "Contrib Module Installation"
     install_contrib_modules || exit 1
     
-    # Step 5: Custom module installation
-    print_step 5 "Custom Module Installation"
+    # Step 6: Custom module installation
+    print_step 6 "Custom Module Installation"
     install_custom_module || exit 1
     
-    # Step 6: Content structure creation
-    print_step 6 "Content Structure Creation"
+    # Step 7: Content structure creation
+    print_step 7 "Content Structure Creation"
     create_content_structure || exit 1
     
-    # Step 7: User profile fields creation
-    print_step 7 "User Profile Fields Creation"
+    # Step 8: User profile fields creation
+    print_step 8 "User Profile Fields Creation"
     create_user_profile_fields || exit 1
     
-    # Step 8: User roles creation (NEW - BEFORE permissions)
-    print_step 8 "User Roles Creation"
+    # Step 9: User roles creation
+    print_step 9 "User Roles Creation"
     create_user_roles || exit 1
     
-    # Step 9: Permission setup (MOVED AFTER ROLES CREATION)
-    print_step 9 "Role Permission Configuration"
+    # Step 10: Permission setup
+    print_step 10 "Role Permission Configuration"
     setup_permissions || exit 1
     
-    # Step 10: Field displays
-    print_step 10 "Field Display Configuration"
+    # Step 11: Field displays
+    print_step 11 "Field Display Configuration"
     setup_field_displays || exit 1
     
-    # Step 11: Final cleanup and comprehensive validation
-    print_step 11 "Final Cleanup and Comprehensive Validation"
+    # Step 12: Final cleanup and comprehensive validation
+    print_step 12 "Final Cleanup and Comprehensive Validation"
     final_cleanup || exit 1
     
     # Generate success report

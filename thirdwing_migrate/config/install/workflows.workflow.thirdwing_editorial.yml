@@ -1,4 +1,6 @@
 # File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_editorial.yml
+# FIXED: Updated to use standard content moderation state IDs while keeping Dutch labels
+
 langcode: nl
 status: true
 dependencies:
@@ -9,27 +11,69 @@ label: 'Thirdwing Redactionele Workflow'
 type: content_moderation
 type_settings:
   states:
-    creation:
-      label: '(creation)'
+    draft:
+      label: '(aanmaak)'
       published: false
       default_revision: false
       weight: -6
-    concept:
+    review:
       label: 'Concept'
       published: false
       default_revision: false
       weight: -5
-    gepubliceerd:
+    published:
       label: 'Gepubliceerd'
       published: true
       default_revision: true
       weight: 0
-    archief:
+    archived:
       label: 'Archief'
       published: false
       default_revision: true
       weight: 1
-    prullenmand:
+    trash:
       label: 'Prullenmand'
       published: false
       default_revision: false
+      weight: 2
+  transitions:
+    create_new_draft:
+      label: 'Nieuwe versie aanmaken'
+      from:
+        - published
+        - archived
+      to: draft
+      weight: 0
+    submit_for_review:
+      label: 'Naar concept'
+      from:
+        - draft
+        - trash
+      to: review
+      weight: 1
+    publish:
+      label: 'Publiceren'
+      from:
+        - draft
+        - review
+        - archived
+        - trash
+      to: published
+      weight: 2
+    archive:
+      label: 'Archiveren'
+      from:
+        - published
+        - review
+        - trash
+      to: archived
+      weight: 3
+    move_to_trash:
+      label: 'Naar prullenmand'
+      from:
+        - draft
+        - review
+        - published
+        - archived
+      to: trash
+      weight: 4

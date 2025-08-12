@@ -60,5 +60,6 @@ type_settings:
       from:
         - published
         - archived
+        - inactive
       to: draft
       weight: 3

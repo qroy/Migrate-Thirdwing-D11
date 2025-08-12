@@ -1,5 +1,5 @@
 # File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_simple.yml
-# FIXED: Removed duplicate content and incorrect extended workflow content
+# FIXED: Updated to use standard content moderation state IDs while keeping Dutch labels
 
 langcode: nl
 status: true
@@ -11,38 +11,45 @@ label: 'Thirdwing Eenvoudige Workflow'
 type: content_moderation
 type_settings:
   states:
-    aanmaak:
+    draft:
       label: '(aanmaak)'
       published: false
       default_revision: false
       weight: -5
-    gepubliceerd:
+    published:
       label: 'Gepubliceerd'
       published: true
       default_revision: true
       weight: 0
-    aangeraden:
+    featured:
       label: 'Aangeraden'
       published: true
       default_revision: true
       weight: 1
   transitions:
-    publiceren:
+    publish:
       label: 'Publiceren'
       from:
-        - aanmaak
-      to: gepubliceerd
+        - draft
+      to: published
       weight: 0
-    aanbevelen:
+    feature:
       label: 'Aanbevelen'
       from:
-        - aanmaak
-        - gepubliceerd
-      to: aangeraden
+        - draft
+        - published
+      to: featured
       weight: 1
-    terug_naar_gepubliceerd:
+    unfeature:
       label: 'Terug naar gepubliceerd'
       from:
-        - aangeraden
-      to: gepubliceerd
+        - featured
+      to: published
       weight: 2
+    create_new_draft:
+      label: 'Nieuwe versie aanmaken'
+      from:
+        - published
+        - featured
+      to: draft
+      weight: 3

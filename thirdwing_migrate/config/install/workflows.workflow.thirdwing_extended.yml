@@ -1,5 +1,5 @@
 # File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_extended.yml
-# FIXED: Removed duplicate transitions section and corrected structure
+# FIXED: Updated to use standard content moderation state IDs while keeping Dutch labels
 
 langcode: nl
 status: true
@@ -11,105 +11,110 @@ label: 'Thirdwing Uitgebreide Workflow'
 type: content_moderation
 type_settings:
   states:
-    aanmaak:
+    draft:
       label: '(aanmaak)'
       published: false
       default_revision: false
       weight: -6
-    concept:
+    review:
       label: 'Concept'
       published: false
       default_revision: false
       weight: -5
-    prullenmand:
+    trash:
       label: 'Prullenmand'
       published: false
       default_revision: false
       weight: -4
-    aangeraden:
+    featured:
       label: 'Aangeraden'
       published: true
       default_revision: true
       weight: 0
-    archief:
+    archived:
       label: 'Archief'
       published: false
       default_revision: true
       weight: 1
-    geen_archief:
+    no_archive:
       label: 'Geen Archief'
       published: true
       default_revision: true
       weight: 2
-    gepubliceerd:
+    published:
       label: 'Gepubliceerd'
       published: true
       default_revision: true
       weight: 3
   transitions:
-    naar_concept:
+    create_new_draft:
+      label: 'Nieuwe versie aanmaken'
+      from:
+        - published
+        - featured
+        - archived
+        - no_archive
+      to: draft
+      weight: 0
+    submit_for_review:
       label: 'Naar concept'
       from:
-        - aanmaak
-        - archief
-        - aangeraden
-        - geen_archief
-        - prullenmand
-        - gepubliceerd
-      to: concept
-      weight: 0
-    archiveren:
+        - draft
+        - trash
+      to: review
+      weight: 1
+    archive:
       label: 'Archiveren'
       from:
-        - aanmaak
-        - concept
-        - aangeraden
-        - geen_archief
-        - prullenmand
-        - gepubliceerd
-      to: archief
-      weight: 1
-    aanbevelen:
+        - draft
+        - review
+        - featured
+        - no_archive
+        - trash
+        - published
+      to: archived
+      weight: 2
+    feature:
       label: 'Aanbevelen'
       from:
-        - aanmaak
-        - concept
-        - archief
-        - geen_archief
-        - prullenmand
-        - gepubliceerd
-      to: aangeraden
-      weight: 2
-    geen_archief_markeren:
+        - draft
+        - review
+        - archived
+        - no_archive
+        - trash
+        - published
+      to: featured
+      weight: 3
+    mark_no_archive:
       label: 'Geen archief markeren'
       from:
-        - aanmaak
-        - concept
-        - archief
-        - aangeraden
-        - prullenmand
-        - gepubliceerd
-      to: geen_archief
-      weight: 3
-    naar_prullenmand:
+        - draft
+        - review
+        - archived
+        - featured
+        - trash
+        - published
+      to: no_archive
+      weight: 4
+    move_to_trash:
       label: 'Naar prullenmand'
       from:
-        - aanmaak
-        - concept
-        - archief
-        - aangeraden
-        - geen_archief
-        - gepubliceerd
-      to: prullenmand
-      weight: 4
-    publiceren:
+        - draft
+        - review
+        - archived
+        - featured
+        - no_archive
+        - published
+      to: trash
+      weight: 5
+    publish:
       label: 'Publiceren'
       from:
-        - aanmaak
-        - concept
-        - archief
-        - aangeraden
-        - geen_archief
-        - prullenmand
-      to: gepubliceerd
-      weight: 5
+        - draft
+        - review
+        - archived
+        - featured
+        - no_archive
+        - trash
+      to: published
+      weight: 6

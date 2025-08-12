@@ -137,22 +137,49 @@ thirdwing_migrate/
 
 ---
 
-## 🛠 **Installation Process (UPDATED & COMPLETE)**
+## 🛠 **Installation Process (COMPLETE AUTOMATION)**
 
 ### **1. Complete Automated Setup** ✅
 ```bash
-# Run complete setup (recommended - includes everything)
+# Run complete setup with interactive database configuration
 ./scripts/setup-complete-migration.sh
+
+# Or non-interactive with database credentials
+./scripts/setup-complete-migration.sh \
+  --db-name=thirdwing_d6 \
+  --db-user=root \
+  --db-pass=secret \
+  --db-host=localhost
 ```
 
-**Now includes ALL field creation:**
+**Now includes EVERYTHING automatically:**
+- ✅ **Database configuration** (NEW - prompts for D6 credentials)
 - ✅ Content types and fields (9 types)
 - ✅ Media bundles and fields (4 bundles)  
 - ✅ User profile fields (32 fields, replaces Profile content type)
+- ✅ User roles (16 roles, all D6 roles recreated)
 - ✅ Permissions and displays
 - ✅ Comprehensive validation
 
-### **2. Step-by-Step Options**
+### **2. Database Configuration Options**
+```bash
+# Interactive database setup (default)
+./scripts/setup-complete-migration.sh
+
+# Non-interactive with all credentials
+./scripts/setup-complete-migration.sh \
+  --db-name=thirdwing_d6 \
+  --db-user=migration_user \
+  --db-pass='complex_password!' \
+  --db-host=localhost \
+  --db-port=3306 \
+  --db-prefix=""
+
+# Skip database configuration
+./scripts/setup-complete-migration.sh --skip-database
+```
+
+### **3. Step-by-Step Options**
 ```bash
 # Validation only
 ./scripts/setup-complete-migration.sh --validate-only
@@ -160,6 +187,7 @@ thirdwing_migrate/
 # Skip specific steps  
 ./scripts/setup-complete-migration.sh --skip-composer
 ./scripts/setup-complete-migration.sh --skip-modules
+./scripts/setup-complete-migration.sh --skip-database
 ./scripts/setup-complete-migration.sh --skip-userfields
 ./scripts/setup-complete-migration.sh --skip-displays
 
@@ -167,7 +195,7 @@ thirdwing_migrate/
 ./scripts/setup-complete-migration.sh --force
 ```
 
-### **3. Manual Field Creation (if needed)**
+### **4. Manual Configuration (if needed)**
 ```bash
 # Create content types and fields (CORRECTED VERSION)
 drush php:script scripts/create-content-types-and-fields.php
@@ -186,6 +214,35 @@ drush php:script scripts/validate-created-fields.php
 
 # Validate all roles created correctly (NEW VALIDATION)
 drush php:script scripts/validate-user-roles.php
+```
+
+### **5. Database Configuration Details**
+
+**What the setup script does:**
+- ✅ **Prompts for credentials**: Interactive input for D6 database details
+- ✅ **Validates settings.php**: Checks file exists and is writable
+- ✅ **Backs up existing config**: Creates timestamped backup before changes
+- ✅ **Tests connection**: Verifies database connectivity using Drush
+- ✅ **Validates D6 structure**: Checks for expected D6 tables
+- ✅ **Adds configuration**: Automatically adds migrate database to settings.php
+
+**Example database configuration added:**
+```php
+/**
+ * Drupal 6 source database for Thirdwing migration.
+ * Added automatically by setup-complete-migration.sh
+ */
+$databases['migrate']['default'] = [
+  'driver' => 'mysql',
+  'database' => 'thirdwing_d6',
+  'username' => 'migration_user',
+  'password' => 'secure_password',
+  'host' => 'localhost',
+  'port' => '3306',
+  'prefix' => '',
+  'collation' => 'utf8mb4_general_ci',
+  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+];
 ```
 
 ### **3. Database Configuration**
@@ -247,6 +304,36 @@ php scripts/validate-migration.php
 - ✅ Shared fields system properly implemented
 - ✅ Media bundles replace deprecated content types
 - ✅ User profile fields replace Profile content type
+
+#### **Database Configuration Automation - COMPLETED** ✅
+**Date**: Current Session  
+**Problem**: Manual database configuration was required in settings.php  
+**Decision**: Automate database configuration with credential prompts and validation  
+**Implementation Status**: ✅ **COMPLETE**
+- ✅ Interactive credential collection with secure password input
+- ✅ Non-interactive mode with command-line credentials
+- ✅ Automatic settings.php configuration and backup
+- ✅ Database connection testing and D6 structure validation
+- ✅ Support for all database options (host, port, prefix, etc.)
+- ✅ Added --skip-database option for flexibility
+- ✅ Integrated into main setup process as Step 2
+
+**Rationale**: 
+- Eliminates manual settings.php editing
+- Reduces setup errors and configuration mistakes
+- Provides immediate feedback on database connectivity
+- Enables fully automated deployment workflows
+- Validates D6 database before attempting migration
+**Date**: Current Session  
+**Problem**: Permission script configured permissions for deprecated content types (audio, video, profiel, verslag)  
+**Decision**: Completely rewrite setup-role-permissions.php to match actual D11 content types  
+**Implementation Status**: ✅ **COMPLETE**
+- ✅ Removed deprecated content types from permissions (audio, video, profiel, verslag)
+- ✅ Added missing content type permissions (webform)
+- ✅ Updated field permissions to match D11 field structure
+- ✅ Aligned all permissions with created content types and fields
+- ✅ Added proper role hierarchy and access levels
+- ✅ Removed references to non-existent D6 fields
 
 #### **Permission Script Alignment - COMPLETED** ✅
 **Date**: Current Session  
@@ -475,6 +562,7 @@ After running `./scripts/setup-complete-migration.sh`, you should see:
 ```
 🎉 INSTALLATION COMPLETED SUCCESSFULLY!
 📊 INSTALLATION SUMMARY:
+  ✅ Database: D6 source configured and tested
   ✅ Content Types: 9 created (activiteit, foto, locatie, nieuws, pagina, programma, repertoire, vriend, webform)
   ✅ Media Bundles: 4 created (image, document, audio, video)
   ✅ User Profile Fields: 32 created (replaces Profile content type)
@@ -561,7 +649,11 @@ After running `./scripts/setup-complete-migration.sh`, you should see:
    - All 16 D6 roles recreated with proper hierarchy
    - Permissions now configured AFTER roles exist
 
-5. **❌ Permission script mismatched content types** → **✅ FIXED**
+6. **❌ Manual database configuration required** → **✅ FIXED**
+   - Automated database credential collection
+   - Automatic settings.php configuration and validation
+   - Database connection testing and D6 structure verification
+   - Perfect integration into setup workflow
    - Removed deprecated content types (audio, video, profiel, verslag)
    - Added missing content type (webform)
    - Updated all field permissions to match D11 structure

@@ -9,9 +9,11 @@ dependencies:
     - node.type.nieuws
   module:
     - datetime
-    - entity_reference
     - text
     - user
+    # ❌ REMOVED: entity_reference (doesn't exist in D8+)
+    # ✅ Entity reference functionality is included in core field module
+    # ✅ Required modules for proper display: datetime, text, user
 id: node.nieuws.default
 targetEntityType: node
 bundle: nieuws

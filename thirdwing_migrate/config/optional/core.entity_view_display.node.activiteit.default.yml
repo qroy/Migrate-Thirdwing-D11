@@ -11,10 +11,12 @@ dependencies:
     - node.type.activiteit
   module:
     - datetime
-    - entity_reference
     - file
     - text
     - user
+    # ❌ REMOVED: entity_reference (doesn't exist in D8+)
+    # ✅ Entity reference functionality is included in core field module
+    # ✅ Required modules: datetime, file, text, user
 id: node.activiteit.default
 targetEntityType: node
 bundle: activiteit

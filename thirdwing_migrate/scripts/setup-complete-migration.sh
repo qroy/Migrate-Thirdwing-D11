@@ -291,6 +291,8 @@ validate_configuration_files() {
 # Validation Functions
 # =============================================================================
 
+# FIXED: Correct files directory path checking in setup-complete-migration.sh
+
 check_prerequisites() {
     print_substep "Checking system prerequisites"
     
@@ -341,14 +343,45 @@ check_prerequisites() {
         fi
     fi
     
-    # Check write permissions for key directories
-    local files_dir=$(drush status --field=files 2>/dev/null || echo "sites/default/files")
-    if [ ! -w "$files_dir" ]; then
+    # FIXED: Check write permissions for files directory
+    # Try multiple methods to get the correct files directory path
+    local files_dir=""
+    
+    # Method 1: Try to get the actual public files URI from Drupal
+    if command -v drush &> /dev/null && drush status > /dev/null 2>&1; then
+        files_dir=$(drush eval "echo \Drupal::service('file_system')->realpath('public://');" 2>/dev/null || echo "")
+    fi
+    
+    # Method 2: If that fails, check common locations
+    if [ -z "$files_dir" ] || [ ! -d "$files_dir" ]; then
+        if [ -d "sites/default/files" ]; then
+            files_dir="sites/default/files"
+        elif [ -d "web/sites/default/files" ]; then
+            files_dir="web/sites/default/files"
+        else
+            files_dir="sites/default/files"  # Default fallback
+        fi
+    fi
+    
+    print_info "Checking files directory: $files_dir"
+    
+    if [ ! -d "$files_dir" ]; then
+        print_warning "Files directory does not exist: $files_dir"
+        print_info "Creating files directory..."
+        mkdir -p "$files_dir" 2>/dev/null || {
+            print_error "Cannot create files directory: $files_dir"
+            print_info "Create manually: mkdir -p $files_dir && chmod 755 $files_dir"
+            ((prereq_errors++))
+        }
+    fi
+    
+    if [ -d "$files_dir" ] && [ ! -w "$files_dir" ]; then
         print_error "Files directory is not writable: $files_dir"
         print_info "Fix with: chmod 755 $files_dir"
+        print_info "Or: sudo chown -R \$USER:www-data $files_dir && chmod 755 $files_dir"
         ((prereq_errors++))
-    else
-        print_success "Files directory is writable"
+    elif [ -d "$files_dir" ]; then
+        print_success "Files directory is writable: $files_dir"
     fi
     
     if [ $prereq_errors -gt 0 ]; then
@@ -434,7 +467,6 @@ install_composer_dependencies() {
         "drupal/migrate_tools" 
         "drupal/migrate_upgrade"
         "drupal/permissions_by_term"
-        "drupal/permissions_by_entity"
         "drupal/field_permissions"
     )
     
@@ -528,7 +560,6 @@ install_contrib_modules() {
         "migrate_tools"
         "migrate_upgrade"
         "permissions_by_term"
-        "permissions_by_entity" 
         "field_permissions"
     )
     

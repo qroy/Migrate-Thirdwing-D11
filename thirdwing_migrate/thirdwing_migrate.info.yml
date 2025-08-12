@@ -32,5 +32,4 @@ dependencies:
   
   # Contrib access control modules
   - permissions_by_term
-  - permissions_by_entity
   - field_permissions

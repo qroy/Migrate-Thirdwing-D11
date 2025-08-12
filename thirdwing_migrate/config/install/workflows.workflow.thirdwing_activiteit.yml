@@ -1,4 +1,6 @@
 # File: thirdwing_migrate/config/install/workflows.workflow.thirdwing_activiteit.yml
+# FIXED: Updated to use standard content moderation state IDs while keeping Dutch labels
+
 langcode: nl
 status: true
 dependencies:
@@ -9,47 +11,54 @@ label: 'Thirdwing Activiteit Workflow'
 type: content_moderation
 type_settings:
   states:
-    aanmaak:
+    draft:
       label: '(aanmaak)'
       published: false
       default_revision: false
       weight: -5
-    actief:
+    published:
       label: 'Actief'
       published: true
       default_revision: true
       weight: 0
-    verlopen:
+    archived:
       label: 'Verlopen'
       published: false
       default_revision: true
       weight: 1
-    inactief:
+    inactive:
       label: 'Inactief'
       published: false
       default_revision: false
       weight: 2
   transitions:
-    activeren:
+    publish:
       label: 'Activeren'
       from:
-        - aanmaak
-        - verlopen
-        - inactief
-      to: actief
+        - draft
+        - archived
+        - inactive
+      to: published
       weight: 0
-    laten_verlopen:
+    archive:
       label: 'Laten verlopen'
       from:
-        - actief
-        - inactief
-      to: verlopen
+        - published
+        - inactive
+      to: archived
       weight: 1
-    deactiveren:
+    deactivate:
       label: 'Deactiveren'
       from:
-        - aanmaak
-        - actief
-        - verlopen
-      to: inactief
+        - draft
+        - published
+        - archived
+      to: inactive
       weight: 2
+    create_new_draft:
+      label: 'Nieuwe versie aanmaken'
+      from:
+        - published
+        - archived
+      to: draft
+      weight: 3

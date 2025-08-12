@@ -1,118 +1,82 @@
 <?php
-// File: modules/custom/thirdwing_migrate/scripts/create-media-bundles-and-fields.php
 
 /**
- * Script to create media bundles and fields for Thirdwing migration.
- * 
- * This script creates the 4-bundle media architecture:
- * - image: For image files with metadata
- * - document: For PDFs, docs, and MuseScore files
- * - audio: For audio files including MIDI/karaoke
- * - video: For video files and embedded content
- * 
- * Usage: drush php:script modules/custom/thirdwing_migrate/scripts/create-media-bundles-and-fields.php
+ * @file
+ * CORRECTED script to create media bundles and fields exactly matching
+ * "Drupal 11 Content types and fields.md" documentation.
+ *
+ * Usage: drush php:script create-media-bundles-and-fields.php
  */
 
 use Drupal\media\Entity\MediaType;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 /**
  * Main execution function.
  */
 function createMediaBundlesAndFields() {
-  echo "🚀 Creating Media Bundles and Fields for Thirdwing Migration...\n\n";
+  echo "🚀 Creating Media Bundles and Fields (CORRECTED VERSION)...\n\n";
   
-  // Create media bundles
-  $bundles = createMediaBundles();
+  // Get media bundle configurations
+  $media_bundles = getMediaBundleConfigurations();
   
-  // Create fields for each bundle
-  foreach ($bundles as $bundle_id => $bundle_info) {
-    echo "Creating fields for bundle: {$bundle_info['label']}\n";
-    createBundleFields($bundle_id, $bundle_info);
+  // Step 1: Create media bundles
+  echo "📦 Creating media bundles...\n";
+  foreach ($media_bundles as $bundle_id => $config) {
+    createMediaBundle($bundle_id, $config);
   }
   
-  // Create file directories
-  createFileDirectories();
-  
-  echo "\n✅ Media bundles and fields creation complete!\n";
-  echo "📋 Run verification: drush php:script modules/custom/thirdwing_migrate/scripts/verify-media-bundle-setup.php\n";
-}
-
-/**
- * Create media bundles.
- */
-function createMediaBundles() {
-  echo "📦 Creating media bundles...\n";
-  
-  $bundles = [
-    'image' => [
-      'label' => 'Afbeelding',
-      'description' => 'Afbeeldingen en foto\'s',
-      'source' => 'image',
-      'source_field' => 'field_media_image',
-    ],
-    'document' => [
-      'label' => 'Document',
-      'description' => 'PDF, Word documenten en MuseScore bestanden',
-      'source' => 'file',
-      'source_field' => 'field_media_document',
-    ],
-    'audio' => [
-      'label' => 'Audio',
-      'description' => 'Audio bestanden inclusief MIDI en karaoke',
-      'source' => 'audio_file',
-      'source_field' => 'field_media_audio_file',
-    ],
-    'video' => [
-      'label' => 'Video',
-      'description' => 'Video bestanden en embedded content',
-      'source' => 'oembed:video',
-      'source_field' => 'field_media_oembed_video',
-    ],
-  ];
-  
-  foreach ($bundles as $bundle_id => $bundle_info) {
-    $media_type = MediaType::load($bundle_id);
-    
-    if (!$media_type) {
-      $media_type = MediaType::create([
-        'id' => $bundle_id,
-        'label' => $bundle_info['label'],
-        'description' => $bundle_info['description'],
-        'source' => $bundle_info['source'],
-        'source_configuration' => [
-          'source_field' => $bundle_info['source_field'],
-        ],
-      ]);
-      
-      $media_type->save();
-      echo "   ✅ Created bundle: {$bundle_info['label']} ($bundle_id)\n";
-    } else {
-      echo "   - Bundle '$bundle_id' already exists\n";
+  // Step 2: Create fields for media bundles
+  echo "\n📋 Creating fields for media bundles...\n";
+  foreach ($media_bundles as $bundle_id => $config) {
+    if (isset($config['fields'])) {
+      echo "Creating fields for media bundle: {$config['name']}\n";
+      createFieldsForMediaBundle($bundle_id, $config['fields']);
     }
   }
   
-  echo "\n";
-  return $bundles;
+  echo "\n✅ Media bundles and fields creation complete!\n";
+  printMediaSummary();
 }
 
 /**
- * Create fields for media bundles.
+ * Create a media bundle.
  */
-function createBundleFields($bundle_id, $bundle_info) {
-  $field_configs = getFieldConfigurations();
+function createMediaBundle($bundle_id, $config) {
+  $media_type = MediaType::load($bundle_id);
   
-  if (!isset($field_configs[$bundle_id])) {
-    echo "   No fields defined for bundle: $bundle_id\n";
-    return;
+  if (!$media_type) {
+    $media_type = MediaType::create([
+      'id' => $bundle_id,
+      'label' => $config['name'],
+      'description' => $config['description'],
+      'source' => $config['source_plugin'],
+      'source_configuration' => $config['source_configuration'] ?? [],
+    ]);
+    
+    $media_type->save();
+    echo "  ✅ Created media bundle: {$config['name']} ({$bundle_id})\n";
+    
+    // Set the source field
+    if (isset($config['source_field'])) {
+      $media_type->set('source_configuration', [
+        'source_field' => $config['source_field']
+      ]);
+      $media_type->save();
+    }
+  } else {
+    echo "  - Media bundle '{$bundle_id}' already exists\n";
   }
-  
-  $fields = $field_configs[$bundle_id];
-  
+}
+
+/**
+ * Create fields for a media bundle.
+ */
+function createFieldsForMediaBundle($bundle_id, $fields) {
   foreach ($fields as $field_name => $field_config) {
-    echo "   Processing field: $field_name\n";
+    echo "    Processing field: {$field_name}\n";
     
     // Create field storage if it doesn't exist
     $field_storage = FieldStorageConfig::loadByName('media', $field_name);
@@ -124,7 +88,7 @@ function createBundleFields($bundle_id, $bundle_info) {
         'cardinality' => $field_config['cardinality'] ?? 1,
       ];
       
-      // Add settings if they exist
+      // Add storage settings if they exist
       if (isset($field_config['settings'])) {
         $storage_config['settings'] = $field_config['settings'];
       }
@@ -169,202 +133,238 @@ function createBundleFields($bundle_id, $bundle_info) {
 }
 
 /**
- * Get field configurations for all media bundles.
+ * Get media bundle configurations from documentation.
  */
-function getFieldConfigurations() {
+function getMediaBundleConfigurations() {
   return [
     'image' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_toegang' => [
-        'type' => 'entity_reference',
-        'label' => 'Toegang',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['toegang'],
-      ],
+      'name' => 'Image',
+      'description' => 'Photos, graphics, and images (replaces Image content type)',
+      'source_plugin' => 'image',
+      'source_field' => 'field_media_image',
+      'fields' => [
+        'field_media_image' => [
+          'type' => 'image',
+          'label' => 'Afbeelding',
+          'cardinality' => 1,
+          'required' => TRUE,
+          'settings' => [
+            'file_extensions' => 'jpg jpeg png gif webp',
+            'max_filesize' => '10 MB',
+            'max_resolution' => '3000x3000',
+            'min_resolution' => '100x100'
+          ]
+        ],
+        'field_datum' => [
+          'type' => 'datetime',
+          'label' => 'Datum',
+          'cardinality' => 1,
+          'settings' => ['datetime_type' => 'date']
+        ],
+        'field_toegang' => [
+          'type' => 'entity_reference',
+          'label' => 'Toegang',
+          'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+          'settings' => ['target_type' => 'taxonomy_term'],
+          'target_bundles' => ['toegang']
+        ]
+      ]
     ],
     
     'document' => [
-      // FIXED: Changed from entity_reference to list_string with allowed values
-      'field_document_soort' => [
-        'type' => 'list_string',
-        'label' => 'Document Soort',
-        'settings' => [
-          'allowed_values' => [
-            'verslag' => 'Verslag',
-            'partituur' => 'Partituur',
-            'huiswerk' => 'Huiswerk',
-            'overig' => 'Overig',
-          ],
+      'name' => 'Document',
+      'description' => 'PDFs, sheet music, and document files',
+      'source_plugin' => 'file',
+      'source_field' => 'field_media_document',
+      'fields' => [
+        'field_media_document' => [
+          'type' => 'file',
+          'label' => 'Document',
+          'cardinality' => 1,
+          'required' => TRUE,
+          'settings' => [
+            'file_extensions' => 'pdf doc docx txt rtf odt ods xls xlsx csv mscz mscx xml ly',
+            'max_filesize' => '50 MB'
+          ]
         ],
-      ],
-      // FIXED: Changed from entity_reference to list_string with allowed values
-      'field_verslag_type' => [
-        'type' => 'list_string',
-        'label' => 'Verslag Type',
-        'settings' => [
-          'allowed_values' => [
-            'algemene_ledenvergadering' => 'Algemene Ledenvergadering',
-            'bestuursvergadering' => 'Bestuursvergadering',
-            'combo_overleg' => 'Combo Overleg',
-            'concertcommissie' => 'Concertcommissie',
-            'jaarevaluatie_dirigent' => 'Jaarevaluatie Dirigent',
-            'jaarverslag' => 'Jaarverslag',
-            'overige_vergadering' => 'Overige Vergadering',
-            'vergadering_muziekcommissie' => 'Vergadering Muziekcommissie',
-          ],
+        'field_doc_categorie' => [
+          'type' => 'list_string',
+          'label' => 'Categorie',
+          'cardinality' => 1,
+          'settings' => [
+            'allowed_values' => [
+              'partituur' => 'Partituur',
+              'tekst' => 'Tekst/Koorregie',
+              'band' => 'Bandpartituur',
+              'document' => 'Document',
+              'notulen' => 'Notulen',
+              'financieel' => 'Financieel',
+              'overig' => 'Overig'
+            ]
+          ]
         ],
-      ],
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_gerelateerd_repertoire' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerd Repertoire',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
-      ],
-      'field_toegang' => [
-        'type' => 'entity_reference',
-        'label' => 'Toegang',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['toegang'],
-      ],
+        'field_datum' => [
+          'type' => 'datetime',
+          'label' => 'Datum',
+          'cardinality' => 1,
+          'settings' => ['datetime_type' => 'date']
+        ],
+        'field_toegang' => [
+          'type' => 'entity_reference',
+          'label' => 'Toegang',
+          'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+          'settings' => ['target_type' => 'taxonomy_term'],
+          'target_bundles' => ['toegang']
+        ]
+      ]
     ],
     
     'audio' => [
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_audio_type' => [
-        'type' => 'entity_reference',
-        'label' => 'Audio Type',
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['audio_type'],
-      ],
-      'field_audio_uitvoerende' => [
-        'type' => 'string',
-        'label' => 'Uitvoerende',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_audio_bijz' => [
-        'type' => 'string',
-        'label' => 'Bijzonderheden',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_gerelateerd_activiteit' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerde Activiteit',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['activiteit'],
-      ],
-      'field_gerelateerd_repertoire' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerd Repertoire',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
-      ],
-      'field_toegang' => [
-        'type' => 'entity_reference',
-        'label' => 'Toegang',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['toegang'],
-      ],
+      'name' => 'Audio',
+      'description' => 'Audio recordings, rehearsals, and concerts',
+      'source_plugin' => 'audio_file',
+      'source_field' => 'field_media_audio_file',
+      'fields' => [
+        'field_media_audio_file' => [
+          'type' => 'file',
+          'label' => 'Audio File',
+          'cardinality' => 1,
+          'required' => TRUE,
+          'settings' => [
+            'file_extensions' => 'mp3 wav ogg m4a aac flac',
+            'max_filesize' => '100 MB'
+          ]
+        ],
+        'field_audio_type' => [
+          'type' => 'list_string',
+          'label' => 'Type',
+          'cardinality' => 1,
+          'settings' => [
+            'allowed_values' => [
+              'rehearsal' => 'Repetitie',
+              'concert' => 'Concert',
+              'interview' => 'Interview',
+              'demo' => 'Demo',
+              'other' => 'Overig'
+            ]
+          ]
+        ],
+        'field_audio_uitvoerende' => [
+          'type' => 'string',
+          'label' => 'Uitvoerende',
+          'cardinality' => 1,
+          'settings' => ['max_length' => 255]
+        ],
+        'field_datum' => [
+          'type' => 'datetime',
+          'label' => 'Datum',
+          'cardinality' => 1,
+          'settings' => ['datetime_type' => 'datetime']
+        ],
+        'field_toegang' => [
+          'type' => 'entity_reference',
+          'label' => 'Toegang',
+          'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+          'settings' => ['target_type' => 'taxonomy_term'],
+          'target_bundles' => ['toegang']
+        ]
+      ]
     ],
     
     'video' => [
-      'field_media_video_file' => [
-        'type' => 'file',
-        'label' => 'Video Bestand',
-        'settings' => [
-          'file_extensions' => 'mp4 avi mov wmv flv',
-          'file_directory' => 'media/video',
+      'name' => 'Video',
+      'description' => 'Video recordings and multimedia content',
+      'source_plugin' => 'video_file',
+      'source_field' => 'field_media_video_file',
+      'fields' => [
+        'field_media_video_file' => [
+          'type' => 'file',
+          'label' => 'Video File',
+          'cardinality' => 1,
+          'required' => TRUE,
+          'settings' => [
+            'file_extensions' => 'mp4 avi mov wmv flv webm mkv',
+            'max_filesize' => '500 MB'
+          ]
         ],
-      ],
-      'field_datum' => [
-        'type' => 'datetime',
-        'label' => 'Datum',
-        'settings' => ['datetime_type' => 'date'],
-      ],
-      'field_audio_type' => [
-        'type' => 'entity_reference',
-        'label' => 'Video Type',
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['audio_type'],
-      ],
-      'field_audio_uitvoerende' => [
-        'type' => 'string',
-        'label' => 'Uitvoerende',
-        'settings' => ['max_length' => 255],
-      ],
-      'field_gerelateerd_activiteit' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerde Activiteit',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['activiteit'],
-      ],
-      'field_gerelateerd_repertoire' => [
-        'type' => 'entity_reference',
-        'label' => 'Gerelateerd Repertoire',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'node'],
-        'target_bundles' => ['repertoire'],
-      ],
-      'field_toegang' => [
-        'type' => 'entity_reference',
-        'label' => 'Toegang',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-        'settings' => ['target_type' => 'taxonomy_term'],
-        'target_bundles' => ['toegang'],
-      ],
-    ],
+        'field_video_type' => [
+          'type' => 'list_string',
+          'label' => 'Type',
+          'cardinality' => 1,
+          'settings' => [
+            'allowed_values' => [
+              'concert' => 'Concert',
+              'rehearsal' => 'Repetitie',
+              'interview' => 'Interview',
+              'promotional' => 'Promotie',
+              'documentary' => 'Documentaire',
+              'other' => 'Overig'
+            ]
+          ]
+        ],
+        'field_video_uitvoerende' => [
+          'type' => 'string',
+          'label' => 'Uitvoerende',
+          'cardinality' => 1,
+          'settings' => ['max_length' => 255]
+        ],
+        'field_datum' => [
+          'type' => 'datetime',
+          'label' => 'Datum',
+          'cardinality' => 1,
+          'settings' => ['datetime_type' => 'datetime']
+        ],
+        'field_toegang' => [
+          'type' => 'entity_reference',
+          'label' => 'Toegang',
+          'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+          'settings' => ['target_type' => 'taxonomy_term'],
+          'target_bundles' => ['toegang']
+        ]
+      ]
+    ]
   ];
 }
 
 /**
- * Create file directories for media bundles.
+ * Print summary of created media bundles.
  */
-function createFileDirectories() {
-  echo "📁 Creating file directories...\n";
+function printMediaSummary() {
+  $media_bundles = getMediaBundleConfigurations();
   
-  $directories = [
-    'media/image',
-    'media/document',
-    'media/audio',
-    'media/video',
-  ];
+  echo "\n📊 Media Bundle Summary:\n";
+  echo "  • Total Media Bundles: " . count($media_bundles) . "\n\n";
   
-  $file_system = \Drupal::service('file_system');
-  
-  foreach ($directories as $directory) {
-    $full_path = $file_system->realpath('public://') . '/' . $directory;
+  echo "📋 Media Bundles Created:\n";
+  foreach ($media_bundles as $bundle_id => $config) {
+    $field_count = isset($config['fields']) ? count($config['fields']) : 0;
+    echo "  • {$config['name']} ({$bundle_id}): {$field_count} fields\n";
+    echo "    - Source: {$config['source_plugin']}\n";
+    echo "    - Source Field: {$config['source_field']}\n";
     
-    if (!is_dir($full_path)) {
-      if (mkdir($full_path, 0755, TRUE)) {
-        echo "   ✅ Created directory: $directory\n";
-      } else {
-        echo "   ❌ Failed to create directory: $directory\n";
+    if (isset($config['fields'])) {
+      foreach ($config['fields'] as $field_name => $field_config) {
+        if ($field_name === $config['source_field']) {
+          echo "    - ⭐ {$field_config['label']} (source field)\n";
+        } else {
+          echo "    - {$field_config['label']}\n";
+        }
       }
-    } else {
-      echo "   - Directory already exists: $directory\n";
     }
+    echo "\n";
   }
   
-  echo "\n";
+  echo "📋 File Extensions Supported:\n";
+  echo "  • Images: jpg, jpeg, png, gif, webp\n";
+  echo "  • Documents: pdf, doc, docx, txt, rtf, odt, ods, xls, xlsx, csv, mscz, mscx, xml, ly\n";
+  echo "  • Audio: mp3, wav, ogg, m4a, aac, flac\n";
+  echo "  • Video: mp4, avi, mov, wmv, flv, webm, mkv\n\n";
+  
+  echo "📋 Next Steps:\n";
+  echo "  1. Run: drush php:script create-user-profile-fields.php\n";
+  echo "  2. Verify: drush entity:info media\n";
+  echo "  3. Check: /admin/structure/media\n";
+  echo "  4. Configure display settings if needed\n";
 }
 
 // Execute the script
@@ -373,4 +373,5 @@ try {
 } catch (Exception $e) {
   echo "❌ Script failed: " . $e->getMessage() . "\n";
   echo "📍 Stack trace:\n" . $e->getTraceAsString() . "\n";
+  exit(1);
 }

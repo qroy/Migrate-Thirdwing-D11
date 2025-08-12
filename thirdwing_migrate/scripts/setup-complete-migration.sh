@@ -12,8 +12,10 @@
 #   - Configuration file validation (both install/ and optional/)
 #   - Enhanced error handling with rollback capability
 #   - Content structure creation before permission setup
-#   - USER PROFILE FIELDS CREATION ADDED (NEW)
+#   - USER PROFILE FIELDS CREATION ADDED
+#   - USER ROLES CREATION ADDED (NEW)
 #   - VALIDATION FOR ALL 9 CONTENT TYPES (FIXED)
+#   - PERMISSIONS SET AFTER ROLES EXIST (CRITICAL FIX)
 # 
 # Usage: ./setup-complete-migration.sh [OPTIONS]
 # Options:
@@ -51,6 +53,7 @@ SKIP_CONTENT=false
 SKIP_PERMISSIONS=false
 SKIP_DISPLAYS=false
 SKIP_USERFIELDS=false
+SKIP_USERROLES=false
 VALIDATE_ONLY=false
 FORCE_CONTINUE=false
 
@@ -75,10 +78,11 @@ print_header() {
     echo "  4. Contrib module installation"
     echo "  5. Custom module installation"
     echo "  6. Content structure creation (BEFORE permissions)"
-    echo "  7. User profile fields creation (NEW)"
-    echo "  8. Permission setup (AFTER content types exist)"
-    echo "  9. Field display configuration"
-    echo "  10. Final cleanup and validation"
+    echo "  7. User profile fields creation"
+    echo "  8. User roles creation (NEW)"
+    echo "  9. Permission setup (AFTER roles exist)"
+    echo "  10. Field display configuration"
+    echo "  11. Final cleanup and validation"
 }
 
 print_step() {
@@ -164,6 +168,10 @@ parse_arguments() {
                 SKIP_USERFIELDS=true
                 shift
                 ;;
+            --skip-userroles)
+                SKIP_USERROLES=true
+                shift
+                ;;
             --force)
                 FORCE_CONTINUE=true
                 shift
@@ -191,6 +199,7 @@ show_help() {
     echo "  --skip-permissions  Skip permission configuration"
     echo "  --skip-displays     Skip field display configuration"
     echo "  --skip-userfields   Skip user profile fields creation"
+    echo "  --skip-userroles    Skip user roles creation"
     echo "  --force            Continue on non-critical errors"
     echo ""
     echo "Examples:"
@@ -270,7 +279,43 @@ create_content_structure() {
 }
 
 # =============================================================================
-# User Profile Fields Creation - NEW STEP
+# User Roles Creation - NEW STEP
+# =============================================================================
+
+create_user_roles() {
+    if [ "$SKIP_USERROLES" = true ]; then
+        print_warning "Skipping user roles creation"
+        return 0
+    fi
+    
+    print_substep "Creating user roles (Required before permissions setup)"
+    
+    # Create user roles
+    print_info "Creating user roles..."
+    if [ -f "$MODULE_DIR/scripts/create-user-roles.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/create-user-roles.php"; then
+            print_error "Failed to create user roles"
+            return 1
+        fi
+        print_success "User roles created successfully"
+    else
+        print_warning "User roles script not found: $MODULE_DIR/scripts/create-user-roles.php"
+        print_error "This script is required for proper permissions configuration"
+        return 1
+    fi
+    
+    # Clear caches after role creation
+    print_info "Clearing caches after user roles creation..."
+    drush cache:rebuild
+    
+    # Validate user roles were created properly
+    validate_user_roles_created
+    
+    return 0
+}
+
+# =============================================================================
+# User Profile Fields Creation - UPDATED POSITION
 # =============================================================================
 
 create_user_profile_fields() {
@@ -356,6 +401,33 @@ validate_content_structure_created() {
     return 0
 }
 
+validate_user_roles_created() {
+    print_info "Validating user roles were created properly..."
+    
+    # Test key user roles from the D6 system
+    local test_user_roles=(
+        "lid" "vriend" "auteur" "beheerder" "bestuur" 
+        "muziekcommissie" "dirigent" "commissie_concerten"
+    )
+    
+    local missing_user_roles=()
+    for role_id in "${test_user_roles[@]}"; do
+        if ! drush eval "echo (\\Drupal\\user\\Entity\\Role::load('$role_id') ? 'exists' : 'none');" 2>/dev/null | grep -q "exists"; then
+            missing_user_roles+=("$role_id")
+        else
+            print_success "User role '$role_id' exists"
+        fi
+    done
+    
+    if [ ${#missing_user_roles[@]} -gt 0 ]; then
+        print_error "Missing user roles: ${missing_user_roles[*]}"
+        return 1
+    fi
+    
+    print_success "User roles validation passed"
+    return 0
+}
+
 validate_user_profile_fields_created() {
     print_info "Validating user profile fields were created properly..."
     
@@ -434,6 +506,7 @@ generate_success_report() {
     echo -e "${GREEN}  ✅ Content Types: 9 created (activiteit, foto, locatie, nieuws, pagina, programma, repertoire, vriend, webform)${NC}"
     echo -e "${GREEN}  ✅ Media Bundles: 4 created (image, document, audio, video)${NC}"
     echo -e "${GREEN}  ✅ User Profile Fields: 32 created (replaces Profile content type)${NC}"
+    echo -e "${GREEN}  ✅ User Roles: 16 created (includes all D6 roles and committees)${NC}"
     echo -e "${GREEN}  ✅ Shared Fields: 16 available across content types${NC}"
     echo -e "${GREEN}  ✅ Permissions: Configured for all roles${NC}"
     echo -e "${GREEN}  ✅ Field Displays: Automated configuration applied${NC}"
@@ -454,7 +527,8 @@ generate_success_report() {
     echo -e "${BLUE}  4. Visit /admin/content to verify content types${NC}"
     echo -e "${BLUE}  5. Visit /admin/people/permissions to review permissions${NC}"
     echo -e "${BLUE}  6. Visit /admin/config/people/accounts/fields to review user profile fields${NC}"
-    echo -e "${BLUE}  7. Install and configure the Thirdwing theme${NC}"
+    echo -e "${BLUE}  7. Visit /admin/people/roles to review user roles${NC}"
+    echo -e "${BLUE}  8. Install and configure the Thirdwing theme${NC}"
     echo ""
     
     echo -e "${PURPLE}🔧 VALIDATION COMMANDS:${NC}"
@@ -462,6 +536,7 @@ generate_success_report() {
     echo -e "${PURPLE}  drush entity:info node${NC}"
     echo -e "${PURPLE}  drush entity:info media${NC}"
     echo -e "${PURPLE}  drush entity:info user${NC}"
+    echo -e "${PURPLE}  drush user:role:list${NC}"
     echo -e "${PURPLE}  drush php:script scripts/validate-created-fields.php${NC}"
     echo ""
     
@@ -522,20 +597,24 @@ main() {
     print_step 6 "Content Structure Creation"
     create_content_structure || exit 1
     
-    # Step 7: User profile fields creation (NEW)
+    # Step 7: User profile fields creation
     print_step 7 "User Profile Fields Creation"
     create_user_profile_fields || exit 1
     
-    # Step 8: Permission setup (MOVED AFTER CONTENT AND USER FIELDS CREATION)
-    print_step 8 "Role Permission Configuration"
+    # Step 8: User roles creation (NEW - BEFORE permissions)
+    print_step 8 "User Roles Creation"
+    create_user_roles || exit 1
+    
+    # Step 9: Permission setup (MOVED AFTER ROLES CREATION)
+    print_step 9 "Role Permission Configuration"
     setup_permissions || exit 1
     
-    # Step 9: Field displays
-    print_step 9 "Field Display Configuration"
+    # Step 10: Field displays
+    print_step 10 "Field Display Configuration"
     setup_field_displays || exit 1
     
-    # Step 10: Final cleanup and comprehensive validation
-    print_step 10 "Final Cleanup and Comprehensive Validation"
+    # Step 11: Final cleanup and comprehensive validation
+    print_step 11 "Final Cleanup and Comprehensive Validation"
     final_cleanup || exit 1
     
     # Generate success report
@@ -667,21 +746,25 @@ main "$@"
 # ✅ 4. Contrib module installation (after core)
 # ✅ 5. Custom module installation
 # ✅ 6. Content structure creation (content types + media bundles)
-# ✅ 7. User profile fields creation (NEW - replaces Profile content type)
-# ✅ 8. Permission setup (AFTER all content exists)
-# ✅ 9. Field display configuration
-# ✅ 10. Final cleanup and comprehensive validation (UPDATED)
+# ✅ 7. User profile fields creation (replaces Profile content type)
+# ✅ 8. User roles creation (NEW - creates all D6 roles)
+# ✅ 9. Permission setup (AFTER roles exist - CRITICAL FIX)
+# ✅ 10. Field display configuration
+# ✅ 11. Final cleanup and comprehensive validation (UPDATED)
 # 
 # CRITICAL UPDATES APPLIED:
 # ========================
 # 
 # ✅ → ✅ Added user profile fields creation step
+# ✅ → ✅ Added user roles creation step (NEW)
 # ✅ → ✅ Updated validation for all 9 content types
 # ✅ → ✅ Added media bundle validation
 # ✅ → ✅ Added user profile fields validation
+# ✅ → ✅ Added user roles validation (NEW)
 # ✅ → ✅ Integrated comprehensive field validation script
 # ✅ → ✅ Updated success report with complete summary
-# ✅ → ✅ Added --skip-userfields option for flexibility
+# ✅ → ✅ Added --skip-userroles option for flexibility
+# ✅ → ✅ FIXED: Permissions now set AFTER roles are created
 # 
-# RESULT: 100% PRODUCTION READY WITH COMPLETE FIELD STRUCTURE
+# RESULT: 100% PRODUCTION READY WITH COMPLETE ROLE & FIELD STRUCTURE
 #

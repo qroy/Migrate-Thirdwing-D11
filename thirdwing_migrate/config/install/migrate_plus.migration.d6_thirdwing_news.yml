@@ -1,4 +1,6 @@
 # File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_news.yml
+# FIXED: Updated workflow state mapping to use new English state IDs
+
 id: d6_thirdwing_news
 migration_group: thirdwing_d6
 migration_tags:
@@ -45,19 +47,19 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Proper D6 workflow state mapping using EXACT D6 labels
-  # News uses Workflow 1 (General Content) - SIDs 1,2,3,4,8,9
+  # FIXED: News workflow state mapping to NEW ENGLISH STATE IDs
+  # D6 General Content Workflow (SIDs 1,2,3,4,8,9) → D11 thirdwing_editorial workflow
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      1: creation      # (creation) → creation
-      2: concept       # Concept → concept  
-      3: gepubliceerd  # Gepubliceerd → gepubliceerd
-      4: archief       # Archief → archief
-      8: prullenmand   # Prullenmand → prullenmand
-      9: aangeraden    # Aangeraden → aangeraden
-    default_value: gepubliceerd
+      1: draft       # (creation) → draft
+      2: review      # Concept → review  
+      3: published   # Gepubliceerd → published
+      4: archived    # Archief → archived
+      8: trash       # Prullenmand → trash
+      9: featured    # Aangeraden → featured (special case - map to published for editorial workflow)
+    default_value: published
   
   field_datum: field_datum_value
   

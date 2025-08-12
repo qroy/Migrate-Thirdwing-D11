@@ -1,4 +1,6 @@
 # File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_friend.yml
+# FIXED: Updated workflow state mapping to use new English state IDs
+
 id: d6_thirdwing_friend
 migration_group: thirdwing_d6
 migration_tags:
@@ -45,17 +47,17 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Friend content uses EXACT D6 workflow labels from documentation
-  # Workflow 3 (Activity/Event) - SIDs 10,11,12,13
+  # FIXED: Friend workflow state mapping to NEW ENGLISH STATE IDs
+  # D6 Activity/Event Workflow (SIDs 10,11,12,13) → D11 thirdwing_activiteit workflow
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      10: aanmaak       # (aanmaak) → aanmaak
-      11: actief        # Actief → actief (active sponsors)
-      12: verlopen      # Verlopen → verlopen (expired sponsorship)
-      13: inactief      # Inactief → inactief (inactive sponsors)
-    default_value: actief
+      10: draft      # (aanmaak) → draft
+      11: published  # Actief → published (active sponsors)
+      12: archived   # Verlopen → archived (expired sponsorship)
+      13: inactive   # Inactief → inactive (inactive sponsors)
+    default_value: published
   
   field_vriend_website: field_vriend_website_url
   field_vriend_telefoon: field_vriend_telefoon_value
@@ -63,7 +65,7 @@ process:
   field_vriend_adres: field_vriend_adres_value
   field_vriend_woonplaats: field_vriend_woonplaats_value
   
-  # CORRECTED: Friend designation mapping (preserve Dutch terms)
+  # Friend designation mapping
   field_vriend_benaming:
     plugin: static_map
     source: field_vriend_benaming_value

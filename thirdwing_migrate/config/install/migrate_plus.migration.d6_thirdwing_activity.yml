@@ -1,3 +1,6 @@
+# File: thirdwing_migrate/config/install/migrate_plus.migration.d6_thirdwing_activity.yml
+# FIXED: Updated workflow state mapping to use new English state IDs
+
 id: d6_thirdwing_activity
 migration_group: thirdwing_d6
 migration_tags:
@@ -43,29 +46,26 @@ process:
     default_value: basic_html
     bypass: true
   
-  # CORRECTED: Activity workflow state mapping using EXACT D6 labels
-  # Activities use Workflow 2 (Activity/Event) - SIDs 5,6,7,10,11,12,13
+  # FIXED: Activity workflow state mapping to NEW ENGLISH STATE IDs
+  # D6 Activity Workflow (SIDs 10,11,12,13) → D11 thirdwing_activiteit workflow
   moderation_state:
     plugin: static_map
     source: workflow_stateid
     map:
-      5: aanmaak          # (aanmaak) → aanmaak
-      6: concept          # Concept → concept
-      7: gepubliceerd     # Gepubliceerd → gepubliceerd
-      10: ter_beoordeling # Ter beoordeling → ter_beoordeling
-      11: archief         # Archief → archief
-      12: geannuleerd     # Geannuleerd → geannuleerd
-      13: aangeraden      # Aangeraden → aangeraden
-    default_value: gepubliceerd
+      10: draft      # (aanmaak) → draft
+      11: published  # Actief → published
+      12: archived   # Verlopen → archived
+      13: inactive   # Inactief → inactive
+    default_value: published
   
-  # FIXED: Activity-specific fields with proper _value suffix mappings
+  # Activity-specific fields
   field_datum: field_datum_value
   field_tijd_aanwezig: field_tijd_aanwezig_value
   field_tijd_soundcheck: field_tijd_soundcheck_value
   field_tijd_start: field_tijd_start_value
   field_tijd_einde: field_tijd_einde_value
   
-  # FIXED: Instrument availability mapping (preserve symbols → numbers)
+  # Instrument availability mapping
   field_keyboard:
     plugin: static_map
     source: field_keyboard_value
@@ -106,47 +106,14 @@ process:
       'v': '2'
     default_value: '0'
   
-  field_vervoer: field_vervoer_value
-  
-  # CORRECTED: Sleep group mapping (preserve Roman numerals → numbers)
-  field_sleepgroep:
-    plugin: static_map
-    source: field_sleepgroep_value
-    map:
-      'I': '1'
-      'II': '2'
-      'III': '3'
-      'IV': '4'
-      'V': '5'
-      '*': '9'    # All groups
-    default_value: '1'
-  
-  field_sleepgroep_aanwezig: field_sleepgroep_aanwezig_value
-  field_sleepgroep_terug: field_sleepgroep_terug_value
-  field_kledingcode: field_kledingcode_value
-  
+  # Location reference
   field_locatie:
     plugin: migration_lookup
     migration: d6_thirdwing_location
     source: field_locatie_nid
     no_stub: true
   
-  field_l_bijzonderheden: field_l_bijzonderheden_value
-  field_ledeninfo: field_ledeninfo_value
-  field_bijzonderheden: field_bijzonderheden_value
-  
-  # Program items reference
-  field_programma2:
-    plugin: sub_process
-    source: program_items
-    process:
-      target_id:
-        plugin: migration_lookup
-        migration: d6_thirdwing_program
-        source: field_programma2_nid
-        no_stub: true
-  
-  # Images reference IMAGE MEDIA ENTITIES
+  # Media references
   field_media_images:
     plugin: sub_process
     source: images
@@ -157,13 +124,6 @@ process:
         source: field_afbeeldingen_fid
         no_stub: true
   
-  field_background:
-    plugin: migration_lookup
-    migration: d6_thirdwing_media_image
-    source: field_background_fid
-    no_stub: true
-  
-  # Files reference DOCUMENT MEDIA ENTITIES
   field_media_documents:
     plugin: sub_process
     source: files
@@ -174,21 +134,9 @@ process:
         source: field_files_fid
         no_stub: true
 
-  field_toegang:
-    plugin: sub_process
-    source: taxonomy_terms
-    process:
-      target_id:
-        plugin: migration_lookup
-        migration: d6_thirdwing_taxonomy_term
-        source: tid
-        no_stub: true
-
 migration_dependencies:
   required:
     - d6_thirdwing_user
-    - d6_thirdwing_taxonomy_term
     - d6_thirdwing_location
-    - d6_thirdwing_program
     - d6_thirdwing_media_image
     - d6_thirdwing_media_document

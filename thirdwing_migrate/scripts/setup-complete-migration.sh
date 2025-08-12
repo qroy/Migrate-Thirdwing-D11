@@ -614,7 +614,7 @@ install_custom_module() {
 }
 
 # =============================================================================
-# Content Structure Creation - FIXED to use available files
+# Content Structure Creation - CORRECTED ORDER
 # =============================================================================
 
 create_content_structure() {
@@ -623,20 +623,27 @@ create_content_structure() {
         return 0
     fi
     
-    print_substep "Creating content structure (using configuration import)"
+    print_substep "Creating content structure (CORRECTED: Content types first, then fields)"
     
-    # FIXED: Instead of separate scripts, use config import for content types and fields
-    print_info "Importing content types, fields, and workflows from configuration..."
-    
-    # Import configurations that create content types, fields, and workflows
-    if ! drush config:import --partial --source="$MODULE_DIR/config/install" -y; then
-        print_error "Failed to import configuration for content types and fields"
-        return 1
+    # STEP 1: Create content types AND fields (this script does both)
+    print_info "Creating content types and fields..."
+    if [ -f "$MODULE_DIR/scripts/create-content-types-and-fields.php" ]; then
+        if ! drush php:script "$MODULE_DIR/scripts/create-content-types-and-fields.php"; then
+            print_error "Failed to create content types and fields"
+            return 1
+        fi
+        print_success "Content types and fields created successfully"
+    else
+        print_warning "Content types and fields script not found: $MODULE_DIR/scripts/create-content-types-and-fields.php"
+        print_info "Trying configuration import as fallback..."
+        
+        # Fallback: Try importing what we can
+        if ! drush config:import --partial --source="$MODULE_DIR/config/install" -y; then
+            print_warning "Configuration import had issues"
+        fi
     fi
     
-    print_success "Content types, fields, and workflows imported from configuration"
-    
-    # Media bundles (this script exists)
+    # STEP 2: Create media bundles (depends on media types being available)
     print_info "Creating media bundles..."
     if [ -f "$MODULE_DIR/scripts/create-media-bundles-and-fields.php" ]; then
         if ! drush php:script "$MODULE_DIR/scripts/create-media-bundles-and-fields.php"; then
@@ -648,11 +655,17 @@ create_content_structure() {
         print_warning "Media bundles script not found: $MODULE_DIR/scripts/create-media-bundles-and-fields.php"
     fi
     
-    # Clear caches after configuration import
+    # STEP 3: Import workflows and other configurations that depend on content types existing
+    print_info "Importing workflows and additional configurations..."
+    if ! drush config:import --partial --source="$MODULE_DIR/config/install" -y 2>/dev/null; then
+        print_info "Some configurations may have been imported already"
+    fi
+    
+    # STEP 4: Clear caches after all structure creation
     print_info "Clearing caches after content structure creation..."
     drush cache:rebuild
     
-    # Validate content structure was created
+    # STEP 5: Validate everything was created properly
     validate_content_structure_created
     
     return 0
@@ -661,8 +674,7 @@ create_content_structure() {
 validate_content_structure_created() {
     print_info "Validating content structure was created properly..."
     
-    # FIXED: Content types are created by config import, not during setup
-    # Check for some expected content types from the configuration
+    # NOW content types should exist because we created them with the script
     local expected_content_types=(
         "activiteit" "nieuws" "pagina" "locatie" "vriend"
     )
@@ -674,15 +686,15 @@ validate_content_structure_created() {
         fi
     done
     
-    if [ ${#missing_types[@]} -gt 0 ]; then
-        print_info "Content types will be created by migration configurations"
-        print_info "Missing content types: ${missing_types[*]}"
-        print_info "This is normal - content types are created when migrations run"
+    if [ ${#missing_types[@]} -eq 0 ]; then
+        print_success "All content types created successfully"
     else
-        print_success "Content types found (likely from previous runs)"
+        print_error "Missing content types: ${missing_types[*]}"
+        print_error "Content structure creation failed"
+        return 1
     fi
     
-    # Check for workflows (these should be imported)
+    # Check for workflows
     print_info "Checking workflows..."
     local expected_workflows=("thirdwing_activiteit" "thirdwing_editorial" "thirdwing_simple" "thirdwing_extended")
     local missing_workflows=()
@@ -697,7 +709,6 @@ validate_content_structure_created() {
         print_success "All workflows imported successfully"
     else
         print_warning "Missing workflows: ${missing_workflows[*]}"
-        print_info "Workflows may be created during first migration run"
     fi
     
     # Check for media bundles

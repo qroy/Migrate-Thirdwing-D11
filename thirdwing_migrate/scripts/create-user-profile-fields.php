@@ -2,456 +2,517 @@
 
 /**
  * @file
- * NEW script to create user profile fields to replace the Profile content type.
- * Based on "Drupal 11 Content types and fields.md" documentation.
- *
- * Usage: drush php:script create-user-profile-fields.php
+ * Script to create user profile fields for Thirdwing migration.
+ * File: thirdwing_migrate/scripts/create-user-profile-fields.php
  */
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
- * Main execution function.
+ * Main function to create user profile fields.
  */
 function createUserProfileFields() {
-  echo "🚀 Creating User Profile Fields (Replaces Profile Content Type)...\n\n";
+  echo "Creating Thirdwing user profile fields...\n";
   
-  // Get user profile field configurations
-  $profile_fields = getUserProfileFieldDefinitions();
-  
-  // Step 1: Create field storages
-  echo "📋 Creating user profile field storages...\n";
-  foreach ($profile_fields as $field_name => $field_config) {
-    createUserFieldStorage($field_name, $field_config);
+  try {
+    // Create field storages
+    createUserFieldStorages();
+    
+    // Create field instances
+    createUserFieldInstances();
+    
+    // Configure field displays
+    configureUserFieldDisplays();
+    
+    // Print summary
+    printUserFieldsSummary();
+    
+    echo "✅ User profile fields created successfully!\n";
+    
+  } catch (Exception $e) {
+    echo "❌ Error creating user profile fields: " . $e->getMessage() . "\n";
+    throw $e;
   }
-  
-  // Step 2: Create field instances
-  echo "\n🔧 Creating user profile field instances...\n";
-  foreach ($profile_fields as $field_name => $field_config) {
-    createUserFieldInstance($field_name, $field_config);
-  }
-  
-  echo "\n✅ User profile fields creation complete!\n";
-  printUserProfileSummary();
 }
 
 /**
- * Create field storage for user entity.
+ * Create field storages for user profile fields.
  */
-function createUserFieldStorage($field_name, $field_config) {
-  echo "  Creating field storage: {$field_name}\n";
+function createUserFieldStorages() {
+  echo "Creating user field storages...\n";
   
-  $field_storage = FieldStorageConfig::loadByName('user', $field_name);
-  if (!$field_storage) {
-    $storage_config = [
+  $user_fields = getUserProfileFieldDefinitions();
+  
+  foreach ($user_fields as $field_name => $field_info) {
+    // Check if field storage already exists
+    if (FieldStorageConfig::loadByName('user', $field_name)) {
+      echo "  Field storage '$field_name' already exists\n";
+      continue;
+    }
+    
+    // Create field storage
+    $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'user',
-      'type' => $field_config['type'],
-      'cardinality' => $field_config['cardinality'] ?? 1,
-    ];
+      'type' => $field_info['type'],
+      'cardinality' => $field_info['cardinality'] ?? 1,
+      'settings' => $field_info['storage_settings'] ?? [],
+    ]);
     
-    if (isset($field_config['settings'])) {
-      $storage_config['settings'] = $field_config['settings'];
-    }
-    
-    $field_storage = FieldStorageConfig::create($storage_config);
     $field_storage->save();
-    echo "    ✓ Created: {$field_config['label']}\n";
-  } else {
-    echo "    - Already exists: {$field_name}\n";
+    echo "  ✅ Created field storage: {$field_info['label']} ($field_name)\n";
   }
 }
 
 /**
- * Create field instance for user entity.
+ * Create field instances for user profile fields.
  */
-function createUserFieldInstance($field_name, $field_config) {
-  echo "  Creating field instance: {$field_name}\n";
+function createUserFieldInstances() {
+  echo "Creating user field instances...\n";
   
-  $field_storage = FieldStorageConfig::loadByName('user', $field_name);
-  if (!$field_storage) {
-    echo "    ⚠️  Field storage for '{$field_name}' not found\n";
-    return;
-  }
+  $user_fields = getUserProfileFieldDefinitions();
   
-  $field_instance = FieldConfig::loadByName('user', 'user', $field_name);
-  if (!$field_instance) {
-    $instance_config = [
+  foreach ($user_fields as $field_name => $field_info) {
+    // Check if field instance already exists
+    if (FieldConfig::loadByName('user', 'user', $field_name)) {
+      echo "  Field instance '$field_name' already exists\n";
+      continue;
+    }
+    
+    // Get field storage
+    $field_storage = FieldStorageConfig::loadByName('user', $field_name);
+    if (!$field_storage) {
+      echo "  ❌ Field storage '$field_name' not found\n";
+      continue;
+    }
+    
+    // Create field instance
+    $field_config = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => 'user',
-      'label' => $field_config['label'],
-      'required' => $field_config['required'] ?? FALSE,
-    ];
+      'label' => $field_info['label'],
+      'description' => $field_info['description'] ?? '',
+      'required' => $field_info['required'] ?? FALSE,
+      'settings' => $field_info['field_settings'] ?? [],
+    ]);
     
-    // Add target bundles for entity reference fields
-    if (isset($field_config['target_bundles'])) {
-      $instance_config['settings']['handler_settings']['target_bundles'] = $field_config['target_bundles'];
-    }
-    
-    // Add other instance settings
-    if (isset($field_config['instance_settings'])) {
-      $instance_config['settings'] = array_merge(
-        $instance_config['settings'] ?? [],
-        $field_config['instance_settings']
-      );
-    }
-    
-    $field_instance = FieldConfig::create($instance_config);
-    $field_instance->save();
-    echo "    ✓ Created: {$field_config['label']}\n";
-  } else {
-    echo "    - Already exists: {$field_name}\n";
+    $field_config->save();
+    echo "  ✅ Created field instance: {$field_info['label']} ($field_name)\n";
   }
 }
 
 /**
- * Get user profile field definitions from documentation.
+ * Configure field displays for user profile fields.
+ */
+function configureUserFieldDisplays() {
+  echo "Configuring user field displays...\n";
+  
+  // Load or create form display
+  $form_display = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->load('user.user.default');
+    
+  if (!$form_display) {
+    $form_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->create([
+        'targetEntityType' => 'user',
+        'bundle' => 'user',
+        'mode' => 'default',
+      ]);
+  }
+  
+  // Load or create view display
+  $view_display = \Drupal::entityTypeManager()
+    ->getStorage('entity_view_display')
+    ->load('user.user.default');
+    
+  if (!$view_display) {
+    $view_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_view_display')
+      ->create([
+        'targetEntityType' => 'user',
+        'bundle' => 'user',
+        'mode' => 'default',
+      ]);
+  }
+  
+  $user_fields = getUserProfileFieldDefinitions();
+  $weight = 10;
+  
+  foreach ($user_fields as $field_name => $field_info) {
+    // Configure form display
+    $form_display->setComponent($field_name, [
+      'type' => $field_info['form_widget'] ?? 'string_textfield',
+      'weight' => $weight,
+      'settings' => $field_info['widget_settings'] ?? [],
+    ]);
+    
+    // Configure view display
+    $view_display->setComponent($field_name, [
+      'type' => $field_info['view_formatter'] ?? 'string',
+      'weight' => $weight,
+      'settings' => $field_info['formatter_settings'] ?? [],
+    ]);
+    
+    $weight++;
+  }
+  
+  $form_display->save();
+  $view_display->save();
+  
+  echo "  ✅ Configured user field displays\n";
+}
+
+/**
+ * Get user profile field definitions.
  */
 function getUserProfileFieldDefinitions() {
   return [
-    // Persoonlijk group
+    // Personal Information
     'field_voornaam' => [
       'type' => 'string',
       'label' => 'Voornaam',
-      'cardinality' => 1,
-      'required' => TRUE,
-      'settings' => ['max_length' => 255]
-    ],
-    'field_achternaam_voorvoegsel' => [
-      'type' => 'string',
-      'label' => 'Achternaam voorvoegsel',
-      'cardinality' => 1,
-      'settings' => ['max_length' => 50]
+      'description' => 'Voornaam van het lid',
+      'storage_settings' => ['max_length' => 255],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_achternaam' => [
       'type' => 'string',
       'label' => 'Achternaam',
-      'cardinality' => 1,
-      'required' => TRUE,
-      'settings' => ['max_length' => 255]
+      'description' => 'Achternaam van het lid',
+      'storage_settings' => ['max_length' => 255],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
-    'field_geslacht' => [
-      'type' => 'list_string',
-      'label' => 'Geslacht',
-      'cardinality' => 1,
-      'settings' => [
-        'allowed_values' => [
-          'm' => 'Man',
-          'v' => 'Vrouw',
-          'x' => 'Anders/Onbekend'
-        ]
-      ]
+    'field_achternaam_voorvoegsel' => [
+      'type' => 'string',
+      'label' => 'Achternaam voorvoegsel',
+      'description' => 'Voorvoegsel van de achternaam (van, de, etc.)',
+      'storage_settings' => ['max_length' => 50],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_geboortedatum' => [
       'type' => 'datetime',
       'label' => 'Geboortedatum',
-      'cardinality' => 1,
-      'settings' => ['datetime_type' => 'date']
+      'description' => 'Geboortedatum van het lid',
+      'storage_settings' => ['datetime_type' => 'date'],
+      'form_widget' => 'datetime_default',
+      'view_formatter' => 'datetime_default',
     ],
+    'field_geslacht' => [
+      'type' => 'list_string',
+      'label' => 'Geslacht',
+      'description' => 'Geslacht van het lid',
+      'storage_settings' => [
+        'allowed_values' => [
+          'm' => 'Man',
+          'v' => 'Vrouw',
+          'x' => 'Anders',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
+    ],
+    
+    // Contact Information
     'field_adres' => [
       'type' => 'string',
       'label' => 'Adres',
-      'cardinality' => 1,
-      'settings' => ['max_length' => 255]
+      'description' => 'Straatnaam en huisnummer',
+      'storage_settings' => ['max_length' => 255],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_postcode' => [
       'type' => 'string',
       'label' => 'Postcode',
-      'cardinality' => 1,
-      'settings' => ['max_length' => 10]
+      'description' => 'Postcode',
+      'storage_settings' => ['max_length' => 10],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_woonplaats' => [
       'type' => 'string',
       'label' => 'Woonplaats',
-      'cardinality' => 1,
-      'settings' => ['max_length' => 255]
+      'description' => 'Woonplaats',
+      'storage_settings' => ['max_length' => 255],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_telefoon' => [
-      'type' => 'telephone',
+      'type' => 'string',
       'label' => 'Telefoon',
-      'cardinality' => 1
+      'description' => 'Telefoonnummer',
+      'storage_settings' => ['max_length' => 20],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
     ],
     'field_mobiel' => [
-      'type' => 'telephone',
+      'type' => 'string',
       'label' => 'Mobiel',
-      'cardinality' => 1
+      'description' => 'Mobiel telefoonnummer',
+      'storage_settings' => ['max_length' => 20],
+      'form_widget' => 'string_textfield',
+      'view_formatter' => 'string',
+    ],
+    'field_emailbewaking' => [
+      'type' => 'string',
+      'label' => 'Email origineel',
+      'description' => 'Origineel email adres voor bewaking',
+      'storage_settings' => ['max_length' => 255],
+      'form_widget' => 'email_default',
+      'view_formatter' => 'basic_string',
     ],
     
-    // Koor group
+    // Choir Information
     'field_lidsinds' => [
       'type' => 'datetime',
       'label' => 'Lid sinds',
-      'cardinality' => 1,
-      'settings' => ['datetime_type' => 'date']
+      'description' => 'Datum vanaf wanneer lid van het koor',
+      'storage_settings' => ['datetime_type' => 'date'],
+      'form_widget' => 'datetime_default',
+      'view_formatter' => 'datetime_default',
     ],
     'field_uitkoor' => [
       'type' => 'datetime',
-      'label' => 'Uit koor',
-      'cardinality' => 1,
-      'settings' => ['datetime_type' => 'date']
+      'label' => 'Uit koor per',
+      'description' => 'Datum uitgetreden uit het koor',
+      'storage_settings' => ['datetime_type' => 'date'],
+      'form_widget' => 'datetime_default',
+      'view_formatter' => 'datetime_default',
     ],
     'field_koor' => [
       'type' => 'list_string',
-      'label' => 'Koor',
-      'cardinality' => 1,
-      'settings' => [
-        'allowed_values' => [
-          'hoofdkoor' => 'Hoofdkoor',
-          'jongerenkoor' => 'Jongerenkoor',
-          'kinderkoor' => 'Kinderkoor',
-          'oud_lid' => 'Oud lid',
-          'erelid' => 'Erelid'
-        ]
-      ]
-    ],
-    'field_positie' => [
-      'type' => 'list_string',
-      'label' => 'Positie',
-      'cardinality' => 1,
-      'settings' => [
+      'label' => 'Koorfunctie',
+      'description' => 'Functie binnen het koor',
+      'storage_settings' => [
         'allowed_values' => [
           'sopraan' => 'Sopraan',
           'alt' => 'Alt',
           'tenor' => 'Tenor',
-          'bas' => 'Bas'
-        ]
-      ]
+          'bas' => 'Bas',
+          'dirigent' => 'Dirigent',
+          'pianist' => 'Pianist',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
+    ],
+    'field_positie' => [
+      'type' => 'list_string',
+      'label' => 'Positie',
+      'description' => 'Positie binnen de stemgroep',
+      'storage_settings' => [
+        'allowed_values' => [
+          'links' => 'Links',
+          'midden' => 'Midden',
+          'rechts' => 'Rechts',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
+    ],
+    'field_sleepgroep' => [
+      'type' => 'list_string',
+      'label' => 'Sleepgroep',
+      'description' => 'Sleepgroep indeling',
+      'storage_settings' => [
+        'allowed_values' => [
+          'a' => 'Groep A',
+          'b' => 'Groep B',
+          'c' => 'Groep C',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_karrijder' => [
       'type' => 'boolean',
       'label' => 'Karrijder',
-      'cardinality' => 1
-    ],
-    'field_sleepgroep_1' => [
-      'type' => 'boolean',
-      'label' => 'Sleepgroep 1',
-      'cardinality' => 1
+      'description' => 'Heeft auto beschikbaar voor vervoer',
+      'form_widget' => 'boolean_checkbox',
+      'view_formatter' => 'boolean',
     ],
     
-    // Commissies group
+    // Committee Functions
     'field_functie_bestuur' => [
       'type' => 'list_string',
       'label' => 'Functie Bestuur',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen het bestuur',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
           'secretaris' => 'Secretaris',
           'penningmeester' => 'Penningmeester',
-          'artistiek_leider' => 'Artistiek leider',
-          'lid' => 'Bestuurslid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_mc' => [
       'type' => 'list_string',
       'label' => 'Functie Muziekcommissie',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de muziekcommissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_concert' => [
       'type' => 'list_string',
       'label' => 'Functie Commissie Concerten',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de concertcommissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_feest' => [
       'type' => 'list_string',
       'label' => 'Functie Feestcommissie',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de feestcommissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_regie' => [
       'type' => 'list_string',
       'label' => 'Functie Commissie Koorregie',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de regiecommissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_ir' => [
       'type' => 'list_string',
       'label' => 'Functie Commissie Interne Relaties',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de IR commissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_pr' => [
       'type' => 'list_string',
       'label' => 'Functie Commissie PR',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de PR commissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_tec' => [
       'type' => 'list_string',
       'label' => 'Functie Technische Commissie',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen de technische commissie',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_lw' => [
       'type' => 'list_string',
       'label' => 'Functie ledenwerf',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie bij de ledenwerving',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     'field_functie_fl' => [
       'type' => 'list_string',
       'label' => 'Functie Faciliteiten',
-      'cardinality' => 1,
-      'settings' => [
+      'description' => 'Functie binnen faciliteiten',
+      'storage_settings' => [
         'allowed_values' => [
           'voorzitter' => 'Voorzitter',
-          'lid' => 'Lid'
-        ]
-      ]
+          'lid' => 'Lid',
+        ],
+      ],
+      'form_widget' => 'options_select',
+      'view_formatter' => 'list_default',
     ],
     
-    // Beheer group
-    'field_emailbewaking' => [
-      'type' => 'boolean',
-      'label' => 'Email bewaking',
-      'cardinality' => 1
-    ],
+    // Additional Information
     'field_notes' => [
       'type' => 'text_long',
-      'label' => 'Notes',
-      'cardinality' => 1
-    ]
-  ];
-}
-
-/**
- * Get field group definitions for organizing fields in the UI.
- */
-function getUserProfileFieldGroups() {
-  return [
-    'Persoonlijk' => [
-      'field_voornaam',
-      'field_achternaam_voorvoegsel', 
-      'field_achternaam',
-      'field_geslacht',
-      'field_geboortedatum',
-      'field_adres',
-      'field_postcode',
-      'field_woonplaats',
-      'field_telefoon',
-      'field_mobiel'
+      'label' => 'Notities',
+      'description' => 'Aanvullende notities over het lid',
+      'form_widget' => 'text_textarea',
+      'view_formatter' => 'text_default',
     ],
-    'Koor' => [
-      'field_lidsinds',
-      'field_uitkoor',
-      'field_koor',
-      'field_positie',
-      'field_karrijder',
-      'field_sleepgroep_1'
-    ],
-    'Commissies' => [
-      'field_functie_bestuur',
-      'field_functie_mc',
-      'field_functie_concert',
-      'field_functie_feest',
-      'field_functie_regie',
-      'field_functie_ir',
-      'field_functie_pr',
-      'field_functie_tec',
-      'field_functie_lw',
-      'field_functie_fl'
-    ],
-    'Beheer' => [
-      'field_emailbewaking',
-      'field_notes'
-    ]
   ];
 }
 
 /**
  * Print summary of created user profile fields.
  */
-function printUserProfileSummary() {
-  $profile_fields = getUserProfileFieldDefinitions();
-  $field_groups = getUserProfileFieldGroups();
+function printUserFieldsSummary() {
+  echo "\n=== USER PROFILE FIELDS SUMMARY ===\n";
   
-  echo "\n📊 User Profile Fields Summary:\n";
-  echo "  • Total Profile Fields: " . count($profile_fields) . "\n";
-  echo "  • Field Groups: " . count($field_groups) . "\n\n";
+  $user_fields = getUserProfileFieldDefinitions();
+  $total_fields = count($user_fields);
   
-  echo "📋 Profile Fields by Group:\n";
-  foreach ($field_groups as $group_name => $field_names) {
-    echo "  🏷️  {$group_name}:\n";
-    foreach ($field_names as $field_name) {
-      if (isset($profile_fields[$field_name])) {
-        $field_config = $profile_fields[$field_name];
-        $required = isset($field_config['required']) && $field_config['required'] ? ' (required)' : '';
-        echo "    • {$field_config['label']}{$required}\n";
+  echo "User Profile Fields Created: $total_fields\n";
+  
+  $categories = [
+    'Personal Information' => ['field_voornaam', 'field_achternaam', 'field_achternaam_voorvoegsel', 'field_geboortedatum', 'field_geslacht'],
+    'Contact Information' => ['field_adres', 'field_postcode', 'field_woonplaats', 'field_telefoon', 'field_mobiel', 'field_emailbewaking'],
+    'Choir Information' => ['field_lidsinds', 'field_uitkoor', 'field_koor', 'field_positie', 'field_sleepgroep', 'field_karrijder'],
+    'Committee Functions' => ['field_functie_bestuur', 'field_functie_mc', 'field_functie_concert', 'field_functie_feest', 'field_functie_regie', 'field_functie_ir', 'field_functie_pr', 'field_functie_tec', 'field_functie_lw', 'field_functie_fl'],
+    'Additional Information' => ['field_notes'],
+  ];
+  
+  foreach ($categories as $category => $fields) {
+    echo "\n$category:\n";
+    foreach ($fields as $field_name) {
+      if (isset($user_fields[$field_name])) {
+        echo "  - {$user_fields[$field_name]['label']} ($field_name)\n";
       }
     }
-    echo "\n";
   }
   
-  echo "🔄 Migration Benefits:\n";
-  echo "  • Replaces D6 Profile content type with D11 user fields\n";
-  echo "  • Integrated with user accounts (no separate content)\n";
-  echo "  • Consistent with modern Drupal architecture\n";
-  echo "  • Better performance and user experience\n";
-  echo "  • Simplified permission management\n\n";
-  
-  echo "📋 Next Steps:\n";
-  echo "  1. Configure user account form display\n";
-  echo "  2. Set up field group layout (install field_group module)\n";
-  echo "  3. Configure user permissions for profile editing\n";
-  echo "  4. Test user registration and profile editing\n";
-  echo "  5. Run migration to transfer Profile content type data\n\n";
-  
-  echo "📋 Verification Commands:\n";
-  echo "  drush entity:info user\n";
-  echo "  drush config:export\n";
-  echo "  Visit: /admin/config/people/accounts/fields\n";
+  echo "\n✅ User profile system ready for migration!\n";
 }
 
-// Execute the script
-try {
-  createUserProfileFields();
-} catch (Exception $e) {
-  echo "❌ Script failed: " . $e->getMessage() . "\n";
-  echo "📍 Stack trace:\n" . $e->getTraceAsString() . "\n";
-  exit(1);
-}
+// Execute the main function
+createUserProfileFields();

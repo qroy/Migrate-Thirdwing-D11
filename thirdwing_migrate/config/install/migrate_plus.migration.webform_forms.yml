@@ -1,6 +1,5 @@
 # =============================================================================
-# WEBFORM MIGRATION CONFIGURATIONS
-# File: thirdwing_migrate/migrations/webform_forms.yml
+# File: thirdwing_migrate/config/install/migrate_plus.migration.webform_forms.yml
 # =============================================================================
 
 id: webform_forms
@@ -13,7 +12,6 @@ migration_tags:
 
 source:
   plugin: d6_webform_forms
-  database: migrate
   
 process:
   # Basic webform entity setup
@@ -71,15 +69,14 @@ process:
     plugin: webform_access_roles
     source: nid
 
-  # Form elements will be handled by separate migration
+  # Form elements conversion
   elements: 
-    plugin: default_value
-    default_value: ''
+    plugin: webform_elements
+    source: components
 
 destination:
   plugin: entity:webform
 
 migration_dependencies:
   required:
-    - thirdwing_users
-    - thirdwing_user_roles
+    - d6_thirdwing_user

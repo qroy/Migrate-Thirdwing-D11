@@ -1,5 +1,5 @@
 # =============================================================================
-# File: thirdwing_migrate/migrations/webform_submission_data.yml
+# File: thirdwing_migrate/config/install/migrate_plus.migration.webform_submission_data.yml
 # =============================================================================
 
 id: webform_submission_data  
@@ -12,8 +12,7 @@ migration_tags:
 
 source:
   plugin: d6_webform_submission_data
-  database: migrate
-
+  
 process:
   # Get the submission entity
   entity_id:

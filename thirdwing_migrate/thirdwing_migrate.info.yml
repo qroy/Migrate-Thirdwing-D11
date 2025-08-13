@@ -30,9 +30,7 @@ dependencies:
   - migrate_upgrade:migrate_upgrade
   - permissions_by_term:permissions_by_term
   - field_permissions:field_permissions
-  - webform:webform
-
-configure: thirdwing_migrate.settings
+  # webform:webform - Optional dependency, handled by installation script
 
 version: '11.x-1.0'
 project: 'thirdwing_migrate'

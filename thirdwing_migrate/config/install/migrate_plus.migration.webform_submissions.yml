@@ -1,5 +1,5 @@
 # =============================================================================
-# File: thirdwing_migrate/migrations/webform_submissions.yml  
+# File: thirdwing_migrate/config/install/migrate_plus.migration.webform_submissions.yml
 # =============================================================================
 
 id: webform_submissions
@@ -12,8 +12,7 @@ migration_tags:
 
 source:
   plugin: d6_webform_submissions
-  database: migrate
-
+  
 process:
   # Basic submission setup
   webform_id:
@@ -24,7 +23,7 @@ process:
   # User mapping
   uid:
     plugin: migration_lookup
-    migration: thirdwing_users
+    migration: d6_thirdwing_user
     source: uid
     no_stub: true
   
@@ -50,4 +49,4 @@ destination:
 migration_dependencies:
   required:
     - webform_forms
-    - thirdwing_users
+    - d6_thirdwing_user

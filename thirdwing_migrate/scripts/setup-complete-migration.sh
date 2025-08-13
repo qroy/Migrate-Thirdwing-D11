@@ -92,6 +92,24 @@ parse_arguments() {
                 VALIDATE_ONLY=true
                 shift
                 ;;
+    # Add --skip-webform option
+    # Add --skip-database and --reconfigure-db options
+            --skip-database)
+                SKIP_DATABASE=true
+                shift
+                ;;
+            --reconfigure-db)
+                RECONFIGURE_DATABASE=true
+                shift
+                ;;
+            --skip-webform)
+                SKIP_WEBFORM=true
+                shift
+                ;;
+            --debug)
+                DEBUG=1
+                shift
+                ;;
             --help|-h)
                 show_help
                 exit 0
@@ -113,49 +131,198 @@ show_help() {
     echo "Options:"
     echo "  --skip-composer     Skip composer dependency installation"
     echo "  --skip-modules      Skip module installation"
+    echo "  --skip-database     Skip database configuration"
+    echo "  --reconfigure-db    Force database reconfiguration"
+    echo "  --skip-webform      Skip webform installation (for D11 compatibility)"
     echo "  --validate-only     Only run validation checks"
+    echo "  --debug             Enable debug output for path detection"
     echo "  --help, -h          Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0                  Full installation"
     echo "  $0 --validate-only  Validation only"
-    echo "  $0 --skip-composer  Skip composer step"
+    echo "  $0 --debug          Debug path detection issues"
+    echo "  $0 --skip-webform   Skip webform (recommended for D11)"
+    echo "  $0 --reconfigure-db Force new database setup"
+    echo "  $0 --skip-database  Skip database configuration entirely"
 }
 
 # =============================================================================
 # VALIDATION FUNCTIONS
 # =============================================================================
 
+# =============================================================================
+# VALIDATION FUNCTIONS
+# =============================================================================
+
+# Debug function
+print_debug() {
+    if [ "${DEBUG:-}" = "1" ]; then
+        echo -e "${YELLOW}DEBUG: $1${NC}"
+    fi
+}
+
+# Auto-detect project structure
+detect_project_structure() {
+    print_debug "Starting path detection from: $CURRENT_DIR"
+    
+    # Verify current directory is set
+    if [ -z "$CURRENT_DIR" ]; then
+        CURRENT_DIR="$(pwd)"
+        print_debug "CURRENT_DIR was empty, reset to: $CURRENT_DIR"
+    fi
+    
+    # Show what files exist in current directory
+    print_debug "Checking files in current directory: $CURRENT_DIR"
+    print_debug "  index.php exists: $([ -f "$CURRENT_DIR/index.php" ] && echo "YES" || echo "NO")"
+    print_debug "  core/ exists: $([ -d "$CURRENT_DIR/core" ] && echo "YES" || echo "NO")"
+    print_debug "  composer.json exists: $([ -f "$CURRENT_DIR/composer.json" ] && echo "YES" || echo "NO")"
+    
+    # Check web subdirectory if we're in project root
+    print_debug "Checking web subdirectory: $CURRENT_DIR/web"
+    print_debug "  web/index.php exists: $([ -f "$CURRENT_DIR/web/index.php" ] && echo "YES" || echo "NO")"
+    print_debug "  web/core/ exists: $([ -d "$CURRENT_DIR/web/core" ] && echo "YES" || echo "NO")"
+    
+    # Case 1: Current directory is Drupal root (has index.php and core/)
+    if [ -f "$CURRENT_DIR/index.php" ] && [ -d "$CURRENT_DIR/core" ]; then
+        DRUPAL_ROOT="$CURRENT_DIR"
+        print_debug "✓ Current directory IS Drupal root: $DRUPAL_ROOT"
+        
+        # Check if composer.json is in parent (typical web/ subdirectory setup)
+        local parent_dir="$(dirname "$CURRENT_DIR")"
+        if [ -f "$parent_dir/composer.json" ]; then
+            PROJECT_ROOT="$parent_dir"
+            print_debug "✓ Found composer.json in parent directory: $PROJECT_ROOT"
+        # Or in current directory (flat structure)
+        elif [ -f "$CURRENT_DIR/composer.json" ]; then
+            PROJECT_ROOT="$CURRENT_DIR"
+            print_debug "✓ Found composer.json in current directory: $PROJECT_ROOT"
+        else
+            print_debug "✗ No composer.json found in current or parent directory"
+        fi
+    
+    # Case 2: Current directory has composer.json (we're in project root)
+    elif [ -f "$CURRENT_DIR/composer.json" ]; then
+        PROJECT_ROOT="$CURRENT_DIR"
+        print_debug "✓ Current directory IS project root: $PROJECT_ROOT"
+        
+        # Look for Drupal in web/ subdirectory
+        if [ -f "$CURRENT_DIR/web/index.php" ] && [ -d "$CURRENT_DIR/web/core" ]; then
+            DRUPAL_ROOT="$CURRENT_DIR/web"
+            print_debug "✓ Found Drupal root in web/ subdirectory: $DRUPAL_ROOT"
+        else
+            print_debug "✗ No Drupal root found in web/ subdirectory"
+        fi
+    
+    # Case 3: Search upward for composer.json
+    else
+        print_debug "Searching upward for composer.json..."
+        local search_dir="$CURRENT_DIR"
+        local depth=0
+        local max_depth=5
+        
+        while [ "$search_dir" != "/" ] && [ $depth -lt $max_depth ]; do
+            print_debug "  Checking: $search_dir (depth $depth)"
+            
+            if [ -f "$search_dir/composer.json" ]; then
+                PROJECT_ROOT="$search_dir"
+                print_debug "✓ Found composer.json at: $PROJECT_ROOT"
+                
+                # Now find Drupal root
+                for subdir in "" "web" "docroot" "public"; do
+                    local candidate="$search_dir/$subdir"
+                    if [ "$subdir" = "" ]; then
+                        candidate="$search_dir"
+                    fi
+                    
+                    if [ -f "$candidate/index.php" ] && [ -d "$candidate/core" ]; then
+                        DRUPAL_ROOT="$candidate"
+                        print_debug "✓ Found Drupal root at: $DRUPAL_ROOT"
+                        break
+                    fi
+                done
+                break
+            fi
+            
+            search_dir="$(dirname "$search_dir")"
+            ((depth++))
+        done
+    fi
+    
+    print_debug "=== Final Results ==="
+    print_debug "PROJECT_ROOT: ${PROJECT_ROOT:-'NOT FOUND'}"
+    print_debug "DRUPAL_ROOT: ${DRUPAL_ROOT:-'NOT FOUND'}"
+}
+
 validate_prerequisites() {
     print_substep "Checking system prerequisites and paths"
     
+    # Run path detection first
+    detect_project_structure
+    
+    # Ensure CURRENT_DIR is set
+    if [ -z "$CURRENT_DIR" ]; then
+        CURRENT_DIR="$(pwd)"
+        print_warning "CURRENT_DIR was empty, reset to: $CURRENT_DIR"
+    fi
+    
     local errors=0
     
-    # Detect and validate paths
-    print_info "Detecting project structure..."
-    print_info "Current directory: $(pwd)"
+    # Show detected paths
+    print_info "Path detection completed:"
+    print_info "Current directory: $CURRENT_DIR"
     print_info "Script directory: $SCRIPT_DIR"
     print_info "Module directory: $MODULE_DIR"
+    print_info "Detected Drupal root: ${DRUPAL_ROOT:-'NOT FOUND'}"
+    print_info "Detected project root: ${PROJECT_ROOT:-'NOT FOUND'}"
     
     # Validate Drupal root
-    if [ ! -f "$DRUPAL_ROOT/index.php" ] || [ ! -d "$DRUPAL_ROOT/core" ]; then
-        print_error "Drupal root not found at: $DRUPAL_ROOT"
-        print_error "Please run this script from your Drupal root directory"
+    if [ -z "$DRUPAL_ROOT" ] || [ ! -f "$DRUPAL_ROOT/index.php" ] || [ ! -d "$DRUPAL_ROOT/core" ]; then
+        print_error "Drupal root not found or invalid"
+        print_error "Looked for index.php and core/ directory in:"
+        print_error "  Current: $CURRENT_DIR"
+        if [ -n "$PROJECT_ROOT" ]; then
+            print_error "  Project root: $PROJECT_ROOT"
+            print_error "  Project root/web: $PROJECT_ROOT/web"
+            print_error "  Project root/docroot: $PROJECT_ROOT/docroot"
+        fi
+        
+        # Additional debugging
+        if [ "${DEBUG:-}" = "1" ]; then
+            print_debug "Files in current directory:"
+            ls -la "$CURRENT_DIR" | head -10 | while read line; do
+                print_debug "  $line"
+            done
+        fi
+        
         ((errors++))
     else
-        print_success "Drupal root detected: $DRUPAL_ROOT"
+        print_success "Drupal root validated: $DRUPAL_ROOT"
     fi
     
     # Validate project root and composer.json
     if [ -z "$PROJECT_ROOT" ] || [ ! -f "$PROJECT_ROOT/composer.json" ]; then
         print_error "Project root with composer.json not found"
         print_error "Searched paths:"
-        print_error "  Current: $(pwd)/composer.json"
-        print_error "  Parent: $(dirname "$(pwd)")/composer.json"
-        print_error "  Detected PROJECT_ROOT: $PROJECT_ROOT"
+        print_error "  Current: $CURRENT_DIR/composer.json"
+        print_error "  Parent: $(dirname "$CURRENT_DIR")/composer.json"
+        print_error "  Grandparent: $(dirname "$(dirname "$CURRENT_DIR")")/composer.json"
+        
+        # Show what we actually found
+        if [ "${DEBUG:-}" = "1" ]; then
+            print_debug "Composer.json search results:"
+            for path in "$CURRENT_DIR/composer.json" "$(dirname "$CURRENT_DIR")/composer.json" "$(dirname "$(dirname "$CURRENT_DIR")")/composer.json"; do
+                if [ -f "$path" ]; then
+                    print_debug "  FOUND: $path"
+                else
+                    print_debug "  MISSING: $path"
+                fi
+            done
+        fi
+        
         ((errors++))
     else
-        print_success "Project root detected: $PROJECT_ROOT"
+        print_success "Project root validated: $PROJECT_ROOT"
         print_success "Composer file found: $PROJECT_ROOT/composer.json"
     fi
     
@@ -181,9 +348,9 @@ validate_prerequisites() {
     
     # Check Drupal version (from Drupal root)
     local drupal_version=""
-    if cd "$DRUPAL_ROOT" 2>/dev/null; then
+    if [ -n "$DRUPAL_ROOT" ] && cd "$DRUPAL_ROOT" 2>/dev/null; then
         drupal_version=$(drush status --field=drupal-version 2>/dev/null || echo "unknown")
-        cd - >/dev/null
+        cd "$CURRENT_DIR" >/dev/null
     else
         drupal_version="unknown"
     fi
@@ -192,7 +359,9 @@ validate_prerequisites() {
         print_success "Drupal version $drupal_version"
     else
         print_error "Drupal version $drupal_version (requires 11.x)"
-        print_info "Run 'drush status' from $DRUPAL_ROOT to check"
+        if [ -n "$DRUPAL_ROOT" ]; then
+            print_info "Run 'drush status' from $DRUPAL_ROOT to check"
+        fi
         ((errors++))
     fi
     
@@ -206,6 +375,12 @@ validate_prerequisites() {
     
     if [ $errors -gt 0 ]; then
         print_error "Prerequisites validation failed with $errors errors"
+        print_info ""
+        print_info "Quick diagnosis - run these commands to check your setup:"
+        print_info "  pwd                    # Should show your current directory"
+        print_info "  ls -la index.php core/ # Should show Drupal files"
+        print_info "  ls -la ../composer.json # Should show composer.json in parent"
+        print_info "  drush status           # Should show Drupal 11.x"
         return 1
     fi
     
@@ -219,6 +394,12 @@ validate_prerequisites() {
 
 collect_database_credentials() {
     print_substep "Collecting D6 database credentials"
+    
+    # Check if we should skip database configuration
+    if [ "$SKIP_DATABASE" = true ]; then
+        print_warning "Skipping database configuration (--skip-database flag used)"
+        return 0
+    fi
     
     echo -e "${BLUE}Please provide your Drupal 6 source database connection details:${NC}"
     echo ""
@@ -281,6 +462,14 @@ collect_database_credentials() {
 configure_migrate_database() {
     print_substep "Configuring migrate database connection"
     
+    # Check if migrate database is already configured and working
+    if check_existing_migrate_database; then
+        print_success "Migrate database already configured and working"
+        print_info "Using existing configuration"
+        return 0
+    fi
+    
+    print_info "No working migrate database configuration found"
     collect_database_credentials
     
     # Determine settings.php location
@@ -316,6 +505,74 @@ configure_migrate_database() {
     test_migrate_database_connection
     
     return $?
+}
+
+check_existing_migrate_database() {
+    print_debug "Checking for existing migrate database configuration..."
+    
+    # Skip check if we're forcing reconfiguration
+    if [ "$RECONFIGURE_DATABASE" = true ]; then
+        print_debug "Forcing database reconfiguration (--reconfigure-db flag)"
+        return 1
+    fi
+    
+    # Change to Drupal root for drush operations
+    local original_dir="$(pwd)"
+    if ! cd "$DRUPAL_ROOT" 2>/dev/null; then
+        print_debug "Cannot change to Drupal root for database check"
+        return 1
+    fi
+    
+    # Test if migrate database connection exists and works
+    local db_test_result=$(drush eval "
+        try {
+            \$database = \\Drupal\\Core\\Database\\Database::getConnection('default', 'migrate');
+            \$result = \$database->query('SELECT VERSION()')->fetchField();
+            echo 'SUCCESS:' . \$result;
+        } catch (Exception \$e) {
+            echo 'FAILED:' . \$e->getMessage();
+        }
+    " 2>/dev/null)
+    
+    cd "$original_dir" >/dev/null
+    
+    if [[ "$db_test_result" =~ ^SUCCESS: ]]; then
+        print_debug "Existing migrate database connection is working"
+        
+        # Also test for required D6 tables
+        if cd "$DRUPAL_ROOT" 2>/dev/null; then
+            local table_test=$(drush eval "
+                try {
+                    \$database = \\Drupal\\Core\\Database\\Database::getConnection('default', 'migrate');
+                    \$tables = ['node', 'users', 'webform'];
+                    \$found = 0;
+                    foreach (\$tables as \$table) {
+                        if (\$database->schema()->tableExists(\$table)) {
+                            \$found++;
+                        }
+                    }
+                    echo 'TABLES:' . \$found;
+                } catch (Exception \$e) {
+                    echo 'ERROR:' . \$e->getMessage();
+                }
+            " 2>/dev/null)
+            
+            cd "$original_dir" >/dev/null
+            
+            if [[ "$table_test" =~ TABLES:3 ]]; then
+                print_debug "Required D6 tables found in migrate database"
+                return 0
+            else
+                print_debug "Required D6 tables not found: $table_test"
+                return 1
+            fi
+        fi
+        
+        return 0
+    else
+        print_debug "Migrate database connection failed: $db_test_result"
+        return 1
+    fi
 }
 
 remove_existing_migrate_config() {
@@ -445,17 +702,25 @@ install_composer_dependencies() {
     print_info "Working in project root: $(pwd)"
     print_info "Using composer.json: $(pwd)/composer.json"
     
-    # Required contrib modules for migration INCLUDING webform
+    # Required contrib modules for migration - EXCLUDING webform for now
     local contrib_modules=(
         "drupal/migrate_plus"
         "drupal/migrate_tools" 
         "drupal/migrate_upgrade"
         "drupal/permissions_by_term"
         "drupal/field_permissions"
-        "drupal/webform"
+    )
+    
+    # Webform module for Drupal 11 - try beta version first
+    local webform_modules=(
+        "drupal/webform:^6.3@beta"
+        "drupal/webform:6.3.x-dev"
+        "drupal/webform:6.x-dev"
+        "drupal/webform:^6.2@dev"
     )
     
     local install_needed=()
+    local webform_installed=false
     
     # Check which modules need to be installed
     # Look in both possible contrib directories
@@ -477,20 +742,83 @@ install_composer_dependencies() {
         fi
     done
     
+    # Check if webform is already installed
+    for contrib_path in "web/modules/contrib" "modules/contrib" "docroot/modules/contrib"; do
+        if [ -d "$contrib_path/webform" ]; then
+            print_success "webform already installed in $contrib_path"
+            webform_installed=true
+            break
+        fi
+    done
+    
+    # Install basic contrib modules first
     if [ ${#install_needed[@]} -gt 0 ]; then
-        print_info "Installing ${#install_needed[@]} missing contrib modules..."
+        print_info "Installing ${#install_needed[@]} basic contrib modules..."
         print_info "Modules to install: ${install_needed[*]}"
         
-        # Install missing modules
         if ! composer require "${install_needed[@]}" --no-interaction; then
-            print_error "Failed to install composer dependencies"
+            print_error "Failed to install basic composer dependencies"
             cd "$original_dir"
             return 1
         fi
         
-        print_success "All contrib modules installed successfully"
+        print_success "Basic contrib modules installed successfully"
     else
-        print_success "All required contrib modules already available"
+        print_success "All basic contrib modules already available"
+    fi
+    
+    # Try to install webform module for Drupal 11
+    if [ "$webform_installed" = false ] && [ "$SKIP_WEBFORM" = false ]; then
+        print_info "Attempting to install Webform 6.3 beta for Drupal 11..."
+        
+        local webform_success=false
+        for webform_version in "${webform_modules[@]}"; do
+            print_info "Trying: $webform_version"
+            
+            if composer require "$webform_version" --no-interaction 2>/dev/null; then
+                print_success "Successfully installed: $webform_version"
+                webform_success=true
+                break
+            else
+                print_warning "Failed to install: $webform_version"
+            fi
+        done
+        
+        if [ "$webform_success" = false ]; then
+            print_warning "Could not install Webform module via Composer"
+            print_info ""
+            print_info "WEBFORM 6.3 BETA INSTALLATION OPTIONS:"
+            print_info "1. Manual installation:"
+            print_info "   composer require drupal/webform:6.3.0-beta1"
+            print_info "   (or latest beta version)"
+            print_info "2. Try specific beta version:"
+            print_info "   composer require 'drupal/webform:^6.3@beta'"
+            print_info "3. Skip webform migration for now:"
+            print_info "   Re-run script with --skip-webform flag"
+            print_info ""
+            
+            # Ask user what to do
+            echo -n "Try manual installation of Webform 6.3 beta? [Y/n]: "
+            read -r response
+            if [[ "$response" =~ ^[Nn]$ ]]; then
+                print_warning "Continuing without Webform module"
+                print_warning "Webform migrations will be skipped"
+            else
+                print_info "Attempting manual installation..."
+                if composer require "drupal/webform:6.3.0-beta1" --no-interaction; then
+                    print_success "Successfully installed Webform 6.3.0-beta1"
+                    webform_success=true
+                elif composer require "drupal/webform:^6.3@beta" --no-interaction; then
+                    print_success "Successfully installed Webform 6.3 beta"
+                    webform_success=true
+                else
+                    print_error "Manual installation also failed"
+                    print_warning "Continuing without Webform module"
+                fi
+            fi
+        fi
+    elif [ "$SKIP_WEBFORM" = true ]; then
+        print_info "Skipping Webform installation (--skip-webform flag used)"
     fi
     
     # Return to original directory

@@ -127,17 +127,36 @@ show_help() {
 # =============================================================================
 
 validate_prerequisites() {
-    print_substep "Checking system prerequisites"
+    print_substep "Checking system prerequisites and paths"
     
     local errors=0
     
-    # Check if we're in a Drupal root
-    if [ ! -f "index.php" ] || [ ! -d "core" ]; then
-        print_error "Not in Drupal root directory"
+    # Detect and validate paths
+    print_info "Detecting project structure..."
+    print_info "Current directory: $(pwd)"
+    print_info "Script directory: $SCRIPT_DIR"
+    print_info "Module directory: $MODULE_DIR"
+    
+    # Validate Drupal root
+    if [ ! -f "$DRUPAL_ROOT/index.php" ] || [ ! -d "$DRUPAL_ROOT/core" ]; then
+        print_error "Drupal root not found at: $DRUPAL_ROOT"
+        print_error "Please run this script from your Drupal root directory"
         ((errors++))
     else
-        print_success "Drupal root directory detected"
-        DRUPAL_ROOT=$(pwd)
+        print_success "Drupal root detected: $DRUPAL_ROOT"
+    fi
+    
+    # Validate project root and composer.json
+    if [ -z "$PROJECT_ROOT" ] || [ ! -f "$PROJECT_ROOT/composer.json" ]; then
+        print_error "Project root with composer.json not found"
+        print_error "Searched paths:"
+        print_error "  Current: $(pwd)/composer.json"
+        print_error "  Parent: $(dirname "$(pwd)")/composer.json"
+        print_error "  Detected PROJECT_ROOT: $PROJECT_ROOT"
+        ((errors++))
+    else
+        print_success "Project root detected: $PROJECT_ROOT"
+        print_success "Composer file found: $PROJECT_ROOT/composer.json"
     fi
     
     # Check for required commands
@@ -160,12 +179,20 @@ validate_prerequisites() {
         ((errors++))
     fi
     
-    # Check Drupal version
-    local drupal_version=$(drush status --field=drupal-version 2>/dev/null || echo "unknown")
+    # Check Drupal version (from Drupal root)
+    local drupal_version=""
+    if cd "$DRUPAL_ROOT" 2>/dev/null; then
+        drupal_version=$(drush status --field=drupal-version 2>/dev/null || echo "unknown")
+        cd - >/dev/null
+    else
+        drupal_version="unknown"
+    fi
+    
     if [[ "$drupal_version" == 11.* ]]; then
         print_success "Drupal version $drupal_version"
     else
         print_error "Drupal version $drupal_version (requires 11.x)"
+        print_info "Run 'drush status' from $DRUPAL_ROOT to check"
         ((errors++))
     fi
     
@@ -258,12 +285,22 @@ configure_migrate_database() {
     
     # Determine settings.php location
     local settings_file=""
-    if [ -f "web/sites/default/settings.php" ]; then
-        settings_file="web/sites/default/settings.php"
-    elif [ -f "sites/default/settings.php" ]; then
-        settings_file="sites/default/settings.php"
-    else
+    local possible_settings=(
+        "$DRUPAL_ROOT/sites/default/settings.php"
+        "sites/default/settings.php"
+        "web/sites/default/settings.php"
+    )
+    
+    for settings_path in "${possible_settings[@]}"; do
+        if [ -f "$settings_path" ]; then
+            settings_file="$settings_path"
+            break
+        fi
+    done
+    
+    if [ -z "$settings_file" ]; then
         print_error "Could not find settings.php file"
+        print_error "Looked in: ${possible_settings[*]}"
         return 1
     fi
     
@@ -328,6 +365,13 @@ EOF
 test_migrate_database_connection() {
     print_info "Testing migrate database connection..."
     
+    # Change to Drupal root for drush operations
+    local original_dir="$(pwd)"
+    if ! cd "$DRUPAL_ROOT"; then
+        print_error "Cannot change to Drupal root: $DRUPAL_ROOT"
+        return 1
+    fi
+    
     # Test the connection using Drush
     if drush eval "
         try {
@@ -342,6 +386,7 @@ test_migrate_database_connection() {
         print_success "Database connection test passed"
     else
         print_error "Database connection test failed"
+        cd "$original_dir"
         return 1
     fi
     
@@ -369,9 +414,11 @@ test_migrate_database_connection() {
         }
     " | grep -q "SUCCESS"; then
         print_success "D6 database structure validated"
+        cd "$original_dir"
         return 0
     else
         print_error "D6 database structure validation failed"
+        cd "$original_dir"
         return 1
     fi
 }
@@ -388,6 +435,16 @@ install_composer_dependencies() {
     
     print_substep "Installing required Composer dependencies with Webform support"
     
+    # Change to project root for composer operations
+    local original_dir="$(pwd)"
+    if ! cd "$PROJECT_ROOT"; then
+        print_error "Cannot change to project root: $PROJECT_ROOT"
+        return 1
+    fi
+    
+    print_info "Working in project root: $(pwd)"
+    print_info "Using composer.json: $(pwd)/composer.json"
+    
     # Required contrib modules for migration INCLUDING webform
     local contrib_modules=(
         "drupal/migrate_plus"
@@ -401,21 +458,33 @@ install_composer_dependencies() {
     local install_needed=()
     
     # Check which modules need to be installed
+    # Look in both possible contrib directories
     for module in "${contrib_modules[@]}"; do
         local module_name=$(echo "$module" | cut -d'/' -f2)
-        if [ ! -d "web/modules/contrib/$module_name" ] && [ ! -d "modules/contrib/$module_name" ]; then
+        local found=false
+        
+        # Check common contrib locations
+        for contrib_path in "web/modules/contrib" "modules/contrib" "docroot/modules/contrib"; do
+            if [ -d "$contrib_path/$module_name" ]; then
+                print_success "$module_name already installed in $contrib_path"
+                found=true
+                break
+            fi
+        done
+        
+        if [ "$found" = false ]; then
             install_needed+=("$module")
-        else
-            print_success "$module_name already installed"
         fi
     done
     
     if [ ${#install_needed[@]} -gt 0 ]; then
         print_info "Installing ${#install_needed[@]} missing contrib modules..."
+        print_info "Modules to install: ${install_needed[*]}"
         
         # Install missing modules
         if ! composer require "${install_needed[@]}" --no-interaction; then
             print_error "Failed to install composer dependencies"
+            cd "$original_dir"
             return 1
         fi
         
@@ -424,7 +493,25 @@ install_composer_dependencies() {
         print_success "All required contrib modules already available"
     fi
     
+    # Return to original directory
+    cd "$original_dir"
     return 0
+}
+
+# All drush commands should run from Drupal root
+run_drush_command() {
+    local original_dir="$(pwd)"
+    if ! cd "$DRUPAL_ROOT"; then
+        print_error "Cannot change to Drupal root: $DRUPAL_ROOT"
+        return 1
+    fi
+    
+    # Run the drush command with all arguments
+    "$@"
+    local exit_code=$?
+    
+    cd "$original_dir"
+    return $exit_code
 }
 
 install_core_modules() {
@@ -462,7 +549,7 @@ install_core_modules() {
     
     # Check which modules need to be enabled
     for module in "${core_modules[@]}"; do
-        if ! drush pm:list --status=enabled --type=module --format=list | grep -q "^$module$"; then
+        if ! run_drush_command drush pm:list --status=enabled --type=module --format=list | grep -q "^$module$"; then
             modules_to_enable+=("$module")
         fi
     done
@@ -470,7 +557,7 @@ install_core_modules() {
     if [ ${#modules_to_enable[@]} -gt 0 ]; then
         print_info "Enabling ${#modules_to_enable[@]} core modules..."
         
-        if ! drush pm:enable -y "${modules_to_enable[@]}"; then
+        if ! run_drush_command drush pm:enable -y "${modules_to_enable[@]}"; then
             print_error "Failed to enable core modules"
             return 1
         fi

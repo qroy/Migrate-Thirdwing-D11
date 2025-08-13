@@ -82,7 +82,7 @@
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_video` | text_long | Video | 1 | embedded video |
-| `field_repertoire` | entity_reference | Nummer | 1 | target_type: node, target_bundles: [repertoire] |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
 | `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
 | `field_audio_type` | list_string | Type | 1 | options widget |
 | `field_datum` | datetime | Datum | 1 | datetime with time |
@@ -176,20 +176,12 @@
 | `field_audio_nummer` | string | Nummer | 1 | max_length: 255 |
 | `field_audio_seizoen` | string | Seizoen | 1 | max_length: 255 |
 
-#### Shared Fields Used:
-| Field Name | Field Type | Label | Cardinality | Target/Settings |
-|------------|------------|-------|-------------|-----------------|
-| `field_partij_band` | entity_reference | Bandpartituur | 1 | target_type: media, target_bundles: [document] |
-| `field_partij_koor_l` | entity_reference | Koorpartituur | 1 | target_type: media, target_bundles: [document] |
-| `field_partij_tekst` | entity_reference | Tekst / koorregie | 1 | target_type: media, target_bundles: [document] |
+#### Shared Fields Used: None
 
 #### Field Groups:
 - **Arrangeur**: field_rep_arr, field_rep_arr_jaar
-- **Bandpartituur**: field_partij_band
 - **Componist**: field_rep_componist, field_rep_componist_jaar
-- **Koorpartituur**: field_partij_koor_l
 - **Informatie**: field_audio_nummer, field_audio_seizoen, field_klapper, field_rep_genre, field_rep_sinds
-- **Tekst en koorregie**: field_partij_tekst
 - **Uitvoerende**: field_rep_uitv, field_rep_uitv_jaar
 
 ### 8. **Vriend** (Friend)
@@ -251,7 +243,12 @@ The media bundle system has been carefully designed to handle all D6 file types 
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_media_audio_file` | file | Audio bestand | 1 | file_extensions: mp3 midi mid wav |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
+| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
+| `field_audio_type` | list_string | Type | 1 | options widget |
 | `field_datum` | datetime | Datum | 1 | date only |
+| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
+| `field_audio_bijz` | string | Bijzonderheden | 1 | max_length: 255 |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
 ### 3. **Video Bundle** (`video`)
@@ -262,7 +259,11 @@ The media bundle system has been carefully designed to handle all D6 file types 
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_media_video_embed_field` | video_embed_field | Video | 1 | - |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
+| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
+| `field_audio_type` | list_string | Type | 1 | options widget |
 | `field_datum` | datetime | Datum | 1 | date only |
+| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
 ### 4. **Document Bundle** (`document`)
@@ -354,12 +355,9 @@ The following fields are available as shared fields that can be attached to any 
 | `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
 | `field_inhoud` | entity_reference | Inhoud | unlimited | target_type: node, target_bundles: [nieuws, activiteit, programma] |
 | `field_l_routelink` | link | Route | 1 | - |
-| `field_partij_band` | entity_reference | Bandpartituur | 1 | target_type: media, target_bundles: [document] |
-| `field_partij_koor_l` | entity_reference | Koorpartituur | 1 | target_type: media, target_bundles: [document] |
-| `field_partij_tekst` | entity_reference | Tekst / koorregie | 1 | target_type: media, target_bundles: [document] |
 | `field_programma2` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
 | `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
-| `field_repertoire` | entity_reference | Nummer | 1 | target_type: node, target_bundles: [repertoire] |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
 | `field_video` | text_long | Video | 1 | embedded video |
 | `field_view` | string | Extra inhoud | 1 | viewfield reference |
 | `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
@@ -378,7 +376,7 @@ The following fields are available as shared fields that can be attached to any 
 1. Users and profiles
 2. Files and media entities
 3. Locations
-4. Repertoire and programs
+4. Repertoire and programs (without partituur files)
 
 ### Phase 3: Activity Content
 1. Activities and events
@@ -386,11 +384,56 @@ The following fields are available as shared fields that can be attached to any 
 3. Pages and static content
 4. Friends and supporters
 
-### Phase 4: Relationships
-1. Content references
-2. Media associations
-3. User permissions
-4. Workflow states
+### Phase 4: Document Media Migration
+1. Document media entities with reverse references
+2. Partituur files migration with repertoire linking
+3. Content references validation
+4. Media associations verification
+
+---
+
+## Critical Migration Changes - Partituur Architecture
+
+### **Data Transformation Requirements:**
+
+#### **D6 → D11 Partituur Migration:**
+1. **D6 Repertoire → D11 Repertoire:** 
+   - `field_partij_band_fid` → Create Document media entity 
+   - `field_partij_koor_l_fid` → Create Document media entity
+   - `field_partij_tekst_fid` → Create Document media entity
+
+2. **New Document Media Entity Creation:**
+   - For each `field_partij_*` file in D6 repertoire
+   - Set `field_document_soort` = "partituur"
+   - Set `field_gerelateerd_repertoire` → back to original repertoire node
+
+### **Migration Scripts Impact:**
+1. **Repertoire migration must NOT migrate partituur files directly**
+2. **Separate Document Media migration** for partituur files
+3. **Reverse mapping logic:** D6 repertoire.field_partij_* → D11 document_media.field_gerelateerd_repertoire
+
+### **Database Query Changes:**
+- **Old D6/D11 approach:** "Get partituren for repertoire X" → Query repertoire fields
+- **New D11 approach:** "Get partituren for repertoire X" → Query document media where gerelateerd_repertoire = X
+
+### **Admin Interface Impact:**
+- **Repertoire management:** No more partituur upload during repertoire edit
+- **Document management:** New workflow - upload document → link to repertoire
+- **Views/Listings:** Modified queries for partituur display
+
+### **Migration Dependencies Order:**
+1. **First:** Migrate Repertoire content (without partituren)
+2. **Then:** Migrate Document media with reverse references
+3. **Validation:** Verify all partituren are correctly linked
+4. **Testing:** Ensure admin interface works with new relationship direction
+
+### **Benefits of New Architecture:**
+- **Logical relationship:** Document knows its repertoire (more intuitive)
+- **Multiple repertoire linking:** One document can relate to multiple repertoire pieces
+- **Document classification:** Via `field_document_soort` = "partituur"
+- **Reduced redundancy:** No need for 3 separate partituur fields
+- **Enhanced flexibility:** Easy to add new document types
+- **Better admin UX:** Direct repertoire linking during document upload
 
 ---
 

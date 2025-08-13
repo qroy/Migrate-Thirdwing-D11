@@ -1,0 +1,41 @@
+{
+  "name": "drupal/thirdwing_migrate",
+  "description": "Complete Drupal 6 to Drupal 11 migration module for Thirdwing choir website with webform support",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": ">=8.1",
+    "drupal/core": "^11.0",
+    "drupal/migrate_plus": "^6.0",
+    "drupal/migrate_tools": "^6.0", 
+    "drupal/migrate_upgrade": "^4.0",
+    "drupal/permissions_by_term": "^3.0",
+    "drupal/field_permissions": "^1.0",
+    "drupal/webform": "^6.2"
+  },
+  "require-dev": {
+    "drupal/core-dev": "^11.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Drupal\\thirdwing_migrate\\": "src/"
+    }
+  },
+  "extra": {
+    "drupal": {
+      "version": "11.x-1.0",
+      "project": "thirdwing_migrate",
+      "datestamp": "1692825600"
+    },
+    "installer-paths": {
+      "web/core": ["type:drupal-core"],
+      "web/libraries/{$name}": ["type:drupal-library"],
+      "web/modules/contrib/{$name}": ["type:drupal-module"],
+      "web/profiles/contrib/{$name}": ["type:drupal-profile"],
+      "web/themes/contrib/{$name}": ["type:drupal-theme"],
+      "drush/Commands/contrib/{$name}": ["type:drupal-drush"]
+    }
+  }
+}

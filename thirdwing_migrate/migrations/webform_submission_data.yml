@@ -1,0 +1,48 @@
+# =============================================================================
+# File: thirdwing_migrate/migrations/webform_submission_data.yml
+# =============================================================================
+
+id: webform_submission_data  
+label: 'Migrate D6 Webform Submission Data'
+migration_group: thirdwing
+migration_tags:
+  - thirdwing
+  - webforms
+  - submission_data
+
+source:
+  plugin: d6_webform_submission_data
+  database: migrate
+
+process:
+  # Get the submission entity
+  entity_id:
+    plugin: migration_lookup
+    migration: webform_submissions
+    source: sid
+    no_stub: true
+  
+  # Get webform entity
+  webform_id:
+    plugin: migration_lookup  
+    migration: webform_forms
+    source: nid
+    no_stub: true
+  
+  # Component key mapping
+  element_key:
+    plugin: d6_webform_element_key
+    source: 
+      - nid
+      - cid
+  
+  # Data value
+  element_data: data
+
+destination:
+  plugin: webform_submission_data
+
+migration_dependencies:
+  required:
+    - webform_submissions
+    - webform_forms

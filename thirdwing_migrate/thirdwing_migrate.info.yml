@@ -1,35 +1,39 @@
 name: 'Thirdwing Migration'
+description: 'Complete Drupal 6 to Drupal 11 migration module for Thirdwing choir website with webform support'
 type: module
-description: 'Migration module for Thirdwing D6 to D11'
-package: Custom
-core_version_requirement: ^10 || ^11
+core_version_requirement: ^11
+package: 'Migration'
 
 dependencies:
-  # Core migration modules
-  - migrate
-  - migrate_drupal
+  # Core modules
+  - drupal:migrate
+  - drupal:migrate_drupal
+  - drupal:node
+  - drupal:user
+  - drupal:field
+  - drupal:file
+  - drupal:image
+  - drupal:media
+  - drupal:taxonomy
+  - drupal:datetime
+  - drupal:link
+  - drupal:text
+  - drupal:options
+  - drupal:workflows
+  - drupal:content_moderation
+  - drupal:menu_ui
+  - drupal:path
   
-  # Contrib migration modules
-  - migrate_plus
-  - migrate_tools
-  - migrate_upgrade
-  
-  # Core content & media modules
-  - media
-  - file
-  - image
-  - taxonomy
-  - menu_ui
-  - field
-  - text
-  - datetime
-  - link
-  - path
-  
-  # Core workflow modules
-  - workflows
-  - content_moderation
-  
-  # Contrib access control modules
-  - permissions_by_term
-  - field_permissions
+  # Contrib modules  
+  - migrate_plus:migrate_plus
+  - migrate_tools:migrate_tools
+  - migrate_upgrade:migrate_upgrade
+  - permissions_by_term:permissions_by_term
+  - field_permissions:field_permissions
+  - webform:webform
+
+configure: thirdwing_migrate.settings
+
+version: '11.x-1.0'
+project: 'thirdwing_migrate'
+datestamp: 1692825600

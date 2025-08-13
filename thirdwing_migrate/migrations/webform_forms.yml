@@ -1,0 +1,85 @@
+# =============================================================================
+# WEBFORM MIGRATION CONFIGURATIONS
+# File: thirdwing_migrate/migrations/webform_forms.yml
+# =============================================================================
+
+id: webform_forms
+label: 'Migrate D6 Webforms to D11 Webforms'
+migration_group: thirdwing
+migration_tags:
+  - thirdwing
+  - webforms
+  - content
+
+source:
+  plugin: d6_webform_forms
+  database: migrate
+  
+process:
+  # Basic webform entity setup
+  id: 
+    plugin: machine_name
+    source: nid
+    prefix: 'webform_'
+  
+  title: 
+    plugin: skip_on_empty
+    source: title
+    method: row
+  
+  description: body
+  
+  # Form settings from D6 webform table
+  status: 
+    plugin: default_value
+    default_value: true
+    source: status
+  
+  # Submit settings
+  settings/submit_text:
+    plugin: default_value
+    default_value: 'Submit'
+    source: submit_text
+  
+  settings/draft: 
+    plugin: default_value
+    default_value: false
+    source: allow_draft
+  
+  settings/confirmation_type:
+    plugin: static_map
+    source: redirect_url
+    map:
+      '<confirmation>': message
+      '<none>': none
+    default_value: message
+  
+  settings/confirmation_message: confirmation
+  
+  settings/limit_total:
+    plugin: default_value
+    default_value: -1
+    source: total_submit_limit
+    
+  settings/limit_user:
+    plugin: default_value  
+    default_value: -1
+    source: submit_limit
+
+  # User access and permissions
+  access:
+    plugin: webform_access_roles
+    source: nid
+
+  # Form elements will be handled by separate migration
+  elements: 
+    plugin: default_value
+    default_value: ''
+
+destination:
+  plugin: entity:webform
+
+migration_dependencies:
+  required:
+    - thirdwing_users
+    - thirdwing_user_roles

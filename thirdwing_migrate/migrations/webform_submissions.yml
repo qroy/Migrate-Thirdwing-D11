@@ -1,0 +1,53 @@
+# =============================================================================
+# File: thirdwing_migrate/migrations/webform_submissions.yml  
+# =============================================================================
+
+id: webform_submissions
+label: 'Migrate D6 Webform Submissions'
+migration_group: thirdwing
+migration_tags:
+  - thirdwing
+  - webforms
+  - submissions
+
+source:
+  plugin: d6_webform_submissions
+  database: migrate
+
+process:
+  # Basic submission setup
+  webform_id:
+    plugin: migration_lookup
+    migration: webform_forms
+    source: nid
+  
+  # User mapping
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_users
+    source: uid
+    no_stub: true
+  
+  # Timestamps
+  created: submitted
+  completed: submitted
+  changed: submitted
+  
+  # Remote IP
+  remote_addr: remote_addr
+  
+  # Draft status
+  in_draft: is_draft
+  
+  # Submission data will be handled by webform_submission_data migration
+  data: 
+    plugin: default_value
+    default_value: {}
+
+destination:
+  plugin: entity:webform_submission
+
+migration_dependencies:
+  required:
+    - webform_forms
+    - thirdwing_users

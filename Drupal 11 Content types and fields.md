@@ -1,41 +1,34 @@
-# Field Types Documentation - Thirdwing D6 to D11 Migration
+# Thirdwing D11 Content Types, Media Bundles en Fields - Volledige Documentatie
 
-## Migration Strategy Overview
+## 📋 **Overzicht Migratie Strategie**
 
-**Installation Strategy:**
-- Module will be installed on a clean Drupal 11 installation
-- Old D6 site remains active until new site is complete and acts as backup
-- Regular syncs from old to new with updated content
-- All field types configured to reference media entities instead of files
-- User profile fields will be used instead of profile content type
-
-**Migration Strategy:**
-- **Deprecated Content Types:** Audio, Video, Image, Verslag, and Nieuwsbrief content types
-- **Audio, Video, Image, Verslag** → converted to media bundles  
-- **Nieuwsbrief** → NOT migrated
-- **Profile Content Type** → converted to user profile fields
-- **File Fields** → converted to media entity references
-- **Shared Fields** → maintained for consistency across content types
+**Migratie Benadering:**
+- Module wordt geïnstalleerd op een schone Drupal 11 installatie
+- Oude D6 site blijft actief tot nieuwe site compleet is en dient als backup voor alle data
+- Reguliere syncs van oud naar nieuw met bijgewerkte content
+- Altijd om bevestiging vragen voor het starten van coding
+- Gebruik exacte specificaties in de documentatie voor alle velden, veldgroepen, content types en permissions
+- Gebruik altijd Nederlands voor UI elementen
 
 ---
 
-## Summary
+## 📊 **Migratie Overzicht**
 
-**Content Types:** 9 content types (migrated from D6)
-**Media Bundles:** 4 media bundles (replaces deprecated content types)
-**User Profile Fields:** Replaces Profile content type
-**Shared Fields:** 16 fields available across content types
+**Content Types:** 9 content types (gemigreerd van D6)  
+**Media Bundles:** 4 media bundles (vervangt afgekeurde content types)  
+**User Profile Fields:** Vervangt Profile content type  
+**Shared Fields:** 16 velden beschikbaar voor alle content types
 
 ---
 
-## Content Types (9 total)
+## 🗂️ **Content Types (9 totaal)**
 
 ### 1. **Activiteit** (Activities)
-**Description:** Een activiteit (uitvoering, repetitie)
-**Title Label:** Omschrijving
+**Description:** Een activiteit (uitvoering, repetitie)  
+**Title Label:** Omschrijving  
 **Has Body:** Yes (Berichttekst)
 
-#### Content Type Specific Fields:
+#### Content Type Specifieke Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_tijd_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 |
@@ -54,7 +47,7 @@
 | `field_sleepgroep_terug` | list_string | Sleepgroep terug | 1 | options widget |
 | `field_huiswerk` | entity_reference | Huiswerk | 1 | target_type: media, target_bundles: [document] |
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
@@ -62,7 +55,7 @@
 | `field_programma2` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
 | `field_datum` | datetime | Datum en tijd | 1 | datetime with time |
 
-#### Field Groups:
+#### Veldgroepen:
 - **Achtergrond**: field_background
 - **Bijzonderheden**: field_bijzonderheden, field_kledingcode
 - **Locatie**: field_locatie, field_l_bijzonderheden
@@ -71,14 +64,16 @@
 - **Logistiek**: field_basgitaar, field_drums, field_gitaar, field_keyboard, field_sleepgroep, field_sleepgroep_aanwezig, field_sleepgroep_terug, field_tijd_aanwezig, field_vervoer
 - **Programma**: field_programma2
 
+---
+
 ### 2. **Foto** (Photo)
-**Description:** Foto-album
-**Title Label:** Titel
+**Description:** Foto-album  
+**Title Label:** Titel  
 **Has Body:** Yes (Omschrijving)
 
-#### Content Type Specific Fields: None
+#### Content Type Specifieke Velden: None
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_video` | text_long | Video | 1 | embedded video |
@@ -88,79 +83,89 @@
 | `field_datum` | datetime | Datum | 1 | datetime with time |
 | `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
 
-#### Field Groups:
+#### Veldgroepen:
 - **Activiteiten**: field_audio_type, field_ref_activiteit
 - **Afbeelding**: field_afbeeldingen
 
+---
+
 ### 3. **Locatie** (Location)
-**Description:** Veelvoorkomende locaties van uitvoeringen
-**Title Label:** Titel
+**Description:** Veelvoorkomende locaties van uitvoeringen  
+**Title Label:** Titel  
 **Has Body:** No
 
-#### Content Type Specific Fields:
+#### Content Type Specifieke Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_l_adres` | string | Adres | 1 | max_length: 255 |
 | `field_l_plaats` | string | Plaats | 1 | max_length: 255 |
 | `field_l_postcode` | string | Postcode | 1 | max_length: 255 |
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_l_routelink` | link | Route | 1 | - |
 
+---
+
 ### 4. **Nieuws** (News)
-**Description:** Een nieuwsbericht. Dit kan een publiek nieuwsbericht zijn, maar ook een nieuwsbericht voor op de ledenpagina.
-**Title Label:** Titel
+**Description:** Een nieuwsbericht. Dit kan een publiek nieuwsbericht zijn, maar ook een nieuwsbericht voor op de ledenpagina.  
+**Title Label:** Titel  
 **Has Body:** Yes (Berichttekst)
 
-#### Content Type Specific Fields: None
+#### Content Type Specifieke Velden: None
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
 | `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
 
-#### Field Groups:
+#### Veldgroepen:
 - **Bestanden**: field_afbeeldingen, field_files
 
+---
+
 ### 5. **Pagina** (Page)
-**Description:** Gebruik een 'Pagina' wanneer je een statische pagina wilt toevoegen
-**Title Label:** Titel
+**Description:** Gebruik een 'Pagina' wanneer je een statische pagina wilt toevoegen  
+**Title Label:** Titel  
 **Has Body:** Yes (Berichttekst)
 
-#### Content Type Specific Fields: None
+#### Content Type Specifieke Velden: None
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
 | `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
 | `field_view` | string | Extra inhoud | 1 | viewfield reference |
 
-#### Field Groups:
+#### Veldgroepen:
 - **Extra inhoud**: field_view
 - **Bestanden**: field_afbeeldingen, field_files
 
+---
+
 ### 6. **Programma** (Program)
-**Description:** Elementen voor in een programma voor een activiteit die niet voorkomen in de repertoire-lijst
-**Title Label:** Titel
+**Description:** Elementen voor in een programma voor een activiteit die niet voorkomen in de repertoire-lijst  
+**Title Label:** Titel  
 **Has Body:** No
 
-#### Content Type Specific Fields:
+#### Content Type Specifieke Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_prog_type` | list_string | Type | 1 | options widget |
 
-#### Shared Fields Used: None
+#### Gedeelde Velden Gebruikt: None
+
+---
 
 ### 7. **Repertoire** (Repertoire)
-**Description:** Stuk uit het repertoire
-**Title Label:** Titel
+**Description:** Stuk uit het repertoire  
+**Title Label:** Titel  
 **Has Body:** Yes (Berichttekst)
 
-#### Content Type Specific Fields:
+#### Content Type Specifieke Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_rep_arr` | string | Arrangeur | 1 | max_length: 255 |
@@ -176,20 +181,22 @@
 | `field_audio_nummer` | string | Nummer | 1 | max_length: 255 |
 | `field_audio_seizoen` | string | Seizoen | 1 | max_length: 255 |
 
-#### Shared Fields Used: None
+#### Gedeelde Velden Gebruikt: None
 
-#### Field Groups:
+#### Veldgroepen:
 - **Arrangeur**: field_rep_arr, field_rep_arr_jaar
 - **Componist**: field_rep_componist, field_rep_componist_jaar
 - **Informatie**: field_audio_nummer, field_audio_seizoen, field_klapper, field_rep_genre, field_rep_sinds
 - **Uitvoerende**: field_rep_uitv, field_rep_uitv_jaar
 
+---
+
 ### 8. **Vriend** (Friend)
-**Description:** Vrienden van de vereniging
-**Title Label:** Naam
+**Description:** Vrienden van de vereniging  
+**Title Label:** Naam  
 **Has Body:** No
 
-#### Content Type Specific Fields:
+#### Content Type Specifieke Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_vriend_website` | link | Website | 1 | - |
@@ -199,45 +206,63 @@
 | `field_vriend_periode_vanaf` | integer | Vriend vanaf | 1 | - |
 | `field_vriend_duur` | list_string | Vriendlengte | 1 | options widget |
 
-#### Shared Fields Used:
+#### Gedeelde Velden Gebruikt:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
 
+---
+
 ### 9. **Webform** (Webform)
-**Description:** Create a new form or questionnaire accessible to users
-**Title Label:** Titel
+**Description:** Create a new form or questionnaire accessible to users  
+**Title Label:** Titel  
 **Has Body:** Yes (Berichttekst)
 
-#### Content Type Specific Fields: None
-
-#### Shared Fields Used: None
+#### Content Type Specifieke Velden: None
+#### Gedeelde Velden Gebruikt: None
 
 ---
 
-## Media Bundles (4 total)
+## 🎬 **Media Bundles (4 totaal)**
 
-### Designed Media Bundle Architecture
+### Ontworpen Media Bundle Architectuur
 
-The media bundle system has been carefully designed to handle all D6 file types with proper metadata and relationships. Each bundle includes specific fields for categorization, access control, and content relationships.
+Het media bundle systeem is zorgvuldig ontworpen om alle D6 bestandstypes te behandelen met juiste metadata en relaties. Elke bundle bevat specifieke velden voor categorisatie, toegangscontrole en content relaties.
 
 ### 1. **Image Bundle** (`image`)
-**Description:** Photos, graphics, and images (replaces Image content type)
-**Source Plugin:** `image`
-**Source Field:** `field_media_image`
+**Description:** Photos, graphics, and images (replaces Image content type)  
+**Source Plugin:** `image`  
+**Source Field:** `field_media_image`  
 **File Extensions:** jpg, jpeg, png, gif, webp
 
-| Field Name | Field Type | Label | Cardinality | Target/Settings |
-|------------|------------|-------|-------------|-----------------|
-| `field_media_image` | file | Afbeelding | 1 | file_extensions: jpg jpeg png gif webp |
-| `field_datum` | datetime | Datum | 1 | date only |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
+| Field Name | Field Type | Label | Cardinality | Target/Settings | Auto-Population |
+|------------|------------|-------|-------------|-----------------|------------------|
+| `field_media_image` | image | Afbeelding | 1 | file_extensions: jpg jpeg png gif webp | - |
+| `field_datum` | datetime | Datum | 1 | date only | **🔄 AUTO: EXIF → File Date** |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | - |
+
+#### **🆕 Automatische EXIF Datum Extractie**
+
+Het `field_datum` veld wordt **automatisch gevuld** volgens de volgende prioriteit:
+
+**Extractie Volgorde:**
+1. **EXIF DateTimeOriginal** - Wanneer de foto origineel gemaakt is
+2. **EXIF DateTime** - Algemene EXIF datum
+3. **EXIF DateTimeDigitized** - Wanneer de foto gedigitaliseerd is  
+4. **Bestandsdatum** - Upload/aanmaak datum als fallback
+
+**Ondersteunde Formaten:**
+- **JPEG** - Volledige EXIF ondersteuning
+- **TIFF** - Volledige EXIF ondersteuning
+- **PNG/GIF/WebP** - Alleen bestandsdatum fallback
+
+---
 
 ### 2. **Audio Bundle** (`audio`)
-**Description:** MP3 and MIDI audio files (replaces Audio content type)
-**Source Plugin:** `audio`
-**Source Field:** `field_media_audio_file`
+**Description:** MP3 and MIDI audio files (replaces Audio content type)  
+**Source Plugin:** `audio`  
+**Source Field:** `field_media_audio_file`  
 **File Extensions:** mp3, midi, mid, wav
 
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
@@ -251,9 +276,11 @@ The media bundle system has been carefully designed to handle all D6 file types 
 | `field_audio_bijz` | string | Bijzonderheden | 1 | max_length: 255 |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
+---
+
 ### 3. **Video Bundle** (`video`)
-**Description:** Embedded videos from YouTube/Vimeo (replaces Video content type)
-**Source Plugin:** `video_embed_field`
+**Description:** Embedded videos from YouTube/Vimeo (replaces Video content type)  
+**Source Plugin:** `video_embed_field`  
 **Source Field:** `field_media_video_embed_field`
 
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
@@ -266,24 +293,26 @@ The media bundle system has been carefully designed to handle all D6 file types 
 | `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
+---
+
 ### 4. **Document Bundle** (`document`)
-**Description:** PDFs, Word documents, MuseScore files, and Verslag reports
-**Source Plugin:** `file`
-**Source Field:** `field_media_document`
+**Description:** PDFs, Word documents, MuseScore files, and Verslag reports  
+**Source Plugin:** `file`  
+**Source Field:** `field_media_document`  
 **File Extensions:** pdf, doc, docx, txt, xls, xlsx, mscz
 
 | Field Name | Field Type | Label | Cardinality | Target/Settings | Required When |
 |------------|------------|-------|-------------|-----------------|---------------|
 | `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt xls xlsx mscz | Always |
-| `field_document_soort` | list_string | Document Soort | 1 | Select options: verslag, partituur, huiswerk, overig | Always |
+| `field_document_soort` | list_string | Document Soort | 1 | options: verslag, partituur, huiswerk, overig | Always |
 | `field_verslag_type` | list_string | Verslag Type | 1 | Select options: algemene_ledenvergadering, bestuursvergadering, combo_overleg, concertcommissie, jaarevaluatie_dirigent, jaarverslag, overige_vergadering, vergadering_muziekcommissie | field_document_soort = verslag |
 | `field_datum` | datetime | Datum | 1 | date only | field_document_soort = verslag |
 | `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] | field_document_soort = partituur |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | Always |
 
-### Conditional Field Requirements
+### Conditionele Veld Vereisten
 
-The Document Bundle uses conditional field requirements based on the document type:
+Het Document Bundle gebruikt conditionele veld vereisten gebaseerd op het document type:
 
 #### **When `field_document_soort` = "verslag":**
 - **`field_verslag_type`** - Required to specify the type of meeting report
@@ -297,9 +326,9 @@ The Document Bundle uses conditional field requirements based on the document ty
 
 ---
 
-## User Profile Fields (Instead of Profile Content Type)
+## 👤 **User Profile Fields (Instead of Profile Content Type)**
 
-The D6 site uses a **Profile** content type, but in D11 these will be converted to **User Profile Fields**:
+De D6 site gebruikt een **Profile** content type, maar in D11 worden deze geconverteerd naar **User Profile Fields**:
 
 ### User Profile Fields:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
@@ -319,7 +348,13 @@ The D6 site uses a **Profile** content type, but in D11 these will be converted 
 | `field_postcode` | string | Postcode | 1 | max_length: 255 |
 | `field_telefoon` | string | Telefoon | 1 | max_length: 255 |
 | `field_notes` | text_long | Notities | 1 | - |
+| `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
+| `field_positie` | list_string | Positie | 1 | options widget |
 | `field_mobiel` | string | Mobiel | 1 | max_length: 255 |
+
+### Commissie Functies:
+| Field Name | Field Type | Label | Cardinality | Target/Settings |
+|------------|------------|-------|-------------|-----------------|
 | `field_functie_bestuur` | list_string | Functie Bestuur | 1 | options widget |
 | `field_functie_mc` | list_string | Functie Muziekcommissie | 1 | options widget |
 | `field_functie_concert` | list_string | Functie Commissie Concerten | 1 | options widget |
@@ -328,24 +363,16 @@ The D6 site uses a **Profile** content type, but in D11 these will be converted 
 | `field_functie_ir` | list_string | Functie Commissie Interne Relaties | 1 | options widget |
 | `field_functie_pr` | list_string | Functie Commissie PR | 1 | options widget |
 | `field_functie_tec` | list_string | Functie Technische Commissie | 1 | options widget |
-| `field_positie` | list_string | Positie | 1 | options widget |
 | `field_functie_lw` | list_string | Functie ledenwerf | 1 | options widget |
 | `field_functie_fl` | list_string | Functie Faciliteiten | 1 | options widget |
-| `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
-
-### User Profile Field Groups:
-- **Beheer**: field_emailbewaking, field_notes
-- **Commissies**: field_functie_bestuur, field_functie_concert, field_functie_feest, field_functie_fl, field_functie_ir, field_functie_lw, field_functie_mc, field_functie_pr, field_functie_regie, field_functie_tec
-- **Koor**: field_karrijder, field_koor, field_lidsinds, field_positie, field_sleepgroep_1, field_uitkoor
-- **Persoonlijk**: field_achternaam, field_achternaam_voorvoegsel, field_adres, field_geboortedatum, field_geslacht, field_mobiel, field_postcode, field_telefoon, field_voornaam, field_woonplaats
 
 ---
 
-## Shared Fields Available to All Content Types
+## 🔗 **Gedeelde Velden Beschikbaar voor Alle Content Types**
 
-The following fields are available as shared fields that can be attached to any content type:
+De volgende velden zijn beschikbaar als gedeelde velden die aan elk content type gekoppeld kunnen worden:
 
-### Core Shared Fields:
+### Core Gedeelde Velden:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
@@ -364,7 +391,7 @@ The following fields are available as shared fields that can be attached to any 
 
 ---
 
-## Migration Dependencies
+## 🔄 **Migratie Dependencies**
 
 ### Phase 1: Foundation
 1. Taxonomy vocabularies and terms
@@ -392,9 +419,9 @@ The following fields are available as shared fields that can be attached to any 
 
 ---
 
-## Critical Migration Changes - Partituur Architecture
+## 🎯 **Kritieke Migratie Wijzigingen - Partituur Architectuur**
 
-### **Data Transformation Requirements:**
+### **Data Transformatie Vereisten:**
 
 #### **D6 → D11 Partituur Migration:**
 1. **D6 Repertoire → D11 Repertoire:** 
@@ -437,26 +464,31 @@ The following fields are available as shared fields that can be attached to any 
 
 ---
 
-## Installation Requirements
+## 📋 **Installatie Vereisten**
 
 ### Pre-Installation
 - Clean Drupal 11 installation
 - Database access to D6 source
 - Required contrib modules installed
 - File system permissions configured
+- PHP EXIF extension for automatic image date extraction
 
 ### Post-Installation
 - Content moderation workflow setup
 - Role-based permissions configuration
 - Media file directory creation
 - URL alias generation
+- EXIF date extraction testing
 
 ---
 
-## Key Migration Benefits
+## ✨ **Belangrijkste Migratie Voordelen**
 
 - **Centralized Media Management:** All media handled through proper media bundles
 - **Better User Experience:** Profile fields integrated into user accounts
 - **Consistent Field Structure:** Shared fields reduce duplication
 - **Modern Architecture:** Leverages D11's media system capabilities
 - **Streamlined Content Types:** Focus on essential content types only
+- **Automatic Metadata Extraction:** EXIF date extraction for images
+- **Intelligent Fallbacks:** Robust date handling with multiple fallback options
+- **Enhanced Content Relationships:** Better linking between content and media

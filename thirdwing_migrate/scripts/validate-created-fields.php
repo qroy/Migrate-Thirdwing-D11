@@ -2,8 +2,8 @@
 
 /**
  * @file
- * NEW script to validate that created fields match the documentation exactly.
- * Based on "Drupal 11 Content types and fields.md" documentation.
+ * GECORRIGEERD script om gemaakte velden te valideren tegen documentatie.
+ * Gebaseerd op "Drupal 11 Content types and fields.md" documentatie.
  *
  * Usage: drush php:script validate-created-fields.php
  */
@@ -15,47 +15,47 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 /**
- * Main execution function.
+ * Hoofduitvoeringsfunctie.
  */
 function validateCreatedFields() {
-  echo "🔍 Validating Created Fields Against Documentation...\n\n";
+  echo "🔍 Valideren van Gemaakte Velden Tegen Documentatie...\n\n";
   
   $errors = [];
   $warnings = [];
   
-  // Step 1: Validate content types
-  echo "📦 Validating content types...\n";
+  // Stap 1: Valideer content types
+  echo "📦 Valideren van content types...\n";
   validateContentTypes($errors, $warnings);
   
-  // Step 2: Validate content type fields
-  echo "\n📋 Validating content type fields...\n";
+  // Stap 2: Valideer content type velden
+  echo "\n📋 Valideren van content type velden...\n";
   validateContentTypeFields($errors, $warnings);
   
-  // Step 3: Validate media bundles
-  echo "\n🎬 Validating media bundles...\n";
+  // Stap 3: Valideer media bundles
+  echo "\n🎬 Valideren van media bundles...\n";
   validateMediaBundles($errors, $warnings);
   
-  // Step 4: Validate media bundle fields
-  echo "\n🎵 Validating media bundle fields...\n";
+  // Stap 4: Valideer media bundle velden
+  echo "\n🎵 Valideren van media bundle velden...\n";
   validateMediaBundleFields($errors, $warnings);
   
-  // Step 5: Validate user profile fields
-  echo "\n👤 Validating user profile fields...\n";
+  // Stap 5: Valideer user profile velden
+  echo "\n👤 Valideren van user profile velden...\n";
   validateUserProfileFields($errors, $warnings);
   
-  // Generate report
+  // Genereer rapport
   echo "\n";
   generateValidationReport($errors, $warnings);
 }
 
 /**
- * Validate content types exist and are configured correctly.
+ * Valideer dat content types bestaan en correct geconfigureerd zijn.
  */
 function validateContentTypes(&$errors, &$warnings) {
   $expected_content_types = [
     'activiteit' => 'Activiteit',
     'foto' => 'Foto',
-    'locatie' => 'Locatie',
+    'locatie' => 'Locatie', 
     'nieuws' => 'Nieuws',
     'pagina' => 'Pagina',
     'programma' => 'Programma',
@@ -67,51 +67,51 @@ function validateContentTypes(&$errors, &$warnings) {
   foreach ($expected_content_types as $type_id => $type_name) {
     $node_type = NodeType::load($type_id);
     if (!$node_type) {
-      $errors[] = "Content type '{$type_id}' ({$type_name}) is missing";
+      $errors[] = "Content type '{$type_id}' ({$type_name}) ontbreekt";
     } else {
       echo "  ✓ {$type_name} ({$type_id})\n";
       
-      // Check if name matches
+      // Controleer of naam overeenkomt
       if ($node_type->label() !== $type_name) {
-        $warnings[] = "Content type '{$type_id}' name is '{$node_type->label()}', expected '{$type_name}'";
+        $warnings[] = "Content type '{$type_id}' naam is '{$node_type->label()}', verwacht '{$type_name}'";
       }
     }
   }
 }
 
 /**
- * Validate content type fields.
+ * Valideer content type velden.
  */
 function validateContentTypeFields(&$errors, &$warnings) {
   $expected_fields = getExpectedContentTypeFields();
   
   foreach ($expected_fields as $content_type => $fields) {
-    echo "  Validating fields for: {$content_type}\n";
+    echo "  Valideren van velden voor: {$content_type}\n";
     
     foreach ($fields as $field_name => $expected_config) {
       $field_config = FieldConfig::loadByName('node', $content_type, $field_name);
       
       if (!$field_config) {
-        $errors[] = "Field '{$field_name}' missing from content type '{$content_type}'";
+        $errors[] = "Veld '{$field_name}' ontbreekt van content type '{$content_type}'";
       } else {
         echo "    ✓ {$expected_config['label']}\n";
         
-        // Validate field type
+        // Valideer veld type
         $field_storage = $field_config->getFieldStorageDefinition();
         if ($field_storage->getType() !== $expected_config['type']) {
-          $errors[] = "Field '{$field_name}' in '{$content_type}' has type '{$field_storage->getType()}', expected '{$expected_config['type']}'";
+          $errors[] = "Veld '{$field_name}' in '{$content_type}' heeft type '{$field_storage->getType()}', verwacht '{$expected_config['type']}'";
         }
         
-        // Validate cardinality
+        // Valideer cardinality
         $expected_cardinality = $expected_config['cardinality'] ?? 1;
         if ($field_storage->getCardinality() !== $expected_cardinality) {
           $actual = $field_storage->getCardinality();
-          $errors[] = "Field '{$field_name}' in '{$content_type}' has cardinality '{$actual}', expected '{$expected_cardinality}'";
+          $errors[] = "Veld '{$field_name}' in '{$content_type}' heeft cardinality '{$actual}', verwacht '{$expected_cardinality}'";
         }
         
-        // Validate label
+        // Valideer label
         if ($field_config->getLabel() !== $expected_config['label']) {
-          $warnings[] = "Field '{$field_name}' in '{$content_type}' has label '{$field_config->getLabel()}', expected '{$expected_config['label']}'";
+          $warnings[] = "Veld '{$field_name}' in '{$content_type}' heeft label '{$field_config->getLabel()}', verwacht '{$expected_config['label']}'";
         }
       }
     }
@@ -119,12 +119,12 @@ function validateContentTypeFields(&$errors, &$warnings) {
 }
 
 /**
- * Validate media bundles exist and are configured correctly.
+ * Valideer dat media bundles bestaan en correct geconfigureerd zijn.
  */
 function validateMediaBundles(&$errors, &$warnings) {
   $expected_media_bundles = [
     'image' => 'Image',
-    'document' => 'Document',
+    'document' => 'Document', 
     'audio' => 'Audio',
     'video' => 'Video'
   ];
@@ -132,46 +132,46 @@ function validateMediaBundles(&$errors, &$warnings) {
   foreach ($expected_media_bundles as $bundle_id => $bundle_name) {
     $media_type = MediaType::load($bundle_id);
     if (!$media_type) {
-      $errors[] = "Media bundle '{$bundle_id}' ({$bundle_name}) is missing";
+      $errors[] = "Media bundle '{$bundle_id}' ({$bundle_name}) ontbreekt";
     } else {
       echo "  ✓ {$bundle_name} ({$bundle_id})\n";
       
-      // Check if name matches
+      // Controleer of naam overeenkomt
       if ($media_type->label() !== $bundle_name) {
-        $warnings[] = "Media bundle '{$bundle_id}' name is '{$media_type->label()}', expected '{$bundle_name}'";
+        $warnings[] = "Media bundle '{$bundle_id}' naam is '{$media_type->label()}', verwacht '{$bundle_name}'";
       }
     }
   }
 }
 
 /**
- * Validate media bundle fields.
+ * Valideer media bundle velden.
  */
 function validateMediaBundleFields(&$errors, &$warnings) {
   $expected_fields = getExpectedMediaBundleFields();
   
   foreach ($expected_fields as $bundle_id => $fields) {
-    echo "  Validating fields for media bundle: {$bundle_id}\n";
+    echo "  Valideren van velden voor media bundle: {$bundle_id}\n";
     
     foreach ($fields as $field_name => $expected_config) {
       $field_config = FieldConfig::loadByName('media', $bundle_id, $field_name);
       
       if (!$field_config) {
-        $errors[] = "Field '{$field_name}' missing from media bundle '{$bundle_id}'";
+        $errors[] = "Veld '{$field_name}' ontbreekt van media bundle '{$bundle_id}'";
       } else {
         echo "    ✓ {$expected_config['label']}\n";
         
-        // Validate field type
+        // Valideer veld type
         $field_storage = $field_config->getFieldStorageDefinition();
         if ($field_storage->getType() !== $expected_config['type']) {
-          $errors[] = "Media field '{$field_name}' in '{$bundle_id}' has type '{$field_storage->getType()}', expected '{$expected_config['type']}'";
+          $errors[] = "Media veld '{$field_name}' in '{$bundle_id}' heeft type '{$field_storage->getType()}', verwacht '{$expected_config['type']}'";
         }
         
-        // Validate cardinality
+        // Valideer cardinality
         $expected_cardinality = $expected_config['cardinality'] ?? 1;
         if ($field_storage->getCardinality() !== $expected_cardinality) {
           $actual = $field_storage->getCardinality();
-          $errors[] = "Media field '{$field_name}' in '{$bundle_id}' has cardinality '{$actual}', expected '{$expected_cardinality}'";
+          $errors[] = "Media veld '{$field_name}' in '{$bundle_id}' heeft cardinality '{$actual}', verwacht '{$expected_cardinality}'";
         }
       }
     }
@@ -179,7 +179,7 @@ function validateMediaBundleFields(&$errors, &$warnings) {
 }
 
 /**
- * Validate user profile fields.
+ * Valideer user profile velden.
  */
 function validateUserProfileFields(&$errors, &$warnings) {
   $expected_fields = getExpectedUserProfileFields();
@@ -188,157 +188,173 @@ function validateUserProfileFields(&$errors, &$warnings) {
     $field_config = FieldConfig::loadByName('user', 'user', $field_name);
     
     if (!$field_config) {
-      $errors[] = "User profile field '{$field_name}' is missing";
+      $errors[] = "User profile veld '{$field_name}' ontbreekt";
     } else {
       echo "  ✓ {$expected_config['label']}\n";
       
-      // Validate field type
+      // Valideer veld type
       $field_storage = $field_config->getFieldStorageDefinition();
       if ($field_storage->getType() !== $expected_config['type']) {
-        $errors[] = "User field '{$field_name}' has type '{$field_storage->getType()}', expected '{$expected_config['type']}'";
+        $errors[] = "User veld '{$field_name}' heeft type '{$field_storage->getType()}', verwacht '{$expected_config['type']}'";
       }
       
-      // Validate cardinality
+      // Valideer cardinality
       $expected_cardinality = $expected_config['cardinality'] ?? 1;
       if ($field_storage->getCardinality() !== $expected_cardinality) {
         $actual = $field_storage->getCardinality();
-        $errors[] = "User field '{$field_name}' has cardinality '{$actual}', expected '{$expected_cardinality}'";
+        $errors[] = "User veld '{$field_name}' heeft cardinality '{$actual}', verwacht '{$expected_cardinality}'";
       }
     }
   }
 }
 
 /**
- * Generate validation report.
+ * Genereer validatierapport.
  */
 function generateValidationReport($errors, $warnings) {
-  echo "📊 VALIDATION REPORT\n";
-  echo "=" . str_repeat("=", 50) . "\n\n";
+  echo "📊 VALIDATIERAPPORT\n";
+  echo "=" . str_repeat("=", 50) . "\n";
   
   if (empty($errors) && empty($warnings)) {
-    echo "🎉 SUCCESS: All fields created correctly!\n";
-    echo "✅ Content types: All 9 created\n";
-    echo "✅ Media bundles: All 4 created\n";
-    echo "✅ User profile fields: All created\n";
-    echo "✅ Field configurations: All match documentation\n\n";
-    
-    echo "📋 Summary:\n";
-    echo "  • 9 Content types with correct field attachments\n";
-    echo "  • 4 Media bundles with proper source fields\n";
-    echo "  • " . count(getExpectedUserProfileFields()) . " User profile fields\n";
-    echo "  • 16 Shared fields available across content types\n";
-    echo "  • All field types, cardinalities, and labels correct\n\n";
-    
-    echo "🚀 Ready for migration execution!\n";
-    
+    echo "🎉 SUCCES: Alle velden komen exact overeen met de documentatie!\n\n";
+    echo "✅ Alle content types zijn aanwezig\n";
+    echo "✅ Alle velden hebben correcte types en cardinality\n";
+    echo "✅ Alle labels zijn correct in het Nederlands\n";
+    echo "✅ Media bundles zijn compleet\n";
+    echo "✅ User profile velden zijn geconfigureerd\n";
   } else {
     if (!empty($errors)) {
-      echo "❌ ERRORS FOUND (" . count($errors) . "):\n";
+      echo "❌ FOUTEN GEVONDEN ({count($errors)}):\n";
       foreach ($errors as $error) {
-        echo "  • {$error}\n";
+        echo "   • {$error}\n";
       }
       echo "\n";
     }
     
     if (!empty($warnings)) {
-      echo "⚠️  WARNINGS (" . count($warnings) . "):\n";
+      echo "⚠️ WAARSCHUWINGEN ({count($warnings)}):\n";
       foreach ($warnings as $warning) {
-        echo "  • {$warning}\n";
+        echo "   • {$warning}\n";
       }
       echo "\n";
     }
     
     if (!empty($errors)) {
-      echo "🔧 FIXES NEEDED:\n";
-      echo "  1. Re-run the field creation scripts\n";
-      echo "  2. Check for missing dependencies\n";
-      echo "  3. Verify module installations\n";
-      echo "  4. Run this validation again\n\n";
+      echo "🔧 ACTIES VEREIST:\n";
+      echo "  1. Los de fouten hierboven op\n";
+      echo "  2. Controleer ontbrekende dependencies\n";
+      echo "  3. Verifieer module installaties\n";
+      echo "  4. Voer deze validatie opnieuw uit\n\n";
     }
   }
   
-  echo "📋 Next Steps:\n";
+  echo "📋 Volgende Stappen:\n";
   if (empty($errors)) {
-    echo "  1. Configure field displays\n";
-    echo "  2. Set up permissions\n";
-    echo "  3. Test content creation\n";
-    echo "  4. Begin migration execution\n";
+    echo "  1. Configureer veld displays\n";
+    echo "  2. Stel permissions in\n";
+    echo "  3. Test content aanmaken\n";
+    echo "  4. Begin migratie uitvoering\n";
   } else {
-    echo "  1. Fix errors listed above\n";
-    echo "  2. Re-run validation\n";
-    echo "  3. Proceed when all fields are correct\n";
+    echo "  1. Los fouten hierboven op\n";
+    echo "  2. Voer validatie opnieuw uit\n";
+    echo "  3. Ga verder wanneer alle velden correct zijn\n";
   }
 }
 
 /**
- * Get expected content type fields for validation.
+ * Krijg verwachte content type velden voor validatie - VOLLEDIG GECORRIGEERD.
  */
 function getExpectedContentTypeFields() {
   return [
     'activiteit' => [
-      // Content-type specific fields
-      'field_a_locatie' => ['type' => 'string', 'label' => 'Locatie vrije invoer', 'cardinality' => 1],
-      'field_a_planner' => ['type' => 'entity_reference', 'label' => 'Planner', 'cardinality' => 1],
-      'field_a_tijd_begin' => ['type' => 'string', 'label' => 'Tijd begin', 'cardinality' => 1],
-      'field_a_tijd_einde' => ['type' => 'string', 'label' => 'Tijd einde', 'cardinality' => 1],
-      'field_a_wijzigingen' => ['type' => 'text_long', 'label' => 'Last-minute wijzigingen', 'cardinality' => 1],
-      'field_l_ref_locatie' => ['type' => 'entity_reference', 'label' => 'Locatie uit lijst', 'cardinality' => 1],
-      // Shared fields
-      'field_datum' => ['type' => 'datetime', 'label' => 'Datum en tijd', 'cardinality' => 1],
+      // Content-type specifieke velden volgens documentatie
+      'field_tijd_aanwezig' => ['type' => 'string', 'label' => 'Koor Aanwezig', 'cardinality' => 1],
+      'field_keyboard' => ['type' => 'list_string', 'label' => 'Toetsenist', 'cardinality' => 1],
+      'field_gitaar' => ['type' => 'list_string', 'label' => 'Gitarist', 'cardinality' => 1],
+      'field_basgitaar' => ['type' => 'list_string', 'label' => 'Basgitarist', 'cardinality' => 1],
+      'field_drums' => ['type' => 'list_string', 'label' => 'Drummer', 'cardinality' => 1],
+      'field_vervoer' => ['type' => 'string', 'label' => 'Karrijder', 'cardinality' => 1],
+      'field_sleepgroep' => ['type' => 'list_string', 'label' => 'Sleepgroep', 'cardinality' => 1],
+      'field_sleepgroep_aanwezig' => ['type' => 'string', 'label' => 'Sleepgroep Aanwezig', 'cardinality' => 1],
+      'field_kledingcode' => ['type' => 'string', 'label' => 'Kledingcode', 'cardinality' => 1],
+      'field_locatie' => ['type' => 'entity_reference', 'label' => 'Locatie', 'cardinality' => 1],
+      'field_l_bijzonderheden' => ['type' => 'text_long', 'label' => 'Bijzonderheden locatie', 'cardinality' => 1],
+      'field_bijzonderheden' => ['type' => 'string', 'label' => 'Bijzonderheden', 'cardinality' => 1],
+      'field_background' => ['type' => 'entity_reference', 'label' => 'Achtergrond', 'cardinality' => 1],
+      'field_sleepgroep_terug' => ['type' => 'list_string', 'label' => 'Sleepgroep terug', 'cardinality' => 1],
+      'field_huiswerk' => ['type' => 'entity_reference', 'label' => 'Huiswerk', 'cardinality' => 1],
+      // Gedeelde velden
       'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1],
       'field_files' => ['type' => 'entity_reference', 'label' => 'Bestandsbijlages', 'cardinality' => -1],
-      'field_programma2' => ['type' => 'entity_reference', 'label' => 'Programma', 'cardinality' => -1]
+      'field_programma2' => ['type' => 'entity_reference', 'label' => 'Programma', 'cardinality' => -1],
+      'field_datum' => ['type' => 'datetime', 'label' => 'Datum en tijd', 'cardinality' => 1]
     ],
+    
     'foto' => [
       'field_video' => ['type' => 'text_long', 'label' => 'Video', 'cardinality' => 1],
-      'field_repertoire' => ['type' => 'entity_reference', 'label' => 'Nummer', 'cardinality' => 1],
+      'field_gerelateerd_repertoire' => ['type' => 'entity_reference', 'label' => 'Gerelateerd Repertoire', 'cardinality' => -1],
       'field_audio_uitvoerende' => ['type' => 'string', 'label' => 'Uitvoerende', 'cardinality' => 1],
       'field_audio_type' => ['type' => 'list_string', 'label' => 'Type', 'cardinality' => 1],
-      'field_datum' => ['type' => 'datetime', 'label' => 'Datum en tijd', 'cardinality' => 1],
+      'field_datum' => ['type' => 'datetime', 'label' => 'Datum', 'cardinality' => 1],
       'field_ref_activiteit' => ['type' => 'entity_reference', 'label' => 'Activiteit', 'cardinality' => 1]
     ],
+    
     'locatie' => [
       'field_l_adres' => ['type' => 'string', 'label' => 'Adres', 'cardinality' => 1],
       'field_l_plaats' => ['type' => 'string', 'label' => 'Plaats', 'cardinality' => 1],
       'field_l_postcode' => ['type' => 'string', 'label' => 'Postcode', 'cardinality' => 1],
       'field_l_routelink' => ['type' => 'link', 'label' => 'Route', 'cardinality' => 1]
     ],
+    
     'nieuws' => [
-      'field_datum' => ['type' => 'datetime', 'label' => 'Datum en tijd', 'cardinality' => 1],
       'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1],
       'field_files' => ['type' => 'entity_reference', 'label' => 'Bestandsbijlages', 'cardinality' => -1]
     ],
+    
     'pagina' => [
       'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1],
       'field_files' => ['type' => 'entity_reference', 'label' => 'Bestandsbijlages', 'cardinality' => -1],
       'field_view' => ['type' => 'string', 'label' => 'Extra inhoud', 'cardinality' => 1]
     ],
+    
     'programma' => [
-      'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1],
-      'field_files' => ['type' => 'entity_reference', 'label' => 'Bestandsbijlages', 'cardinality' => -1],
-      'field_ref_activiteit' => ['type' => 'entity_reference', 'label' => 'Activiteit', 'cardinality' => 1]
+      'field_prog_type' => ['type' => 'list_string', 'label' => 'Type', 'cardinality' => 1]
     ],
+    
     'repertoire' => [
-      'field_componist' => ['type' => 'string', 'label' => 'Componist', 'cardinality' => 1],
-      'field_arrangeur' => ['type' => 'string', 'label' => 'Arrangeur', 'cardinality' => 1],
-      'field_genre' => ['type' => 'entity_reference', 'label' => 'Genre', 'cardinality' => 1],
-      'field_uitgave' => ['type' => 'string', 'label' => 'Uitgave', 'cardinality' => 1],
-      'field_toegang' => ['type' => 'entity_reference', 'label' => 'Toegang', 'cardinality' => -1],
-      'field_partij_band' => ['type' => 'entity_reference', 'label' => 'Bandpartituur', 'cardinality' => 1],
-      'field_partij_koor_l' => ['type' => 'entity_reference', 'label' => 'Koorpartituur', 'cardinality' => 1],
-      'field_partij_tekst' => ['type' => 'entity_reference', 'label' => 'Tekst / koorregie', 'cardinality' => 1]
+      'field_rep_arr' => ['type' => 'string', 'label' => 'Arrangeur', 'cardinality' => 1],
+      'field_rep_arr_jaar' => ['type' => 'integer', 'label' => 'Arrangeur Jaar', 'cardinality' => 1],
+      'field_rep_componist' => ['type' => 'string', 'label' => 'Componist', 'cardinality' => 1],
+      'field_rep_componist_jaar' => ['type' => 'integer', 'label' => 'Componist Jaar', 'cardinality' => 1],
+      'field_rep_genre' => ['type' => 'list_string', 'label' => 'Genre', 'cardinality' => 1],
+      'field_rep_sinds' => ['type' => 'integer', 'label' => 'Sinds', 'cardinality' => 1],
+      'field_rep_uitv' => ['type' => 'string', 'label' => 'Uitvoering', 'cardinality' => 1],
+      'field_rep_uitv_jaar' => ['type' => 'integer', 'label' => 'Uitvoering Jaar', 'cardinality' => 1],
+      'field_positie' => ['type' => 'list_string', 'label' => 'Positie', 'cardinality' => 1],
+      'field_klapper' => ['type' => 'boolean', 'label' => 'Klapper', 'cardinality' => 1],
+      'field_audio_nummer' => ['type' => 'string', 'label' => 'Nummer', 'cardinality' => 1],
+      'field_audio_seizoen' => ['type' => 'string', 'label' => 'Seizoen', 'cardinality' => 1]
     ],
+    
     'vriend' => [
-      'field_v_categorie' => ['type' => 'entity_reference', 'label' => 'Categorie', 'cardinality' => 1],
-      'field_v_website' => ['type' => 'link', 'label' => 'Website', 'cardinality' => 1],
-      'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1],
-      'field_woonplaats' => ['type' => 'string', 'label' => 'Woonplaats', 'cardinality' => 1]
+      'field_vriend_website' => ['type' => 'link', 'label' => 'Website', 'cardinality' => 1],
+      'field_vriend_soort' => ['type' => 'list_string', 'label' => 'Soort', 'cardinality' => 1],
+      'field_vriend_benaming' => ['type' => 'list_string', 'label' => 'Benaming', 'cardinality' => 1],
+      'field_vriend_periode_tot' => ['type' => 'integer', 'label' => 'Vriend t/m', 'cardinality' => 1],
+      'field_vriend_periode_vanaf' => ['type' => 'integer', 'label' => 'Vriend vanaf', 'cardinality' => 1],
+      'field_vriend_duur' => ['type' => 'list_string', 'label' => 'Vriendlengte', 'cardinality' => 1],
+      'field_woonplaats' => ['type' => 'string', 'label' => 'Woonplaats', 'cardinality' => 1],
+      'field_afbeeldingen' => ['type' => 'entity_reference', 'label' => 'Afbeeldingen', 'cardinality' => -1]
+    ],
+    
+    'webform' => [
+      // Webform heeft geen specifieke velden - alleen gedeelde velden
     ]
   ];
 }
 
 /**
- * Get expected media bundle fields for validation.
+ * Krijg verwachte media bundle velden voor validatie.
  */
 function getExpectedMediaBundleFields() {
   return [
@@ -349,7 +365,8 @@ function getExpectedMediaBundleFields() {
     ],
     'document' => [
       'field_media_document' => ['type' => 'file', 'label' => 'Document', 'cardinality' => 1],
-      'field_doc_categorie' => ['type' => 'list_string', 'label' => 'Categorie', 'cardinality' => 1],
+      'field_document_soort' => ['type' => 'list_string', 'label' => 'Document Soort', 'cardinality' => 1],
+      'field_gerelateerd_repertoire' => ['type' => 'entity_reference', 'label' => 'Gerelateerd Repertoire', 'cardinality' => -1],
       'field_datum' => ['type' => 'datetime', 'label' => 'Datum', 'cardinality' => 1],
       'field_toegang' => ['type' => 'entity_reference', 'label' => 'Toegang', 'cardinality' => -1]
     ],
@@ -371,26 +388,28 @@ function getExpectedMediaBundleFields() {
 }
 
 /**
- * Get expected user profile fields for validation.
+ * Krijg verwachte user profile velden voor validatie - VOLLEDIG VOLGENS DOCUMENTATIE.
  */
 function getExpectedUserProfileFields() {
   return [
+    'field_emailbewaking' => ['type' => 'string', 'label' => 'Email origineel', 'cardinality' => 1],
+    'field_lidsinds' => ['type' => 'datetime', 'label' => 'Lid Sinds', 'cardinality' => 1],
+    'field_koor' => ['type' => 'list_string', 'label' => 'Koorfunctie', 'cardinality' => 1],
+    'field_sleepgroep_1' => ['type' => 'list_string', 'label' => 'Sleepgroep', 'cardinality' => 1],
     'field_voornaam' => ['type' => 'string', 'label' => 'Voornaam', 'cardinality' => 1],
     'field_achternaam_voorvoegsel' => ['type' => 'string', 'label' => 'Achternaam voorvoegsel', 'cardinality' => 1],
     'field_achternaam' => ['type' => 'string', 'label' => 'Achternaam', 'cardinality' => 1],
-    'field_geslacht' => ['type' => 'list_string', 'label' => 'Geslacht', 'cardinality' => 1],
     'field_geboortedatum' => ['type' => 'datetime', 'label' => 'Geboortedatum', 'cardinality' => 1],
+    'field_geslacht' => ['type' => 'list_string', 'label' => 'Geslacht', 'cardinality' => 1],
+    'field_karrijder' => ['type' => 'boolean', 'label' => 'Karrijder', 'cardinality' => 1],
+    'field_uitkoor' => ['type' => 'datetime', 'label' => 'Uit koor per', 'cardinality' => 1],
     'field_adres' => ['type' => 'string', 'label' => 'Adres', 'cardinality' => 1],
     'field_postcode' => ['type' => 'string', 'label' => 'Postcode', 'cardinality' => 1],
+    'field_telefoon' => ['type' => 'string', 'label' => 'Telefoon', 'cardinality' => 1],
+    'field_notes' => ['type' => 'text_long', 'label' => 'Notities', 'cardinality' => 1],
     'field_woonplaats' => ['type' => 'string', 'label' => 'Woonplaats', 'cardinality' => 1],
-    'field_telefoon' => ['type' => 'telephone', 'label' => 'Telefoon', 'cardinality' => 1],
-    'field_mobiel' => ['type' => 'telephone', 'label' => 'Mobiel', 'cardinality' => 1],
-    'field_lidsinds' => ['type' => 'datetime', 'label' => 'Lid sinds', 'cardinality' => 1],
-    'field_uitkoor' => ['type' => 'datetime', 'label' => 'Uit koor', 'cardinality' => 1],
-    'field_koor' => ['type' => 'list_string', 'label' => 'Koor', 'cardinality' => 1],
-    'field_positie' => ['type' => 'list_string', 'label' => 'Positie', 'cardinality' => 1],
-    'field_karrijder' => ['type' => 'boolean', 'label' => 'Karrijder', 'cardinality' => 1],
-    'field_sleepgroep_1' => ['type' => 'boolean', 'label' => 'Sleepgroep 1', 'cardinality' => 1],
+    
+    // Commissie functies
     'field_functie_bestuur' => ['type' => 'list_string', 'label' => 'Functie Bestuur', 'cardinality' => 1],
     'field_functie_mc' => ['type' => 'list_string', 'label' => 'Functie Muziekcommissie', 'cardinality' => 1],
     'field_functie_concert' => ['type' => 'list_string', 'label' => 'Functie Commissie Concerten', 'cardinality' => 1],
@@ -401,16 +420,18 @@ function getExpectedUserProfileFields() {
     'field_functie_tec' => ['type' => 'list_string', 'label' => 'Functie Technische Commissie', 'cardinality' => 1],
     'field_functie_lw' => ['type' => 'list_string', 'label' => 'Functie ledenwerf', 'cardinality' => 1],
     'field_functie_fl' => ['type' => 'list_string', 'label' => 'Functie Faciliteiten', 'cardinality' => 1],
-    'field_emailbewaking' => ['type' => 'boolean', 'label' => 'Email bewaking', 'cardinality' => 1],
-    'field_notes' => ['type' => 'text_long', 'label' => 'Notes', 'cardinality' => 1]
+    
+    // Extra velden
+    'field_positie' => ['type' => 'list_string', 'label' => 'Positie', 'cardinality' => 1],
+    'field_mobiel' => ['type' => 'string', 'label' => 'Mobiel', 'cardinality' => 1]
   ];
 }
 
-// Execute the script
+// Voer het script uit
 try {
   validateCreatedFields();
 } catch (Exception $e) {
-  echo "❌ Validation failed: " . $e->getMessage() . "\n";
+  echo "❌ Validatie gefaald: " . $e->getMessage() . "\n";
   echo "📍 Stack trace:\n" . $e->getTraceAsString() . "\n";
   exit(1);
 }

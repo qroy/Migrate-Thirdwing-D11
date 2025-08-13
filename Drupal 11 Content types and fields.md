@@ -49,7 +49,6 @@
 | `field_kledingcode` | string | Kledingcode | 1 | max_length: 255 |
 | `field_locatie` | entity_reference | Locatie | 1 | target_type: node, target_bundles: [locatie] |
 | `field_l_bijzonderheden` | text_long | Bijzonderheden locatie | 1 | - |
-| `field_ledeninfo` | text_long | Informatie voor leden | 1 | - |
 | `field_bijzonderheden` | string | Bijzonderheden | 1 | max_length: 255 |
 | `field_background` | entity_reference | Achtergrond | 1 | target_type: media, target_bundles: [image] |
 | `field_sleepgroep_terug` | list_string | Sleepgroep terug | 1 | options widget |
@@ -120,7 +119,6 @@
 #### Shared Fields Used:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
-| `field_datum` | datetime | Datum | 1 | datetime with time |
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
 | `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
 
@@ -146,18 +144,16 @@
 - **Bestanden**: field_afbeeldingen, field_files
 
 ### 6. **Programma** (Program)
-**Description:** Programma-item
+**Description:** Elementen voor in een programma voor een activiteit die niet voorkomen in de repertoire-lijst
 **Title Label:** Titel
-**Has Body:** Yes (Berichttekst)
+**Has Body:** No
 
-#### Content Type Specific Fields: None
-
-#### Shared Fields Used:
+#### Content Type Specific Fields:
 | Field Name | Field Type | Label | Cardinality | Target/Settings |
 |------------|------------|-------|-------------|-----------------|
-| `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
-| `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
-| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
+| `field_prog_type` | list_string | Type | 1 | options widget |
+
+#### Shared Fields Used: None
 
 ### 7. **Repertoire** (Repertoire)
 **Description:** Stuk uit het repertoire
@@ -198,12 +194,24 @@
 
 ### 8. **Vriend** (Friend)
 **Description:** Vrienden van de vereniging
-**Title Label:** Titel
-**Has Body:** Yes (Berichttekst)
+**Title Label:** Naam
+**Has Body:** No
 
-#### Content Type Specific Fields: None
+#### Content Type Specific Fields:
+| Field Name | Field Type | Label | Cardinality | Target/Settings |
+|------------|------------|-------|-------------|-----------------|
+| `field_vriend_website` | link | Website | 1 | - |
+| `field_vriend_soort` | list_string | Soort | 1 | options widget |
+| `field_vriend_benaming` | list_string | Benaming | 1 | options widget |
+| `field_vriend_periode_tot` | integer | Vriend t/m | 1 | - |
+| `field_vriend_periode_vanaf` | integer | Vriend vanaf | 1 | - |
+| `field_vriend_duur` | list_string | Vriendlengte | 1 | options widget |
 
-#### Shared Fields Used: None
+#### Shared Fields Used:
+| Field Name | Field Type | Label | Cardinality | Target/Settings |
+|------------|------------|-------|-------------|-----------------|
+| `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
+| `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
 
 ### 9. **Webform** (Webform)
 **Description:** Create a new form or questionnaire accessible to users
@@ -234,7 +242,30 @@ The media bundle system has been carefully designed to handle all D6 file types 
 | `field_datum` | datetime | Datum | 1 | date only |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
-### 2. **Document Bundle** (`document`)
+### 2. **Audio Bundle** (`audio`)
+**Description:** MP3 and MIDI audio files (replaces Audio content type)
+**Source Plugin:** `audio`
+**Source Field:** `field_media_audio_file`
+**File Extensions:** mp3, midi, mid, wav
+
+| Field Name | Field Type | Label | Cardinality | Target/Settings |
+|------------|------------|-------|-------------|-----------------|
+| `field_media_audio_file` | file | Audio bestand | 1 | file_extensions: mp3 midi mid wav |
+| `field_datum` | datetime | Datum | 1 | date only |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
+
+### 3. **Video Bundle** (`video`)
+**Description:** Embedded videos from YouTube/Vimeo (replaces Video content type)
+**Source Plugin:** `video_embed_field`
+**Source Field:** `field_media_video_embed_field`
+
+| Field Name | Field Type | Label | Cardinality | Target/Settings |
+|------------|------------|-------|-------------|-----------------|
+| `field_media_video_embed_field` | video_embed_field | Video | 1 | - |
+| `field_datum` | datetime | Datum | 1 | date only |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
+
+### 4. **Document Bundle** (`document`)
 **Description:** PDFs, Word documents, MuseScore files, and Verslag reports
 **Source Plugin:** `file`
 **Source Field:** `field_media_document`
@@ -262,125 +293,6 @@ The Document Bundle uses conditional field requirements based on the document ty
 
 #### **When `field_document_soort` = "huiswerk" or "overig":**
 - No additional required fields beyond the base document and toegang fields
-
-### Document Soort Select Options
-
-The `field_document_soort` field includes four main document categories:
-
-| Key | Label (Dutch) | Description | Usage |
-|-----|---------------|-------------|-------|
-| `verslag` | Verslag | Meeting report | Files attached to verslag content type |
-| `partituur` | Partituur | Sheet music | MuseScore files (.mscz) or repertoire attachments |
-| `huiswerk` | Huiswerk | Homework/assignments | Files attached to Activiteit nodes via field_huiswerk |
-| `overig` | Overig | Other documents | General documents (PDFs, DOCs, etc.) |
-
-**Document Classification Logic:**
-```php
-// From ThirdwingDocumentClassifier plugin (updated)
-if ($source_content_type === 'verslag') {
-  return 'verslag';
-}
-
-if ($file_extension === 'mscz' || $repertoire_attachment) {
-  return 'partituur';
-}
-
-// Check for homework files (attached to activities via field_huiswerk)
-if ($source_content_type === 'activiteit' && $field_name === 'field_huiswerk') {
-  return 'huiswerk';
-}
-
-// Default to general document
-return 'overig';
-```
-
-### 3. **Audio Bundle** (`audio`)
-**Description:** Audio files including MP3, MIDI, and karaoke (replaces Audio content type)
-**Source Plugin:** `audio_file`
-**Source Field:** `field_media_audio_file`
-**File Extensions:** mp3, wav, ogg, m4a, aac, mid, kar
-
-| Field Name | Field Type | Label | Cardinality | Target/Settings |
-|------------|------------|-------|-------------|-----------------|
-| `field_media_audio_file` | file | Audio Bestand | 1 | file_extensions: mp3 wav ogg m4a aac mid kar |
-| `field_datum` | datetime | Datum | 1 | date only |
-| `field_audio_type` | entity_reference | Audio Type | 1 | target_type: taxonomy_term, target_bundles: [audio_type] |
-| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
-| `field_audio_bijz` | string | Bijzonderheden | 1 | max_length: 255 |
-| `field_gerelateerd_activiteit` | entity_reference | Gerelateerde Activiteit | unlimited | target_type: node, target_bundles: [activiteit] |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
-
-### 4. **Video Bundle** (`video`)
-**Description:** Video files and embedded content (replaces Video content type)
-**Source Plugin:** `oembed:video`
-**Source Field:** `field_media_oembed_video`
-**File Extensions:** mp4, avi, mov, wmv, flv
-
-| Field Name | Field Type | Label | Cardinality | Target/Settings |
-|------------|------------|-------|-------------|-----------------|
-| `field_media_oembed_video` | file | Video Bestand | 1 | file_extensions: mp4 avi mov wmv flv |
-| `field_media_video_file` | file | Video Bestand (Upload) | 1 | file_extensions: mp4 avi mov wmv flv |
-| `field_datum` | datetime | Datum | 1 | date only |
-| `field_audio_type` | entity_reference | Video Type | 1 | target_type: taxonomy_term, target_bundles: [audio_type] |
-| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
-| `field_gerelateerd_activiteit` | entity_reference | Gerelateerde Activiteit | unlimited | target_type: node, target_bundles: [activiteit] |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
-
-### File Extension to Media Bundle Mapping
-
-The migration system automatically categorizes files based on their extensions:
-
-```php
-// Image bundle
-'jpg', 'jpeg', 'png', 'gif', 'webp' => 'image'
-
-// Document bundle (includes MuseScore)
-'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'mscz' => 'document'
-
-// Audio bundle (includes MIDI)
-'mp3', 'wav', 'ogg', 'm4a', 'aac', 'mid', 'kar' => 'audio'
-
-// Video bundle
-'mp4', 'avi', 'mov', 'wmv', 'flv' => 'video'
-```
-
-**Key Design Changes:**
-- **MIDI files** (.mid, .kar) moved from document to **audio bundle**
-- **MuseScore files** (.mscz) remain in **document bundle**
-- **Sheet music bundle** removed (consolidated into document bundle)
-- **4-bundle architecture** for simplicity and maintainability
-
-### Media Bundle Creation Script
-
-```bash
-# Create media bundles and fields
-drush php:script modules/custom/thirdwing_migrate/scripts/create-media-bundles-and-fields.php
-
-# Verify setup
-drush php:script modules/custom/thirdwing_migrate/scripts/verify-media-bundle-setup.php
-```
-
-### Migration Configurations
-
-Each media bundle has its own migration configuration:
-
-- **`d6_thirdwing_media_image`** - Images with date/access metadata
-- **`d6_thirdwing_media_document`** - Documents with type categorization
-- **`d6_thirdwing_media_audio`** - Audio files with performance metadata
-- **`d6_thirdwing_media_video`** - Video files with activity relationships
-
-### File Directory Structure
-
-```
-public://
-├── media/
-│   ├── image/     # Image files (jpg, png, gif, etc.)
-│   ├── document/  # Documents and MuseScore files
-│   ├── audio/     # Audio files including MIDI
-│   └── video/     # Video files
-```
 
 ---
 

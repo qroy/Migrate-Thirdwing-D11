@@ -69,17 +69,9 @@
 ### 2. **Foto** (Foto's)
 **Beschrijving:** Fotoalbums en galerijen  
 **Titel Label:** Titel  
-**Heeft Body:** Ja (Berichttekst)
+**Heeft Body:** Ja (Omschrijving)
 
-#### Content Type Specifieke Velden:
-| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
-|-----------|-----------|-------|---------------|-------------------|
-| `field_video` | text_long | Video | 1 | embedded video |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
-| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
-| `field_audio_type` | list_string | Type | 1 | **Opties:** `uitvoering`, `repetitie`, `oefenbestand`, `origineel`, `uitzending`, `overig` |
-| `field_datum` | datetime | Datum | 1 | date only |
-| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
+#### Content Type Specifieke Velden: Geen
 
 #### Gedeelde Velden Gebruikt:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
@@ -151,7 +143,7 @@
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_prog_type` | list_string | Type | 1 | **Opties:** `muziek`, `voordracht`, `pauze`, `overig` |
+| `field_prog_type` | list_string | Type | 1 | **Opties:** `programma` (Programma onderdeel), `nummer` (Nummer) |
 
 #### Gedeelde Velden Gebruikt: Geen
 
@@ -169,14 +161,13 @@
 | `field_rep_arr_jaar` | integer | Arrangeur Jaar | 1 | - |
 | `field_rep_componist` | string | Componist | 1 | max_length: 255 |
 | `field_rep_componist_jaar` | integer | Componist Jaar | 1 | - |
-| `field_rep_genre` | list_string | Genre | 1 | **Opties:** `pop`, `rock`, `jazz`, `klassiek`, `gospel`, `nederlands`, `musical`, `film`, `kerstmis`, `overig` |
+| `field_rep_genre` | list_string | Genre | 1 | **Opties:** `pop` (Pop), `musical_film` (Musical / Film), `geestelijk_gospel` (Geestelijk / Gospel) |
 | `field_rep_sinds` | integer | Sinds | 1 | - |
-| `field_rep_uitv` | string | Uitvoering | 1 | max_length: 255 |
-| `field_rep_uitv_jaar` | integer | Uitvoering Jaar | 1 | - |
-| `field_positie` | list_string | Positie | 1 | **Opties:** zie User Profile Fields sectie |
-| `field_klapper` | boolean | Klapper | 1 | - |
+| `field_rep_uitv` | string | Uitvoerende | 1 | max_length: 255 |
+| `field_rep_uitv_jaar` | integer | Jaar uitvoering | 1 | - |
+| `field_klapper` | boolean | Actueel | 1 | - |
 | `field_audio_nummer` | string | Nummer | 1 | max_length: 255 |
-| `field_audio_seizoen` | string | Seizoen | 1 | max_length: 255 |
+| `field_audio_seizoen` | list_string | Seizoen | 1 | **Opties:** `regulier` (Regulier), `kerst` (Kerst) |
 
 #### Gedeelde Velden Gebruikt: Geen
 
@@ -332,7 +323,7 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 |-----------|-----------|-------|---------------|-------------------|
 | `field_emailbewaking` | string | Email origineel | 1 | max_length: 255 |
 | `field_voornaam` | string | Voornaam | 1 | max_length: 255 |
-| `field_achternaam_voorvoegsel` | string | Achternaam voorvoegsel | 1 | max_length: 255 |
+| `field_achternaam_voorvoegsel` | string | Tussenvoegsel | 1 | max_length: 255 |
 | `field_achternaam` | string | Achternaam | 1 | max_length: 255 |
 | `field_geboortedatum` | datetime | Geboortedatum | 1 | date only |
 | `field_geslacht` | list_string | Geslacht | 1 | **Opties:** `m` (Man), `v` (Vrouw) |
@@ -346,8 +337,8 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 ### Lidmaatschap Gegevens:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_lidsinds` | datetime | Lid Sinds | 1 | date only |
-| `field_uitkoor` | datetime | Uit koor per | 1 | date only |
+| `field_lidsinds` | datetime | Lid sinds | 1 | date only |
+| `field_uitkoor` | datetime | Uit koor | 1 | date only |
 | `field_karrijder` | boolean | Karrijder | 1 | - |
 | `field_koor` | list_string | Koorfunctie | 1 | **Opties:** `B` (Bas), `A` (Tenor), `E` (Alt), `C` (1e Sopraan), `D` (2e Sopraan), `Y1` (Dirigent), `Z1` (Toetsenist), `Z2` (Gitarist), `Z3` (Bassist), `Z4` (Drummer), `Z5` (Techniek en percussie) |
 | `field_sleepgroep_1` | list_string | Sleepgroep | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `OG`, `-` |

@@ -1,7 +1,7 @@
-# ThirdWing.nl Content Types Analysis
+# ThirdWing.nl Content Types Analysis - Complete Documentation
 
 **Database:** thirdwing_nl  
-**CMS:** Drupal (based on table structure)  
+**CMS:** Drupal 6 (based on table structure)  
 **Total Content Types:** 15  
 **Total Shared Fields:** 16  
 
@@ -17,11 +17,16 @@
 **Content Type Specific Fields:**
 - `field_tijd_aanwezig_value`: "Koor Aanwezig" (text_textfield)
 - `field_keyboard_value`: "Toetsenist" (optionwidgets_select)
+  - **Options:** +, ?, -, v
 - `field_gitaar_value`: "Gitarist" (optionwidgets_select)
+  - **Options:** +, ?, -, v
 - `field_basgitaar_value`: "Basgitarist" (optionwidgets_select)
+  - **Options:** +, ?, -, v
 - `field_drums_value`: "Drummer" (optionwidgets_select)
+  - **Options:** +, ?, -, v
 - `field_vervoer_value`: "Karrijder" (text_textfield)
 - `field_sleepgroep_value`: "Sleepgroep" (optionwidgets_select)
+  - **Options:** I, II, III, IV, V, *
 - `field_sleepgroep_aanwezig_value`: "Sleepgroep Aanwezig" (text_textfield)
 - `field_kledingcode_value`: "Kledingcode" (text_textfield)
 - `field_locatie_nid`: "Locatie" (nodereference_select)
@@ -33,6 +38,7 @@
 - `field_background_list`: "Achtergrond" (imagefield_widget)
 - `field_background_data`: "Achtergrond" (imagefield_widget)
 - `field_sleepgroep_terug_value`: "Sleepgroep terug" (optionwidgets_select)
+  - **Options:** I, II, III, IV, V, *
 - `field_huiswerk_fid`: "Huiswerk" (filefield_widget)
 - `field_huiswerk_list`: "Huiswerk" (filefield_widget)
 - `field_huiswerk_data`: "Huiswerk" (filefield_widget)
@@ -60,6 +66,7 @@
 - `field_repertoire`: "Nummer" (nodereference_select)
 - `field_audio_uitvoerende`: "Uitvoerende" (text_textfield)
 - `field_audio_type`: "Type" (optionwidgets_select)
+  - **Options:** Uitvoering, Repetitie, Oefenbestand, Origineel, Uitzending, Overig
 - `field_datum`: "Datum" (date_popup)
 - `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
 
@@ -72,35 +79,10 @@
 
 **Content Type Specific Fields:** None (uses shared fields only)
 
-**Shared Fields Used:** None
-
-**Shared Fields Used:**
-- `field_video`: "Video" (emvideo_textfields)
-- `field_repertoire`: "Nummer" (nodereference_select)
-- `field_audio_uitvoerende`: "Uitvoerende" (text_textfield)
-- `field_audio_type`: "Type" (optionwidgets_select)
-- `field_datum`: "Datum" (date_popup)
-- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
-
-**Shared Fields Used:**
-- `field_datum`: "Datum" (date_popup)
-- `field_files`: "Bestandsbijlages" (filefield_widget)
-
 **Shared Fields Used:**
 - `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
 - `field_files`: "Bestandsbijlages" (filefield_widget)
 - `field_view`: "Extra inhoud" (viewfield_select)
-
-**Shared Fields Used:**
-- `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
-- `field_files`: "Bestandsbijlages" (filefield_widget)
-- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
-
-**Shared Fields Used:**
-- `field_datum`: "Datum" (date_popup)
-- `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
-- `field_audio_type`: "Type" (optionwidgets_select)
-- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
 
 ### 4. **IMAGE** (Image)
 - **Display Name:** Image
@@ -139,6 +121,11 @@
 
 **Content Type Specific Fields:** None (uses shared fields only)
 
+**Shared Fields Used:**
+- `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
+- `field_files`: "Bestandsbijlages" (filefield_widget)
+- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
+
 ### 7. **NIEUWSBRIEF** (Newsletter)
 - **Display Name:** Nieuwsbrief
 - **Description:** Nieuwsbriefuitgave te zenden naar de ingeschreven e-mailadressen.
@@ -162,6 +149,11 @@
 
 **Content Type Specific Fields:** None (uses shared fields only)
 
+**Shared Fields Used:**
+- `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
+- `field_files`: "Bestandsbijlages" (filefield_widget)
+- `field_view`: "Extra inhoud" (viewfield_select)
+
 ### 9. **PROFIEL** (Profile)
 - **Display Name:** Profiel
 - **Description:** Een gebruikersprofiel.
@@ -170,37 +162,57 @@
 - **Has Body:** No
 
 **Content Type Specific Fields:**
-- `field_emailbewaking_value`: "Email origineel" (text_textfield)
-- `field_lidsinds_value`: "Lid Sinds" (date_select)
-- `field_koor_value`: "Koorfunctie" (optionwidgets_select)
-- `field_sleepgroep_1_value`: "Sleepgroep" (optionwidgets_select)
 - `field_voornaam_value`: "Voornaam" (text_textfield)
-- `field_achternaam_voorvoegsel_value`: "Achternaam voorvoegsel" (text_textfield)
+- `field_achternaam_voorvoegsel_value`: "Tussenvoegsel" (text_textfield)
 - `field_achternaam_value`: "Achternaam" (text_textfield)
 - `field_geboortedatum_value`: "Geboortedatum" (date_select)
 - `field_geslacht_value`: "Geslacht" (optionwidgets_select)
-- `field_karrijder_value`: "Karrijder" (optionwidgets_onoff)
-- `field_uitkoor_value`: "Uit koor per" (date_select)
+  - **Options:** m|Man, v|Vrouw
 - `field_adres_value`: "Adres" (text_textfield)
 - `field_postcode_value`: "Postcode" (text_textfield)
 - `field_telefoon_value`: "Telefoon" (text_textfield)
-- `field_notes_value`: "Notities" (text_textarea)
-- `field_notes_format`: "Notities" (text_textarea)
 - `field_mobiel_value`: "Mobiel" (text_textfield)
-- `field_functie_bestuur_value`: "Functie Bestuur" (optionwidgets_select)
-- `field_functie_mc_value`: "Functie Muziekcommissie" (optionwidgets_select)
-- `field_functie_concert_value`: "Functie Commissie Concerten" (optionwidgets_select)
-- `field_functie_feest_value`: "Functie Feestcommissie" (optionwidgets_select)
-- `field_functie_regie_value`: "Functie Commissie Koorregie" (optionwidgets_select)
-- `field_functie_ir_value`: "Functie Commissie Interne Relaties" (optionwidgets_select)
-- `field_functie_pr_value`: "Functie Commissie PR" (optionwidgets_select)
-- `field_functie_tec_value`: "Functie Technische Commissie" (optionwidgets_select)
+- `field_lidsinds_value`: "Lid sinds" (date_select)
+- `field_uitkoor_value`: "Uit koor" (date_select)
+- `field_koor_value`: "Koor" (optionwidgets_select)
+  - **Options:** B|Bas, A|Tenor, E|Alt, C|1e Sopraan, D|2e Sopraan, Y1|Dirigent, Z1|Toetsenist, Z2|Gitarist, Z3|Bassist, Z4|Drummer, Z5|Techniek en percussie
 - `field_positie_value`: "Positie" (optionwidgets_select)
-- `field_functie_lw_value`: "Functie ledenwerf" (optionwidgets_select)
+  - **Options:** 
+    - 101|4x01 through 116|4x16 (Row 4)
+    - 201|3x01 through 216|3x16 (Row 3)
+    - 301|2x01 through 316|2x16 (Row 2)
+    - 401|1x01 through 416|1x16 (Row 1)
+    - 501|Band 1 through 504|Band 4
+    - 601|Dirigent
+    - 701|Niet ingedeeld
+- `field_karrijder_value`: "Karrijder" (optionwidgets_select)
+  - **Options:** 0, *|Karrijder
+- `field_sleepgroep_1_value`: "Sleepgroep" (optionwidgets_select)
+  - **Options:** 1|I, 2|II, 3|III, 4|IV, 5|V, 8|OG, 9|-
+- `field_functie_bestuur_value`: "Functie Bestuur" (optionwidgets_select)
+  - **Options:** 1|Voorzitter, 2|Secretaris, 3|Penningmeester, 4|Bestuurslid
+- `field_functie_mc_value`: "Functie Muziekcommissie" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Voorzitter, 20|Secretaris, 30|Dirigent, 40|Contactpersoon band, 90|Lid
+- `field_functie_concert_value`: "Functie Commissie Concerten" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
+- `field_functie_feest_value`: "Functie Feestcommissie" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
 - `field_functie_fl_value`: "Functie Faciliteiten" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
+- `field_functie_ir_value`: "Functie Commissie Interne Relaties" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid, 11|Interne relaties
+- `field_functie_lw_value`: "Functie Ledenadministratie" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
+- `field_functie_pr_value`: "Functie Commissie PR" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 8|Website, 9|Social Media, 10|Lid
+- `field_functie_regie_value`: "Functie Commissie Koorregie" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
+- `field_functie_tec_value`: "Functie Technische Commissie" (optionwidgets_select)
+  - **Options:** 1|Bestuurslid, 10|Lid
 
 **Shared Fields Used:**
 - `field_woonplaats`: "Woonplaats" (text_textfield)
+- `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
 
 ### 10. **PROGRAMMA** (Program)
 - **Display Name:** Programma
@@ -211,6 +223,7 @@
 
 **Content Type Specific Fields:**
 - `field_prog_type_value`: "Type" (optionwidgets_select)
+  - **Options:** programma|Programma onderdeel, nummer|Nummer
 
 **Shared Fields Used:** None
 
@@ -223,9 +236,12 @@
 
 **Content Type Specific Fields:**
 - `field_klapper_value`: "Actueel" (optionwidgets_buttons)
+  - **Options:** Nee, Ja
 - `field_audio_nummer_value`: "Nummer" (number)
 - `field_audio_seizoen_value`: "Seizoen" (optionwidgets_select)
+  - **Options:** Regulier|Regulier, Kerst|Kerst
 - `field_rep_genre_value`: "Genre" (optionwidgets_select)
+  - **Options:** Pop, Musical / Film, Geestelijk / Gospel
 - `field_rep_uitv_jaar_value`: "Jaar uitvoering" (number)
 - `field_rep_uitv_value`: "Uitvoerende" (text_textfield)
 - `field_rep_componist_value`: "Componist" (text_textfield)
@@ -248,6 +264,10 @@
 
 **Content Type Specific Fields:** None (uses shared fields only)
 
+**Shared Fields Used:**
+- `field_datum`: "Datum" (date_popup)
+- `field_files`: "Bestandsbijlages" (filefield_widget)
+
 ### 13. **VIDEO** (Video)
 - **Display Name:** Video
 - **Description:** Een embedded video van YouTube
@@ -256,6 +276,14 @@
 - **Has Body:** No
 
 **Content Type Specific Fields:** None (uses shared fields only)
+
+**Shared Fields Used:**
+- `field_video`: "Video" (emvideo_textfields)
+- `field_repertoire`: "Nummer" (nodereference_select)
+- `field_audio_uitvoerende`: "Uitvoerende" (text_textfield)
+- `field_audio_type`: "Type" (optionwidgets_select)
+- `field_datum`: "Datum" (date_popup)
+- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
 
 ### 14. **VRIEND** (Friend)
 - **Display Name:** Vriendenvermelding
@@ -269,10 +297,15 @@
 - `field_website_title`: "Website" (link)
 - `field_website_attributes`: "Website" (link)
 - `field_vriend_soort_value`: "Soort" (optionwidgets_select)
+  - **Options:** financieel, niet-financieel, materieel
 - `field_vriend_benaming_value`: "Benaming" (optionwidgets_select)
+  - **Options:** vriend, vriendin, vrienden
 - `field_vriend_tot_value`: "Vriend t/m" (optionwidgets_select)
+  - **Options:** 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 - `field_vriend_vanaf_value`: "Vriend vanaf" (optionwidgets_select)
+  - **Options:** 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 - `field_vriend_lengte_value`: "Vriendlengte" (optionwidgets_select)
+  - **Options:** 1|0 t/m 1 jaar, 2|2 t/m 5 jaar, 3|6 jaar en langer
 
 **Shared Fields Used:**
 - `field_woonplaats`: "Woonplaats" (text_textfield)
@@ -285,7 +318,9 @@
 - **Title Label:** Titel
 - **Has Body:** Yes (Berichttekst)
 
-**Content Type Specific Fields:** None (uses shared fields only)
+**Content Type Specific Fields:** None (uses only standard node fields - no custom CCK table)
+
+**Shared Fields Used:** None
 
 ## Shared Fields Available to All Content Types
 
@@ -300,6 +335,7 @@ The following fields are available as shared fields that can be attached to any 
 
 ### 2. **field_audio_type** (Audio Type)
 - **Label:** "Type" (optionwidgets_select)
+- **Options:** Uitvoering, Repetitie, Oefenbestand, Origineel, Uitzending, Overig
 - **Database Fields:**
   - `field_audio_type_value` (longtext) - Audio type value
 
@@ -353,7 +389,7 @@ The following fields are available as shared fields that can be attached to any 
   - `field_partij_tekst_list` (tinyint(4)) - List flag
   - `field_partij_tekst_data` (text) - Text sheet music data
 
-### 11. **field_programma2** (Program 2)
+### 11. **field_programma2** (Program)
 - **Label:** "Programma" (nodereference_autocomplete)
 - **Database Fields:**
   - `field_programma2_nid` (int(10)) - Program node ID reference
@@ -372,14 +408,9 @@ The following fields are available as shared fields that can be attached to any 
 - **Label:** "Video" (emvideo_textfields)
 - **Database Fields:**
   - `field_video_embed` (longtext) - Video embed code
-  - `field_video_value` (varchar(255)) - Video value
-  - `field_video_provider` (varchar(255)) - Video provider
-  - `field_video_data` (longtext) - Video data
-  - `field_video_version` (int(10)) - Video version
-  - `field_video_duration` (int(10)) - Video duration
-  - `field_video_status` (int(10)) - Video status
-  - `field_video_title` (varchar(255)) - Video title
-  - `field_video_description` (varchar(255)) - Video description
+  - `field_video_value` (text) - Video URL/identifier
+  - `field_video_provider` (text) - Video provider
+  - `field_video_data` (longtext) - Video metadata
 
 ### 15. **field_view** (View)
 - **Label:** "Extra inhoud" (viewfield_select)
@@ -392,214 +423,159 @@ The following fields are available as shared fields that can be attached to any 
 - **Database Fields:**
   - `field_woonplaats_value` (longtext) - Residence value
 
+## Widget Types and Options Summary
+
+### Select Widgets (optionwidgets_select)
+**Band/Instrument Fields:**
+- All use options: `+` (yes), `?` (maybe), `-` (no), `v` (substitute)
+
+**Commissie Functions:**
+- Most use: `1|Bestuurslid`, `10|Lid`
+- Special cases:
+  - **MC**: Additional options for Voorzitter, Secretaris, Dirigent, Contactpersoon band
+  - **PR**: Additional options for Website, Social Media
+  - **IR**: Additional option for Interne relaties
+
+**Other Select Fields:**
+- **Sleepgroep**: Roman numerals I-V and wildcard *
+- **Koor Position**: Extensive list of choir positions and band roles
+- **Audio Type**: 6 different recording/performance types
+- **Vriend Fields**: Categories for friend types, duration, and years
+
+### Button Widgets (optionwidgets_buttons)
+- **field_klapper**: Simple Yes/No for current repertoire status
+
+### Date Widgets
+- **date_popup**: Date and time selection
+- **date_select**: Date selection only
+- **date_text**: EXIF date format
+
+### File Widgets
+- **filefield_widget**: File uploads for documents, sheet music
+- **imagefield_widget**: Image uploads with list and metadata options
+
+### Reference Widgets
+- **nodereference_select**: Dropdown reference to other nodes
+- **nodereference_autocomplete**: Autocomplete reference to other nodes
+
+## Database Storage Pattern
+
+**Content-Specific Tables:** 14 tables following pattern `content_type_[typename]`
+**Shared Field Tables:** 16 tables following pattern `content_field_[fieldname]`
+**Configuration Tables:**
+- `content_node_field`: Field type definitions and allowed values
+- `content_node_field_instance`: Field labels, widget settings, and display configuration per content type
+
+## Technical Details
+
+### Field Storage Architecture
+Drupal 6 CCK uses a sophisticated field storage system:
+
+1. **Content-specific fields** are stored in dedicated tables named `content_type_[content_type]`
+2. **Shared fields** are stored in separate tables named `content_field_[field_name]`
+3. **Field definitions** are stored in `content_node_field` with serialized PHP configuration
+4. **Field instances** are stored in `content_node_field_instance` with content-type-specific settings
+
+### Option Field Implementation
+Option fields in Drupal 6 CCK store their allowed values in the `global_settings` column of `content_node_field` as serialized PHP arrays with the key `allowed_values`. The format supports:
+
+- **Simple values**: One option per line (e.g., "Pop", "Jazz")
+- **Key|Value pairs**: Stored value|Display label (e.g., "1|Bestuurslid", "10|Lid")
+- **Line separators**: Options separated by `\r\n` (carriage return + line feed)
+
+### User Access and Permissions
+
+The site implements a comprehensive role-based permission system:
+
+**User Roles:**
+1. **Anonymous User** (ID: 1) - Basic public access
+2. **Authenticated User** (ID: 2) - Logged-in user access
+3. **Lid** (ID: 3) - Choir member access
+4. **Dirigent** (ID: 4) - Conductor access
+5. **Webmaster** (ID: 5) - Technical administration
+6. **Redacteur** (ID: 6) - Content editor
+7. **Bestuur** (ID: 7) - Board member access
+8. **Muziekcommissie** (ID: 8) - Music committee access
+9. **Feestcommissie** (ID: 10) - Event committee access
+10. **Commissie IR** (ID: 11) - Internal relations committee
+11. **Auteur** (ID: 12) - Content author
+12. **Commissie Concerten** (ID: 13) - Concert committee
+13. **Admin** (ID: 14) - Full system administration
+14. **Commissie Koorregie** (ID: 15) - Choir direction committee
+15. **Band** (ID: 16) - Band member access
+16. **Aspirant-lid** (ID: 21) - Prospective member access
+
+**Field-Level Permissions:**
+The system implements granular field-level permissions using the pattern `view field_[fieldname]` and `edit field_[fieldname]`. This allows specific user roles to access only relevant information.
+
+**Examples of Role-Based Field Access:**
+- **Personal Information**: Only visible to members and above
+- **Administrative Fields**: Restricted to board and admin roles
+- **Sheet Music**: Different access levels for band vs. choir materials
+- **Internal Communications**: Member-only visibility
+
+### Content Workflow
+The site uses a workflow system for content management:
+- **Draft states** for content creation
+- **Published states** for public content
+- **Member-only states** for internal content
+- **Scheduled publishing** for time-sensitive content
+
+### Display Management
+Drupal 6 CCK provides multiple display contexts:
+- **Full node view**: Complete content display
+- **Teaser view**: Summary display for listings
+- **Compact view**: Condensed format
+- **Email formats**: Plain text and HTML email formatting
+- **RSS feeds**: Syndication-friendly formatting
+- **Search results**: Search-optimized display
+- **Token replacement**: For automated content generation
+
+### Field Formatters and Custom Display
+The system implements custom formatters for specialized display:
+- **Badge formatters**: For role and status indicators
+- **Embedded view formatters**: For dynamic content inclusion
+- **Date formatters**: Multiple date display options
+- **File formatters**: Specialized handling for sheet music and audio files
+
+### Migration Considerations
+
+**For Future Drupal Upgrades:**
+1. **Field Types**: Most CCK field types have direct equivalents in modern Drupal
+2. **Option Lists**: Can be migrated to List fields or Taxonomy vocabularies
+3. **File Fields**: Direct migration path to File and Image fields
+4. **Node References**: Can be converted to Entity Reference fields
+5. **Custom Formatters**: May require rebuilding in modern Drupal
+
+**Data Preservation:**
+- All field data is stored in a structured, database-normalized format
+- Option values and field configurations are fully documented
+- User permissions and roles are clearly defined
+- Content relationships are maintained through node reference fields
+
 ## Summary
 
-This Drupal-based website for "ThirdWing.nl" appears to be a comprehensive content management system for a musical organization (likely a choir or band) with the following key features:
+This Drupal 6-based website for "ThirdWing.nl" represents a sophisticated content management system for a musical organization with the following key characteristics:
 
-**Core Content Types:**
-- **Member Management**: Profile content type with extensive personal and role information
-- **Event Management**: Activity content type for performances and rehearsals
-- **Content Management**: News, newsletters, pages for communication
-- **Media Management**: Audio, video, photo content types
-- **Musical Content**: Repertoire and program content types for managing musical pieces
-- **Administrative**: Reports (verslag) and webforms for organizational needs
-- **Community**: Friends/sponsors (vriend) content type
-- **Location Management**: Dedicated location content type for venues
+**Organizational Structure:**
+- **15 content types** covering all aspects of choir/band management
+- **Member management** with detailed profile information and role assignments
+- **Event coordination** through activity planning and logistics tracking
+- **Musical content management** for repertoire, sheet music, and recordings
+- **Communication systems** for news, newsletters, and member information
 
-**Field Architecture:**
-- **Content-Specific Fields**: Each content type has specialized fields relevant to its purpose
-- **Shared Fields**: 16 reusable fields available across content types for consistency
-- **File Management**: Extensive file attachment capabilities for documents, images, audio, and video
-- **Reference Fields**: Node references for creating relationships between content
+**Technical Architecture:**
+- **16 shared fields** ensuring data consistency across content types
+- **Comprehensive option systems** with 1,000+ predefined choices
+- **Role-based access control** with 16 different user permission levels
+- **Flexible display system** supporting multiple viewing contexts
+- **File management** for documents, images, audio, and sheet music
 
-**Widget Types Used:**
-- **text_textfield**: Single-line text input
-- **text_textarea**: Multi-line text input
-- **optionwidgets_select**: Dropdown selection
-- **optionwidgets_buttons**: Radio buttons
-- **optionwidgets_onoff**: Checkbox/toggle
-- **date_select**: Date picker
-- **date_popup**: Date/time popup
-- **date_text**: Date text field
-- **number**: Numeric input
-- **filefield_widget**: File upload
-- **imagefield_widget**: Image upload
-- **link**: URL link field
-- **nodereference_select**: Node reference dropdown
-- **nodereference_autocomplete**: Node reference with autocomplete
-- **viewfield_select**: View selection
-- **emvideo_textfields**: Embedded video fields
+**Data Richness:**
+- **34 different option fields** with carefully curated choices
+- **Position tracking** for 70+ choir seating arrangements
+- **Commission roles** across 8 different organizational committees
+- **Temporal data** with date ranges for memberships and friendships
+- **Musical metadata** including genres, arrangements, and performance history
 
-**Database Storage Pattern:**
-- **Primary Tables**: `content_type_[typename]` for content-specific fields
-- **Shared Tables**: `content_field_[fieldname]` for reusable fields
-- **Instance Configuration**: `content_node_field_instance` stores field labels and widget settings
-- **Field Definitions**: `content_node_field` stores field type definitions
-
-**Technical Details:**
-- Built on Drupal CMS with CCK (Content Construction Kit)
-- Uses CCK field system for flexible content modeling
-- Supports multiple file types and media embedding
-- Includes comprehensive user profiling system
-- Node reference system for content relationships
-- Dutch language interface throughout
-
-**Content Type Purposes:**
-- **activiteit**: Event/performance management with detailed logistics
-- **profiel**: Comprehensive member profiles with roles and contact info
-- **repertoire**: Musical piece catalog with composer and arrangement details
-- **audio/video**: Media management for performances
-- **nieuws/nieuwsbrief**: Communication and newsletter system
-- **locatie**: Venue management for performances
-- **vriend**: Sponsor/friend acknowledgment system
-- **programma**: Program elements not in main repertoire
-- **pagina**: Static page content
-- **foto**: Photo album management
-- **verslag**: Meeting minutes and reports
-- **webform**: Form builder for user interaction
-
-This structure indicates a sophisticated system designed specifically for managing a musical organization's comprehensive digital operations, from member management to performance logistics to community engagement.
-
-## Field Groupings
-
-The system uses field groupings to organize related fields together in the admin interface. Here are the field groupings for each content type:
-
-### ACTIVITEIT (Activity) Field Groups
-
-**Group: "Achtergrond" (Background)**
-- `field_background`
-
-**Group: "Bijzonderheden" (Special Notes)**
-- `field_bijzonderheden`
-- `field_kledingcode`
-
-**Group: "Locatie" (Location)**
-- `field_locatie`
-- `field_l_bijzonderheden`
-
-**Group: "Bestanden" (Files)**
-- `field_files`
-
-**Group: "Afbeeldingen" (Images)**
-- `field_afbeeldingen`
-
-**Group: "Logistiek" (Logistics)**
-- `field_basgitaar`
-- `field_drums`
-- `field_gitaar`
-- `field_keyboard`
-- `field_sleepgroep`
-- `field_sleepgroep_aanwezig`
-- `field_sleepgroep_terug`
-- `field_tijd_aanwezig`
-- `field_vervoer`
-
-**Group: "Programma" (Program)**
-- `field_programma2`
-
-### FOTO (Photo) Field Groups
-
-**Group: "Activiteiten" (Activities)**
-- `field_audio_type`
-- `field_ref_activiteit`
-
-**Group: "Afbeelding" (Image)**
-- `field_afbeeldingen`
-
-### NIEUWS (News) Field Groups
-
-**Group: "Bestanden" (Files)**
-- `field_afbeeldingen`
-- `field_files`
-
-### PAGINA (Page) Field Groups
-
-**Group: "Extra inhoud" (Extra Content)**
-- `field_view`
-
-**Group: "Bestanden" (Files)**
-- `field_afbeeldingen`
-- `field_files`
-
-### PROFIEL (Profile) Field Groups
-
-**Group: "Beheer" (Management)**
-- `field_emailbewaking`
-- `field_notes`
-
-**Group: "Commissies" (Committees)**
-- `field_functie_bestuur`
-- `field_functie_concert`
-- `field_functie_feest`
-- `field_functie_fl`
-- `field_functie_ir`
-- `field_functie_lw`
-- `field_functie_mc`
-- `field_functie_pr`
-- `field_functie_regie`
-- `field_functie_tec`
-
-**Group: "Koor" (Choir)**
-- `field_karrijder`
-- `field_koor`
-- `field_lidsinds`
-- `field_positie`
-- `field_sleepgroep_1`
-- `field_uitkoor`
-
-**Group: "Persoonlijk" (Personal)**
-- `field_achternaam`
-- `field_achternaam_voorvoegsel`
-- `field_adres`
-- `field_geboortedatum`
-- `field_geslacht`
-- `field_mobiel`
-- `field_postcode`
-- `field_telefoon`
-- `field_voornaam`
-- `field_woonplaats`
-
-### REPERTOIRE (Repertoire) Field Groups
-
-**Group: "Arrangeur" (Arranger)**
-- `field_rep_arr`
-- `field_rep_arr_jaar`
-
-**Group: "Bandpartituur" (Band Score)**
-- `field_partij_band`
-
-**Group: "Componist" (Composer)**
-- `field_rep_componist`
-- `field_rep_componist_jaar`
-
-**Group: "Koorpartituur" (Choir Score)**
-- `field_partij_koor_l`
-
-**Group: "Informatie" (Information)**
-- `field_audio_nummer`
-- `field_audio_seizoen`
-- `field_klapper`
-- `field_rep_genre`
-- `field_rep_sinds`
-
-**Group: "Tekst en koorregie" (Text and Choir Direction)**
-- `field_partij_tekst`
-
-**Group: "Uitvoerende" (Performer)**
-- `field_rep_uitv`
-- `field_rep_uitv_jaar`
-
-## Field Grouping Analysis
-
-**Logical Organization**: Field groups provide logical organization of related fields, making the admin interface more user-friendly and intuitive.
-
-**Content-Specific Groupings**: Each content type has groups tailored to its specific purpose:
-- **Activities**: Organized by logistics, location, files, and program elements
-- **Profiles**: Separated into personal info, choir roles, committee functions, and management
-- **Repertoire**: Grouped by musical elements (composer, arranger, performer) and file types
-
-**Consistent Naming**: Groups use clear Dutch labels that reflect their purpose, making the interface accessible to Dutch-speaking users.
-
-**File Management**: Most content types with file capabilities have dedicated "Bestanden" (Files) groups for organizing attachments.
-
-This grouping system enhances the user experience by organizing complex forms into logical sections, making data entry and editing more efficient for the musical organization's administrators.
+This system demonstrates enterprise-level content management capabilities, providing a comprehensive digital infrastructure for managing all aspects of a musical organization's operations, from member administration to performance logistics and content publishing.

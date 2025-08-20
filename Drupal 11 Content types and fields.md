@@ -119,6 +119,7 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
+| `field_activiteit_soort` | list_string | Activiteit Soort | 1 | **Opties gemigreerd van D6 taxonomy "Activiteiten" (vocab ID 5):** `wereldlijk` (Wereldlijk), `kerkelijk` (Kerkelijk), `concours` (Concours), `repetitie` (Repetitie), `koorreis` (Koorreis), `vergadering` (Vergadering), `overige` (Overige), `vakantie` (Vakantie) |
 | `field_koor_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 (Hernoemd van field_tijd_aanwezig) |
 | `field_keyboard` | list_string | Toetsenist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
 | `field_gitaar` | list_string | Gitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
@@ -490,7 +491,9 @@ field_files_fid (huiswerk context) → document_soort = "huiswerk"
 field_files_fid (andere context)   → document_soort = "algemeen"
 ```
 
-#### **Verslag Type Migratie (Taxonomy → List Field):**
+### **🔧 Uitgebreide Taxonomy → List Field Migraties:**
+
+#### **Verslag Type Migratie (D6 Taxonomy → D11 List Field):**
 ```php
 // D6 Taxonomy "Verslagen" (vocab ID 9) → D11 list_string veld opties
 function migrateVerslagTypeTaxonomyToListOptions() {
@@ -512,17 +515,41 @@ function migrateVerslagTypeTaxonomyToListOptions() {
   
   return $d6_verslag_terms;
 }
+```
 
-// Migratie van verslag node met taxonomy term naar document media
-function migrateVerslagToDocument($d6_verslag_node) {
-  // Haal taxonomy term ID op uit vocabulary 9 (Verslagen)
-  $verslag_type_tid = getVerslagNodeTaxonomyTerm($d6_verslag_node['nid'], 9);
+#### **Activiteit Soort Migratie (D6 Taxonomy → D11 List Field):**
+```php
+// D6 Taxonomy "Activiteiten" (vocab ID 5) → D11 list_string veld opties
+function migrateActiviteitSoortTaxonomyToListOptions() {
+  
+  // D6 taxonomy termen uit vocabulary "Activiteiten" (ID: 5)
+  $d6_activiteit_terms = [
+    'Wereldlijk' => 'wereldlijk',
+    'Kerkelijk' => 'kerkelijk',
+    'Concours' => 'concours',
+    'Repetitie' => 'repetitie',
+    'Koorreis' => 'koorreis',
+    'Vergadering' => 'vergadering',
+    'Overige' => 'overige',
+    'Vakantie' => 'vakantie'
+  ];
+  
+  // Stel allowed_values in voor field_activiteit_soort
+  setFieldAllowedValues('field_activiteit_soort', $d6_activiteit_terms);
+  
+  return $d6_activiteit_terms;
+}
+
+// Migratie van activiteit node met taxonomy term
+function migrateActiviteitWithSoort($d6_activiteit_node) {
+  // Haal taxonomy term ID op uit vocabulary 5 (Activiteiten)
+  $activiteit_soort_tid = getActiviteitTaxonomyTerm($d6_activiteit_node['nid'], 5);
   
   // Converteer TID naar machine name voor list_string veld
-  $term_name = getTermName($verslag_type_tid);
+  $term_name = getTermName($activiteit_soort_tid);
   $machine_name = convertTermToMachineName($term_name);
   
-  return $machine_name; // Voor field_verslag_type waarde
+  return $machine_name; // Voor field_activiteit_soort waarde
 }
 ```
 1. **Repertoire migratie mag NIET direct partituur bestanden migreren**

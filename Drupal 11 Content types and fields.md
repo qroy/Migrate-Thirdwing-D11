@@ -17,7 +17,7 @@
 **Content Types:** 8 content types (gemigreerd van D6)  
 **Media Bundles:** 4 media bundles (vervangt afgekeurde content types + verslag)  
 **Gebruiker Profiel Velden:** 32 velden - Vervangt Profiel content type volledig  
-**Gedeelde Velden:** 13 velden beschikbaar voor alle content types
+**Gedeelde Velden:** 10 velden beschikbaar voor alle content types
 
 ### **🔄 D6 → D11 Content Type Transformaties:**
 
@@ -261,14 +261,24 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 | `field_rep_uitv_jaar` | integer | Jaar uitvoering | 1 | - |
 | `field_rep_sinds` | integer | In repertoire sinds | 1 | - |
 
-#### Gedeelde Velden Gebruikt:
-| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
-|-----------|-----------|-------|---------------|-------------------|
-| `field_partij_band` | entity_reference | Bandpartituur | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
-| `field_partij_koor_l` | entity_reference | Koorpartituur | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
-| `field_partij_tekst` | entity_reference | Tekst / koorregie | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
+#### Gedeelde Velden Gebruikt: Geen
 
-**⚠️ BELANGRIJKE WIJZIGING: Partituur bestanden worden gemigreerd naar Document Media entiteiten met reverse referenties.**
+**⚠️ BELANGRIJKE WIJZIGING: Partituur bestanden worden NIET langer opgeslagen als velden op Repertoire, maar als Document Media entiteiten met reverse referenties via `field_gerelateerd_repertoire`.**
+
+**Query voor partituren:**
+```php
+// Oud D6/D11: Query repertoire velden
+$partituren = $repertoire_node->get('field_partij_band')->getValue();
+
+// Nieuw D11: Query document media met reverse referentie
+$partituren = \Drupal::entityTypeManager()
+  ->getStorage('media')
+  ->loadByProperties([
+    'bundle' => 'document',
+    'field_document_soort' => 'partituur',
+    'field_gerelateerd_repertoire' => $repertoire_node_id
+  ]);
+```
 
 ---
 
@@ -364,7 +374,7 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 |-----------|-----------|-------|---------------|-------------------|
 | `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt |
 | `field_document_soort` | list_string | Document Soort | 1 | **Opties:** `partituur`, `huiswerk`, `verslag`, `algemeen` |
-| `field_verslag_type` | list_string | Verslag Type | 1 | **Opties:** `bestuur`, `muziekcommissie`, `concerten`, `feest`, `koorregie`, `algemeen` (alleen zichtbaar als document_soort = verslag) |
+| `field_verslag_type` | list_string | Verslag Type | 1 | **Opties gemigreerd van D6 taxonomy "Verslagen" (vocab ID 9):** `bestuursvergadering` (Bestuursvergadering), `vergadering_muziekcommissie` (Vergadering Muziekcommissie), `algemene_ledenvergadering` (Algemene Ledenvergadering), `overige_vergadering` (Overige Vergadering), `combo_overleg` (Combo Overleg), `jaarevaluatie_dirigent` (Jaarevaluatie Dirigent), `jaarverslag` (Jaarverslag), `concertcommissie` (Concertcommissie) |
 | `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
@@ -393,7 +403,7 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 
 ---
 
-## 🔗 **Gedeelde Velden (13 totaal)**
+## 🔗 **Gedeelde Velden (10 totaal)**
 
 Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 
@@ -430,6 +440,8 @@ Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 | `field_repertoire` | entity_reference | Repertoire | audio, video (via media bundles) |
 | `field_audio_uitvoerende` | string | Uitvoerende | Gebruikt in media bundles |
 
+**Opmerking:** Partituur velden (`field_partij_band`, `field_partij_koor_l`, `field_partij_tekst`) vervallen vanwege reverse reference architectuur.
+
 ---
 
 ## 🎯 **Kritieke Migratie Wijzigingen - Partituur Architectuur**
@@ -455,7 +467,8 @@ Deze velden zijn beschikbaar voor gebruik door meerdere content types:
    - **D6 Verslag data wordt getransformeerd naar Document media:**
      - Verslag titel → Document media naam
      - Verslag datum → Document media metadata
-     - Verslag bestanden → `document_soort = "verslag"` + `verslag_type` detectie
+     - Verslag bestanden → `document_soort = "verslag"`
+     - **D6 Taxonomy "verslag type" terms → D11 `field_verslag_type` list_string opties**
      - Verslag body tekst → Document beschrijving of bijlage
 
 **3. Andere Document Bestanden:**
@@ -477,36 +490,39 @@ field_files_fid (huiswerk context) → document_soort = "huiswerk"
 field_files_fid (andere context)   → document_soort = "algemeen"
 ```
 
-#### **Verslag Type Detectie Logica:**
+#### **Verslag Type Migratie (Taxonomy → List Field):**
 ```php
-function detectVerslagType($verslag_node_title, $file_name) {
-  $title_lower = strtolower($verslag_node_title);
-  $file_lower = strtolower($file_name);
+// D6 Taxonomy "Verslagen" (vocab ID 9) → D11 list_string veld opties
+function migrateVerslagTypeTaxonomyToListOptions() {
   
-  // Check op bestuur keywords
-  if (strpos($title_lower, 'bestuur') !== false || 
-      strpos($file_lower, 'bestuur') !== false) {
-    return 'bestuur';
-  }
-  
-  // Check op commissie types
-  $commissie_types = [
-    'muziekcommissie' => 'muziekcommissie',
-    'mc' => 'muziekcommissie',
-    'concert' => 'concerten',
-    'feest' => 'feest',
-    'koorregie' => 'koorregie',
-    'regie' => 'koorregie'
+  // D6 taxonomy termen uit vocabulary "Verslagen" (ID: 9)
+  $d6_verslag_terms = [
+    'Bestuursvergadering' => 'bestuursvergadering',
+    'Vergadering Muziekcommissie' => 'vergadering_muziekcommissie',
+    'Algemene Ledenvergadering' => 'algemene_ledenvergadering',
+    'Overige Vergadering' => 'overige_vergadering',
+    'Combo Overleg' => 'combo_overleg',
+    'Jaarevaluatie Dirigent' => 'jaarevaluatie_dirigent',
+    'Jaarverslag' => 'jaarverslag',
+    'Concertcommissie' => 'concertcommissie'
   ];
   
-  foreach ($commissie_types as $keyword => $type) {
-    if (strpos($title_lower, $keyword) !== false || 
-        strpos($file_lower, $keyword) !== false) {
-      return $type;
-    }
-  }
+  // Stel allowed_values in voor field_verslag_type
+  setFieldAllowedValues('field_verslag_type', $d6_verslag_terms);
   
-  return 'algemeen';
+  return $d6_verslag_terms;
+}
+
+// Migratie van verslag node met taxonomy term naar document media
+function migrateVerslagToDocument($d6_verslag_node) {
+  // Haal taxonomy term ID op uit vocabulary 9 (Verslagen)
+  $verslag_type_tid = getVerslagNodeTaxonomyTerm($d6_verslag_node['nid'], 9);
+  
+  // Converteer TID naar machine name voor list_string veld
+  $term_name = getTermName($verslag_type_tid);
+  $machine_name = convertTermToMachineName($term_name);
+  
+  return $machine_name; // Voor field_verslag_type waarde
 }
 ```
 1. **Repertoire migratie mag NIET direct partituur bestanden migreren**
@@ -621,34 +637,6 @@ Alle D6 veld-niveau permissies (`view field_[veldnaam]`, `edit field_[veldnaam]`
 - Basis gebruiker profiel velden systeem
 - Automatische EXIF datum extractie
 - Partituur architectuur herstructurering
-
----
-
-## 🚀 **Implementatie Prioriteiten**
-
-### **Fase 1: Kritieke Migratie Voorbereiding**
-1. **User Profile Velden Creatie:** Maak alle 32 velden aan in D11
-2. **Permissie Mapping:** Converteer D6 veld permissies naar D11 profiel permissies
-3. **Optie Lijsten Validatie:** Controleer alle commissie en positie opties
-4. **Database Connectiviteit:** Test migratie van `content_type_profiel` tabel
-
-### **Fase 2: Content Type Implementatie**
-1. **Content Types:** Maak alle 8 content types aan
-2. **Media Bundles:** Configureer 4 media bundles
-3. **Gedeelde Velden:** Implementeer 13 gedeelde velden
-4. **Relatie Configuratie:** Stel entity references in
-
-### **Fase 3: Migratie Execution**
-1. **Gebruiker Migratie:** Migreer gebruikers met alle 32 profielvelden
-2. **Content Migratie:** Migreer alle 8 content types
-3. **Media Migratie:** Partituur transformatie naar Document media
-4. **Permissie Migratie:** Herstel alle veld-niveau rechten
-
-### **Fase 4: Validatie & Testing**
-1. **Data Integriteit:** Controleer alle gemigreerde data
-2. **Functionaliteit Test:** Test alle gebruiker workflows
-3. **Permissie Test:** Valideer toegangsniveaus per rol
-4. **Performance Test:** Optimaliseer query performance
 
 ---
 

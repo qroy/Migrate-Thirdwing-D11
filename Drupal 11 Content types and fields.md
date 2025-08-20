@@ -31,7 +31,7 @@
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_tijd_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 |
+| `field_koor_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 **← D6: field_tijd_aanwezig** |
 | `field_keyboard` | list_string | Toetsenist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
 | `field_gitaar` | list_string | Gitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
 | `field_basgitaar` | list_string | Basgitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
@@ -61,7 +61,7 @@
 - **Locatie**: field_locatie, field_l_bijzonderheden
 - **Bestanden**: field_files
 - **Afbeeldingen**: field_afbeeldingen
-- **Logistiek**: field_basgitaar, field_drums, field_gitaar, field_keyboard, field_sleepgroep, field_sleepgroep_aanwezig, field_sleepgroep_terug, field_tijd_aanwezig, field_vervoer
+- **Logistiek**: field_basgitaar, field_drums, field_gitaar, field_keyboard, field_sleepgroep, field_sleepgroep_aanwezig, field_sleepgroep_terug, field_koor_aanwezig, field_vervoer
 - **Programma**: field_programma2
 
 ---
@@ -425,6 +425,13 @@ De volgende velden zijn beschikbaar als gedeelde velden die aan elk content type
 ---
 
 ## 🎯 **Kritieke Migratie Wijzigingen - Partituur Architectuur**
+
+### **Veld Naam Wijzigingen:**
+
+**D6 → D11 Veld Herbenaming:**
+- `field_tijd_aanwezig` → `field_koor_aanwezig` (Activiteit content type)
+  - **Reden:** Duidelijkere veldnaam die beter de functie beschrijft
+  - **Label blijft:** "Koor Aanwezig"
 
 ### **Data Transformatie Vereisten:**
 

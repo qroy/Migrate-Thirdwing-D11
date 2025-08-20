@@ -81,8 +81,10 @@
 
 **Gebruikte Gedeelde Velden:**
 - `field_afbeeldingen`: "Afbeeldingen" (imagefield_widget)
-- `field_files`: "Bestandsbijlages" (filefield_widget)
-- `field_view`: "Extra inhoud" (viewfield_select)
+- `field_audio_type`: "Type" (optionwidgets_select)
+  - **Opties:** Uitvoering, Repetitie, Oefenbestand, Origineel, Uitzending, Overig
+- `field_datum`: "Datum" (date_popup)
+- `field_ref_activiteit`: "Activiteit" (nodereference_autocomplete)
 
 ### 4. **IMAGE** (Afbeelding)
 - **Weergavenaam:** Image

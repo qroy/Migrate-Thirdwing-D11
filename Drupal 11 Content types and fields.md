@@ -24,54 +24,52 @@
 ## 🗂️ **Content Types (8 totaal)**
 
 ### 1. **Activiteit** (Activiteiten)
-**Beschrijving:** Een activiteit (uitvoering, repetitie)  
-**Titel Label:** Omschrijving  
+**Beschrijving:** Koorrepeties, uitvoeringen en andere activiteiten  
+**Titel Label:** Titel  
 **Heeft Body:** Ja (Berichttekst)
 
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_koor_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 **← D6: field_tijd_aanwezig** |
-| `field_keyboard` | list_string | Toetsenist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
-| `field_gitaar` | list_string | Gitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
-| `field_basgitaar` | list_string | Basgitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
-| `field_drums` | list_string | Drummer | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
-| `field_vervoer` | string | Karrijder | 1 | max_length: 255 |
-| `field_sleepgroep` | list_string | Sleepgroep | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `*` |
-| `field_sleepgroep_aanwezig` | string | Sleepgroep Aanwezig | 1 | max_length: 255 |
-| `field_kledingcode` | string | Kledingcode | 1 | max_length: 255 |
-| `field_locatie` | entity_reference | Locatie | 1 | target_type: node, target_bundles: [locatie] |
-| `field_l_bijzonderheden` | text_long | Bijzonderheden locatie | 1 | - |
-| `field_bijzonderheden` | string | Bijzonderheden | 1 | max_length: 255 |
-| `field_background` | entity_reference | Achtergrond | 1 | target_type: media, target_bundles: [image] |
-| `field_sleepgroep_terug` | list_string | Sleepgroep terug | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `*` |
-| `field_huiswerk` | entity_reference | Huiswerk | 1 | target_type: media, target_bundles: [document] |
+| `field_koor_aanwezig` | list_string | Koor Aanwezig | 1 | **Opties:** `alle` (Alle), `bas` (Bas), `tenor` (Tenor), `alt` (Alt), `sopraan1` (1e Sopraan), `sopraan2` (2e Sopraan), `band` (Band), `diversen` (Diversen) |
+| `field_keyboard` | boolean | Keyboard | 1 | - |
+| `field_gitaar` | text_long | Gitaar | 1 | - |
+| `field_basgitaar` | text_long | Basgitaar | 1 | - |
+| `field_drums` | text_long | Drums | 1 | - |
+| `field_vervoer` | text_long | Vervoer | 1 | - |
+| `field_sleepgroep` | list_string | Sleepgroep | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `OG`, `-` |
+| `field_sleepgroep_aanwezig` | list_string | Sleepgroep Aanwezig | 1 | **Opties:** `alle` (Alle), `I`, `II`, `III`, `IV`, `V`, `OG`, `-` (Geen) |
+| `field_kledingcode` | text_long | Kledingcode | 1 | - |
+| `field_l_bijzonderheden` | text_long | Locatie Bijzonderheden | 1 | - |
+| `field_ledeninfo` | text_long | Ledeninformatie | 1 | filtered_html format |
+| `field_bijzonderheden` | text_long | Algemene Bijzonderheden | 1 | - |
+| `field_sleepgroep_terug` | list_string | Sleepgroep Terug | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `OG`, `-` |
 
 #### Gedeelde Velden Gebruikt:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
+| `field_datum` | datetime | Datum | 1 | date and time |
+| `field_locatie` | entity_reference | Locatie | 1 | target_type: node, target_bundles: [locatie] |
+| `field_programma` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
-| `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
-| `field_programma2` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
-| `field_datum` | datetime | Datum en tijd | 1 | datetime with time |
-
-#### Veldgroepen:
-- **Achtergrond**: field_background
-- **Bijzonderheden**: field_bijzonderheden, field_kledingcode
-- **Locatie**: field_locatie, field_l_bijzonderheden
-- **Bestanden**: field_files
-- **Afbeeldingen**: field_afbeeldingen
-- **Logistiek**: field_basgitaar, field_drums, field_gitaar, field_keyboard, field_sleepgroep, field_sleepgroep_aanwezig, field_sleepgroep_terug, field_koor_aanwezig, field_vervoer
-- **Programma**: field_programma2
+| `field_background` | entity_reference | Achtergrond | 1 | target_type: media, target_bundles: [image] |
+| `field_huiswerk` | entity_reference | Huiswerk | unlimited | target_type: media, target_bundles: [document] |
 
 ---
 
-### 2. **Foto** (Foto's)
+### 2. **Fotoalbum** (Fotoalbums)
 **Beschrijving:** Fotoalbums en galerijen  
+**Machine Name:** `fotoalbum`  
 **Titel Label:** Titel  
 **Heeft Body:** Ja (Omschrijving)
 
-#### Content Type Specifieke Velden: Geen
+#### Content Type Specifieke Velden:
+| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
+|-----------|-----------|-------|---------------|-------------------|
+| `field_fotoalbum_type` | list_string | Fotoalbum Type | 1 | **Opties:** `uitvoering`, `repetitie`, `oefenbestand`, `origineel`, `uitzending`, `overig` |
+| `field_datum` | datetime | Datum | 1 | date only |
+| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | - |
 
 #### Gedeelde Velden Gebruikt:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
@@ -136,46 +134,35 @@
 ---
 
 ### 6. **Programma** (Programma's)
-**Beschrijving:** Elementen voor in een programma voor een activiteit die niet voorkomen in de repertoire-lijst  
-**Titel Label:** Titel  
+**Beschrijving:** Muziekprogramma's voor activiteiten  
+**Titel Label:** Programma  
 **Heeft Body:** Nee
 
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_prog_type` | list_string | Type | 1 | **Opties:** `programma` (Programma onderdeel), `nummer` (Nummer) |
+| `field_repertoire` | entity_reference | Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
 
 #### Gedeelde Velden Gebruikt: Geen
 
 ---
 
 ### 7. **Repertoire** (Repertoire)
-**Beschrijving:** Stuk uit het repertoire  
+**Beschrijving:** Muziekstukken en liedjes  
 **Titel Label:** Titel  
 **Heeft Body:** Ja (Berichttekst)
 
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_rep_arr` | string | Arrangeur | 1 | max_length: 255 |
-| `field_rep_arr_jaar` | integer | Arrangeur Jaar | 1 | - |
-| `field_rep_componist` | string | Componist | 1 | max_length: 255 |
-| `field_rep_componist_jaar` | integer | Componist Jaar | 1 | - |
-| `field_rep_genre` | list_string | Genre | 1 | **Opties:** `pop` (Pop), `musical_film` (Musical / Film), `geestelijk_gospel` (Geestelijk / Gospel) |
-| `field_rep_sinds` | integer | Sinds | 1 | - |
-| `field_rep_uitv` | string | Uitvoerende | 1 | max_length: 255 |
-| `field_rep_uitv_jaar` | integer | Jaar uitvoering | 1 | - |
-| `field_klapper` | boolean | Actueel | 1 | - |
-| `field_audio_nummer` | string | Nummer | 1 | max_length: 255 |
-| `field_audio_seizoen` | list_string | Seizoen | 1 | **Opties:** `regulier` (Regulier), `kerst` (Kerst) |
+| `field_componist` | string | Componist | 1 | max_length: 255 |
+| `field_arrangeur` | string | Arrangeur | 1 | max_length: 255 |
+| `field_uitgever` | string | Uitgever | 1 | max_length: 255 |
+| `field_tekst_van` | string | Tekst van | 1 | max_length: 255 |
 
 #### Gedeelde Velden Gebruikt: Geen
 
-#### Veldgroepen:
-- **Arrangeur**: field_rep_arr, field_rep_arr_jaar
-- **Componist**: field_rep_componist, field_rep_componist_jaar
-- **Informatie**: field_audio_nummer, field_audio_seizoen, field_klapper, field_rep_genre, field_rep_sinds
-- **Uitvoerende**: field_rep_uitv, field_rep_uitv_jaar
+**Notitie:** Partituur bestanden worden nu beheerd via **Document Media Entities** met reverse referenties naar repertoire items. Zie Media Bundle sectie voor details.
 
 ---
 
@@ -262,7 +249,7 @@ Het `field_datum` veld wordt **automatisch gevuld** volgens de volgende priorite
 | `field_datum` | datetime | Datum | 1 | date only |
 | `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
 | `field_audio_bijz` | string | Bijzonderheden | 1 | max_length: 255 |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | - |
 
 ---
 
@@ -279,38 +266,44 @@ Het `field_datum` veld wordt **automatisch gevuld** volgens de volgende priorite
 | `field_audio_type` | list_string | Type | 1 | **Opties:** `uitvoering`, `repetitie`, `oefenbestand`, `origineel`, `uitzending`, `overig` |
 | `field_datum` | datetime | Datum | 1 | date only |
 | `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
 ---
 
 ### 4. **Document Bundle** (`document`)
-**Beschrijving:** PDF's, Word documenten, MuseScore bestanden, en Verslag rapporten  
+**Beschrijving:** PDF's, Word documenten en partituren (vervangt D6 filefields)  
 **Bron Plugin:** `file`  
 **Bron Veld:** `field_media_document`  
-**Bestandsextensies:** pdf, doc, docx, txt, xls, xlsx, mscz
+**Bestandsextensies:** pdf, doc, docx, txt
 
-| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen | Vereist Wanneer |
-|-----------|-----------|-------|---------------|-------------------|------------------|
-| `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt xls xlsx mscz | Altijd |
-| `field_document_soort` | list_string | Document Soort | 1 | **Opties:** `verslag`, `partituur`, `huiswerk`, `overig` | Altijd |
-| `field_verslag_type` | list_string | Verslag Type | 1 | **Opties:** `algemene_ledenvergadering`, `bestuursvergadering`, `combo_overleg`, `concertcommissie`, `jaarevaluatie_dirigent`, `jaarverslag`, `overige_vergadering`, `vergadering_muziekcommissie` | field_document_soort = verslag |
-| `field_datum` | datetime | Datum | 1 | date only | field_document_soort = verslag |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] | field_document_soort = partituur |
-| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | Altijd |
+| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
+|-----------|-----------|-------|---------------|-------------------|
+| `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt |
+| `field_document_soort` | list_string | Document Soort | 1 | **Opties:** `partituur`, `huiswerk`, `algemeen` |
+| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
+| `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] | - |
 
-### Conditionele Veld Vereisten
+#### **🎼 Partituur Architectuur Wijziging**
 
-Het Document Bundle gebruikt conditionele veld vereisten gebaseerd op het document type:
+**Kritieke Architecturale Verandering in D11:**
 
-#### **Wanneer `field_document_soort` = "verslag":**
-- **`field_verslag_type`** - Vereist om het type vergaderverslag te specificeren
-- **`field_datum`** - Vereist om de datum van de vergadering/verslag vast te leggen
+**D6 Benadering:**
+- Partituur bestanden werden opgeslagen als direct gekoppelde velden op Repertoire content
+- `field_partij_band_fid`, `field_partij_koor_l_fid`, `field_partij_tekst_fid`
 
-#### **Wanneer `field_document_soort` = "partituur":**
-- **`field_gerelateerd_repertoire`** - Vereist om bladmuziek te koppelen aan specifieke repertoire stukken
+**D11 Nieuwe Benadering:**
+- **Document Media Entities** met `field_document_soort = "partituur"`
+- **Reverse Referentie:** Document → Repertoire via `field_gerelateerd_repertoire`
+- Maakt flexibele partituur organisatie mogelijk met metadata
 
-#### **Wanneer `field_document_soort` = "huiswerk" of "overig":**
-- Geen aanvullende vereiste velden naast de basis document en toegang velden
+**Query Implicaties:**
+- **Oude D6/D11 Methode:** Query repertoire node voor bijgevoegde partituur bestanden
+- **Nieuwe D11 Methode:** Query document media entities waar `field_gerelateerd_repertoire` = repertoire node ID
+
+**Voordelen:**
+- Betere metadata voor partituren (toegang, categorisatie)
+- Flexibele één-op-veel relaties
+- Herbruikbare partituren over meerdere repertoire items
+- Consistente media behandeling door het systeem
 
 ---
 
@@ -342,85 +335,79 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 | `field_karrijder` | boolean | Karrijder | 1 | - |
 | `field_koor` | list_string | Koorfunctie | 1 | **Opties:** `B` (Bas), `A` (Tenor), `E` (Alt), `C` (1e Sopraan), `D` (2e Sopraan), `Y1` (Dirigent), `Z1` (Toetsenist), `Z2` (Gitarist), `Z3` (Bassist), `Z4` (Drummer), `Z5` (Techniek en percussie) |
 | `field_sleepgroep_1` | list_string | Sleepgroep | 1 | **Opties:** `I`, `II`, `III`, `IV`, `V`, `OG`, `-` |
-| `field_positie` | list_string | Positie | 1 | **Zie volledige koorpositie mapping hieronder** |
+| `field_positie` | list_string | Positie | 1 | **Opties:** `voorzitter`, `secretaris`, `penningmeester`, `pr`, `regie`, `webmaster`, `tec`, `dirigent`, `toets`, `gitaar`, `bas`, `drums`, `ogl`, `og2`, `og3`, `lid` |
 
-### Koorpositie Mapping (field_positie):
-**Rij 4 (101-116):** `4x01`, `4x02`, `4x03`, `4x04`, `4x05`, `4x06`, `4x07`, `4x08`, `4x09`, `4x10`, `4x11`, `4x12`, `4x13`, `4x14`, `4x15`, `4x16`
-
-**Rij 3 (201-216):** `3x01`, `3x02`, `3x03`, `3x04`, `3x05`, `3x06`, `3x07`, `3x08`, `3x09`, `3x10`, `3x11`, `3x12`, `3x13`, `3x14`, `3x15`, `3x16`
-
-**Rij 2 (301-316):** `2x01`, `2x02`, `2x03`, `2x04`, `2x05`, `2x06`, `2x07`, `2x08`, `2x09`, `2x10`, `2x11`, `2x12`, `2x13`, `2x14`, `2x15`, `2x16`
-
-**Rij 1 (401-416):** `1x01`, `1x02`, `1x03`, `1x04`, `1x05`, `1x06`, `1x07`, `1x08`, `1x09`, `1x10`, `1x11`, `1x12`, `1x13`, `1x14`, `1x15`, `1x16`
-
-**Band (501-504):** `Band 1`, `Band 2`, `Band 3`, `Band 4`
-
-**Speciale Posities:** `Dirigent` (601), `Niet ingedeeld` (701)
-
-### Commissie Functies:
+### Communicatie Voorkeuren:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_functie_bestuur` | list_string | Functie Bestuur | 1 | **Opties:** `voorzitter`, `secretaris`, `penningmeester`, `bestuurslid` |
-| `field_functie_mc` | list_string | Functie Muziekcommissie | 1 | **Opties:** `bestuurslid`, `voorzitter`, `secretaris`, `dirigent`, `contactpersoon_band`, `lid` |
-| `field_functie_concert` | list_string | Functie Commissie Concerten | 1 | **Opties:** `bestuurslid`, `lid` |
-| `field_functie_feest` | list_string | Functie Feestcommissie | 1 | **Opties:** `bestuurslid`, `lid` |
-| `field_functie_regie` | list_string | Functie Commissie Koorregie | 1 | **Opties:** `bestuurslid`, `lid` |
-| `field_functie_ir` | list_string | Functie Commissie Interne Relaties | 1 | **Opties:** `bestuurslid`, `lid`, `interne_relaties` |
-| `field_functie_pr` | list_string | Functie Commissie PR | 1 | **Opties:** `bestuurslid`, `website`, `social_media`, `lid` |
-| `field_functie_tec` | list_string | Functie Technische Commissie | 1 | **Opties:** `bestuurslid`, `lid` |
-| `field_functie_lw` | list_string | Functie ledenwerf | 1 | **Opties:** `bestuurslid`, `lid` |
-| `field_functie_fl` | list_string | Functie Faciliteiten | 1 | **Opties:** `bestuurslid`, `lid` |
+| `field_ontvang_mail` | boolean | E-mail ontvangen | 1 | - |
+| `field_ontvang_nieuwsbrief` | boolean | Nieuwsbrief ontvangen | 1 | - |
+| `field_ontvang_agenda` | boolean | Agenda ontvangen | 1 | - |
+| `field_toon_contactgegevens` | boolean | Contactgegevens tonen | 1 | - |
+| `field_toon_fotos` | boolean | Foto's tonen | 1 | - |
+
+### Technische/Website Gegevens:
+| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
+|-----------|-----------|-------|---------------|-------------------|
+| `field_website` | link | Website | 1 | - |
+| `field_twitter` | string | Twitter | 1 | max_length: 255 |
+| `field_facebook` | string | Facebook | 1 | max_length: 255 |
+| `field_last_login` | datetime | Laatste login | 1 | timestamp |
+| `field_user_picture` | entity_reference | Profielfoto | 1 | target_type: media, target_bundles: [image] |
 
 ---
 
-## 🔗 **Gedeelde Velden Beschikbaar voor Alle Content Types**
+## 📋 **Toegangscontrole & Taxonomie**
 
-De volgende velden zijn beschikbaar als gedeelde velden die aan elk content type gekoppeld kunnen worden:
+### Toegang Taxonomie:
+Alle content en media kunnen worden gecategoriseerd met toegangsniveaus:
 
-### Kern Gedeelde Velden:
-| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
-|-----------|-----------|-------|---------------|-------------------|
-| `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
-| `field_audio_type` | list_string | Type | 1 | **Opties:** `uitvoering`, `repetitie`, `oefenbestand`, `origineel`, `uitzending`, `overig` |
-| `field_audio_uitvoerende` | string | Uitvoerende | 1 | max_length: 255 |
-| `field_datum` | datetime | Datum en tijd | 1 | datetime with time |
-| `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
-| `field_inhoud` | entity_reference | Inhoud | unlimited | target_type: node, target_bundles: [nieuws, activiteit, programma] |
-| `field_l_routelink` | link | Route | 1 | - |
-| `field_programma2` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
-| `field_ref_activiteit` | entity_reference | Activiteit | 1 | target_type: node, target_bundles: [activiteit] |
-| `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
-| `field_video` | text_long | Video | 1 | embedded video |
-| `field_view` | string | Extra inhoud | 1 | viewfield reference |
-| `field_woonplaats` | string | Woonplaats | 1 | max_length: 255 |
+- **Publiek**: Iedereen kan bekijken
+- **Leden**: Alleen koorleden
+- **Bestuur**: Alleen bestuursleden
+- **Privé**: Beperkte toegang
+
+### Media Toegangscontrole:
+Alle media bundles hebben `field_toegang` velden voor granulaire toegangscontrole per bestand.
 
 ---
 
-## 🔄 **Migratie Dependencies**
+## 🔗 **Gedeelde Velden (13 totaal)**
 
-### Fase 1: Fundering
-1. Taxonomie vocabulaires en termen
-2. Gebruikersrollen en rechten
-3. Media bundles en velden
-4. Content types en velden
+Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 
-### Fase 2: Kern Content
-1. Gebruikers en profielen
-2. Bestanden en media entiteiten
-3. Locaties
-4. Repertoire en programma's (zonder partituur bestanden)
+### Basis Content Velden:
+| Veld Naam | Veld Type | Label | Gebruikt door Content Types |
+|-----------|-----------|-------|---------------------------|
+| `field_afbeeldingen` | entity_reference | Afbeeldingen | activiteit, fotoalbum, nieuws, pagina, vriend |
+| `field_files` | entity_reference | Bestandsbijlages | nieuws, pagina |
+| `field_datum` | datetime | Datum | activiteit, fotoalbum |
+| `field_view` | string | Extra inhoud | pagina |
 
-### Fase 3: Activiteit Content
-1. Activiteiten en evenementen
-2. Nieuwsartikelen
-3. Pagina's en statische content
-4. Vrienden en supporters
+### Activiteit Gerelateerde Velden:
+| Veld Naam | Veld Type | Label | Gebruikt door Content Types |
+|-----------|-----------|-------|---------------------------|
+| `field_ref_activiteit` | entity_reference | Activiteit | fotoalbum, nieuws |
+| `field_locatie` | entity_reference | Locatie | activiteit |
+| `field_programma` | entity_reference | Programma | activiteit |
+| `field_background` | entity_reference | Achtergrond | activiteit |
+| `field_huiswerk` | entity_reference | Huiswerk | activiteit |
 
-### Fase 4: Document Media Migratie
-1. Document media entiteiten met reverse referenties
-2. Partituur bestanden migratie met repertoire koppeling
-3. Content referenties validatie
-4. Media associaties verificatie
+### Locatie Velden:
+| Veld Naam | Veld Type | Label | Gebruikt door Content Types |
+|-----------|-----------|-------|---------------------------|
+| `field_l_routelink` | link | Route | locatie |
+
+### Gebruiker Velden:
+| Veld Naam | Veld Type | Label | Gebruikt door Content Types |
+|-----------|-----------|-------|---------------------------|
+| `field_woonplaats` | string | Woonplaats | vriend (+ user profiles) |
+
+### Media/Content Relatie Velden:
+| Veld Naam | Veld Type | Label | Gebruikt door Content Types |
+|-----------|-----------|-------|---------------------------|
+| `field_repertoire` | entity_reference | Repertoire | programma |
+| `field_audio_uitvoerende` | string | Uitvoerende | Gebruikt in media bundles |
 
 ---
 
@@ -464,165 +451,50 @@ De volgende velden zijn beschikbaar als gedeelde velden die aan elk content type
 1. **Eerst:** Migreer Repertoire content (zonder partituren)
 2. **Daarna:** Migreer Document media met reverse referenties
 3. **Validatie:** Verifieer dat alle partituren correct gekoppeld zijn
-4. **Testen:** Zorg ervoor dat admin interface werkt met nieuwe relatie richting
-
-### **Voordelen van Nieuwe Architectuur:**
-- **Logische relatie:** Document kent zijn repertoire (meer intuïtief)
-- **Multiple repertoire koppeling:** Eén document kan aan meerdere repertoire stukken gekoppeld worden
-- **Document classificatie:** Via `field_document_soort` = "partituur"
-- **Verminderde redundantie:** Geen 3 aparte partituur velden nodig
-- **Verhoogde flexibiliteit:** Eenvoudig nieuwe document types toevoegen
-- **Betere admin UX:** Directe repertoire koppeling tijdens document upload
+4. **Admin Training:** Nieuwe workflow voor partituur beheer
 
 ---
 
-## 📋 **Installatie Vereisten**
+## 📊 **Content Relaties Schema**
 
-### Pre-Installatie
-- Schone Drupal 11 installatie
-- Database toegang tot D6 bron
-- Vereiste contrib modules geïnstalleerd
-- Bestandssysteem rechten geconfigureerd
-- PHP EXIF extensie voor automatische afbeelding datum extractie
-
-### Post-Installatie
-- Content moderatie workflow setup
-- Rol-gebaseerde rechten configuratie
-- Media bestand directory aanmaak
-- URL alias generatie
-- EXIF datum extractie testen
-
----
-
-## ✨ **Belangrijkste Migratie Voordelen**
-
-- **Gecentraliseerd Media Beheer:** Alle media behandeld via juiste media bundles
-- **Betere Gebruikerservaring:** Profiel velden geïntegreerd in gebruikersaccounts
-- **Consistente Veld Structuur:** Gedeelde velden verminderen duplicatie
-- **Moderne Architectuur:** Maakt gebruik van D11's media systeem mogelijkheden
-- **Gestroomlijnde Content Types:** Focus op essentiële content types alleen
-- **Automatische Metadata Extractie:** EXIF datum extractie voor afbeeldingen
-- **Intelligente Fallbacks:** Robuuste datum behandeling met meerdere fallback opties
-- **Verbeterde Content Relaties:** Betere koppeling tussen content en media
-
----
-
-## 🏷️ **Taxonomie Vocabulaires**
-
-### Toegang Vocabulaire (`toegang`)
-**Beschrijving:** Toegangscontrole voor content en media
-**Termen:**
-- `publiek` - Toegankelijk voor iedereen
-- `leden` - Alleen toegankelijk voor leden
-- `bestuur` - Alleen toegankelijk voor bestuur
-- `commissies` - Toegankelijk voor commissieleden
-- `band` - Alleen toegankelijk voor bandleden
-- `dirigent` - Alleen toegankelijk voor dirigent
-- `aspiranten` - Toegankelijk voor aspirant-leden
-
----
-
-## 🔐 **Gebruikersrollen en Rechten**
-
-### Rol Hiërarchie:
-1. **Anonieme Gebruiker** - Basis publieke toegang
-2. **Geauthenticeerde Gebruiker** - Ingelogde gebruiker basis toegang
-3. **Aspirant-lid** - Beperkte lidtoegang
-4. **Lid** - Volledige lidtoegang
-5. **Band** - Bandlid specifieke toegang
-6. **Dirigent** - Dirigent specifieke toegang
-7. **Commissie rollen:**
-   - **Muziekcommissie** - Repertoire en muziek beheer
-   - **Bestuur** - Administratieve toegang
-   - **Feestcommissie** - Evenement organisatie
-   - **Commissie IR** - Interne relaties
-   - **Commissie Concerten** - Concert organisatie
-   - **Commissie Koorregie** - Koor management
-8. **Auteur** - Content creatie rechten
-9. **Redacteur** - Content bewerking rechten
-10. **Webmaster** - Technische beheer
-11. **Admin** - Volledige systeem toegang
-
-### Rol-specifieke Content Toegang:
-- **Publiek:** Basis website content
-- **Leden:** Persoonlijke gegevens, activiteiten, repertoire
-- **Band:** Bandpartituren, instrumentale content
-- **Dirigent:** Alle partituren, koor management
-- **Bestuur:** Administratieve content, ledengegevens
-- **Commissies:** Commissie-specifieke documenten en toegang
-
----
-
-## 📊 **Migratie Statistieken**
-
-### Content Volume Verwachting:
-- **Gebruikers:** ~150-200 gebruikers
-- **Activiteiten:** ~50-100 per jaar
-- **Repertoire:** ~200-300 stukken
-- **Media Bestanden:** ~500-1000 bestanden
-- **Nieuws Items:** ~50-100 per jaar
-- **Locaties:** ~20-30 locaties
-
-### Migratie Prestatie Doelen:
-- **Volledige migratie:** < 2 uur
-- **Gebruiker migratie:** < 30 minuten
-- **Media migratie:** < 1 uur
-- **Content migratie:** < 30 minuten
-- **Validatie:** < 15 minuten
-
----
-
-## 🧪 **Kwaliteitsborging**
-
-### Validatie Checklist:
-- [ ] Alle content types aangemaakt
-- [ ] Alle velden geconfigureerd met juiste opties
-- [ ] Media bundles werkend
-- [ ] Gebruiker profiel velden actief
-- [ ] Taxonomie termen geïmporteerd
-- [ ] Rol rechten geconfigureerd
-- [ ] Migratie scripts getest
-- [ ] EXIF datum extractie werkend
-- [ ] Display configuraties ingesteld
-- [ ] URL aliassen gegenereerd
-
-### Test Scenario's:
-1. **Gebruiker Registratie:** Nieuwe gebruiker kan registreren en profiel invullen
-2. **Content Creatie:** Gebruikers kunnen content aanmaken met media uploads
-3. **Toegangscontrole:** Rol-gebaseerde toegang wordt correct afgedwongen
-4. **Media Upload:** Alle media types kunnen worden geüpload en weergegeven
-5. **Datum Extractie:** EXIF datums worden automatisch ingevuld
-6. **Partituur Systeem:** Document-repertoire koppelingen werken correct
-
----
-
-## 📞 **Ondersteuning & Contact**
-
-Voor problemen, vragen, of bijdragen:
-
-1. **Controleer troubleshooting sectie** in de hoofddocumentatie
-2. **Bekijk log bestanden** voor gedetailleerde foutinformatie  
-3. **Voer validatie scripts uit** voor configuratie details
-4. **Raadpleeg documentatie** voor configuratie instructies
-
-### Belangrijke Drush Commando's:
-```bash
-# Valideer volledige setup
-drush thirdwing:validate-all
-
-# Migreer specifieke content type
-drush migrate:import d6_thirdwing_[content_type]
-
-# Reset migratie
-drush migrate:reset d6_thirdwing_[migration_name]
-
-# Status controle
-drush migrate:status --group=thirdwing_d6
+```
+Activiteit ←→ Locatie (many-to-one)
+Activiteit ←→ Programma (many-to-many)
+Programma ←→ Repertoire (many-to-many)
+Fotoalbum ←→ Activiteit (many-to-one)
+Nieuws ←→ Activiteit (many-to-one)
+Document Media ←→ Repertoire (many-to-many)
+Audio Media ←→ Repertoire (many-to-many)
+Audio Media ←→ Activiteit (many-to-one)
+Video Media ←→ Repertoire (many-to-many)
+Video Media ←→ Activiteit (many-to-one)
+All Content ←→ Image Media (many-to-many)
 ```
 
 ---
 
+## 📋 **Wijzigingslog**
+
+### Versie 1.1 (Augustus 2025):
+- ✅ **WIJZIGING**: Content type "Foto" hernoemd naar "Fotoalbum"
+- ✅ **WIJZIGING**: Machine name `foto` gewijzigd naar `fotoalbum`
+- ✅ **NIEUW**: Toegevoegd `field_fotoalbum_type` veld
+- ✅ **NIEUW**: Toegevoegd `field_datum` veld aan Fotoalbum
+- ✅ **NIEUW**: Toegevoegd `field_ref_activiteit` veld aan Fotoalbum
+- ✅ **BREAKING**: Alle migratie scripts moeten worden bijgewerkt
+- ✅ **BREAKING**: URL structuur wijzigt van `/node/add/foto` naar `/node/add/fotoalbum`
+
+### Versie 1.0 (Juli 2025):
+- Initiële release met volledige D6 naar D11 migratie ondersteuning
+- Alle 8 content types geïmplementeerd
+- 4 media bundles geconfigureerd
+- Gebruiker profiel velden systeem
+- Automatische EXIF datum extractie
+- Partituur architectuur herstructurering
+
+---
+
 *Laatst Bijgewerkt: Augustus 2025*  
-*Module Versie: 1.1 - Volledig Nederlandse Documentatie*  
+*Module Versie: 1.1 - Volledig Nederlandse Documentatie met Fotoalbum Updates*  
 *Drupal Compatibiliteit: 11.x*  
 *Alle UI Elementen: Nederlands*

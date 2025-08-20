@@ -49,6 +49,18 @@
 - `field_programma2`: "Programma" (nodereference_autocomplete)
 - `field_datum`: "Datum en tijd" (date_popup)
 
+**Taxonomy Velden:**
+- **Activiteiten** (vocabulary ID: 5): Categorisatie van activiteit type
+  - **Terms:**
+    - Wereldlijk
+    - Kerkelijk
+    - Concours
+    - Repetitie
+    - Koorreis
+    - Vergadering
+    - Overige
+    - Vakantie
+
 ### 2. **AUDIO** (Audio)
 - **Weergavenaam:** Audio
 - **Beschrijving:** Geluidsbestanden
@@ -269,6 +281,18 @@
 **Gebruikte Gedeelde Velden:**
 - `field_datum`: "Datum" (date_popup)
 - `field_files`: "Bestandsbijlages" (filefield_widget)
+
+**Taxonomy Velden:**
+- **Verslagen** (vocabulary ID: 9): Categorisatie van verslag type
+  - **Terms:** 
+    - Bestuursvergadering
+    - Vergadering Muziekcommissie
+    - Algemene Ledenvergadering
+    - Overige Vergadering
+    - Combo Overleg
+    - Jaarevaluatie Dirigent
+    - Jaarverslag
+    - Concertcommissie
 
 ### 13. **VIDEO** (Video)
 - **Weergavenaam:** Video

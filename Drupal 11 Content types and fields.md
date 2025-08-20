@@ -15,9 +15,34 @@
 ## 📊 **Migratie Overzicht**
 
 **Content Types:** 8 content types (gemigreerd van D6)  
-**Media Bundles:** 4 media bundles (vervangt afgekeurde content types)  
+**Media Bundles:** 4 media bundles (vervangt afgekeurde content types + verslag)  
 **Gebruiker Profiel Velden:** 32 velden - Vervangt Profiel content type volledig  
 **Gedeelde Velden:** 13 velden beschikbaar voor alle content types
+
+### **🔄 D6 → D11 Content Type Transformaties:**
+
+**Gemigreerd als Content Types (8):**
+- activiteit → activiteit
+- foto → fotoalbum  
+- locatie → locatie
+- nieuws → nieuws
+- pagina → pagina
+- programma → programma
+- repertoire → repertoire
+- vriend → vriend
+
+**Vervangen door Media Bundles:**
+- audio → audio media bundle
+- video → video media bundle  
+- image → image media bundle
+- **verslag → document media bundle** (document_soort = "verslag")
+
+**Vervangen door User Profile Fields:**
+- profiel → 32 user profile velden
+
+**Niet gemigreerd:**
+- nieuwsbrief (vervangen door andere functionaliteit)
+- webform (vervangen door Webform module)
 
 ---
 
@@ -88,23 +113,34 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 ### 1. **Activiteit** (Activiteiten)
 **Beschrijving:** Activiteiten en evenementen van het koor  
 **Machine Name:** `activiteit`  
-**Titel Label:** Titel  
-**Heeft Body:** Ja (Omschrijving)
+**Titel Label:** Omschrijving  
+**Heeft Body:** Ja (Berichttekst)
 
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_koor_aanwezig` | datetime | Koor Aanwezig | 1 | time only (Hernoemd van field_tijd_aanwezig) |
-| `field_activiteit_soort` | list_string | Activiteit Soort | 1 | **Opties:** `repetitie`, `uitvoering`, `social`, `vergadering` |
+| `field_koor_aanwezig` | string | Koor Aanwezig | 1 | max_length: 255 (Hernoemd van field_tijd_aanwezig) |
+| `field_keyboard` | list_string | Toetsenist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
+| `field_gitaar` | list_string | Gitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
+| `field_basgitaar` | list_string | Basgitarist | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
+| `field_drums` | list_string | Drummer | 1 | **Opties:** `+` (ja), `?` (misschien), `-` (nee), `v` (vervanging) |
+| `field_vervoer` | string | Karrijder | 1 | max_length: 255 |
 | `field_sleepgroep` | list_string | Sleepgroep | unlimited | **Opties:** `I`, `II`, `III`, `IV`, `V`, `*` |
+| `field_sleepgroep_aanwezig` | string | Sleepgroep Aanwezig | 1 | max_length: 255 |
+| `field_sleepgroep_terug` | list_string | Sleepgroep Terug | unlimited | **Opties:** `I`, `II`, `III`, `IV`, `V`, `*` |
+| `field_kledingcode` | string | Kledingcode | 1 | max_length: 255 |
+| `field_l_bijzonderheden` | text_long | Bijzonderheden locatie | 1 | formatted text |
+| `field_ledeninfo` | text_long | Informatie voor leden | 1 | formatted text |
+| `field_bijzonderheden` | string | Bijzonderheden | 1 | max_length: 255 |
 
 #### Gedeelde Velden Gebruikt:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_datum` | datetime | Datum | 1 | date and time |
+| `field_datum` | datetime | Datum en tijd | 1 | date and time |
 | `field_locatie` | entity_reference | Locatie | 1 | target_type: node, target_bundles: [locatie] |
-| `field_programma` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] |
+| `field_programma` | entity_reference | Programma | unlimited | target_type: node, target_bundles: [programma] (via field_programma2) |
 | `field_afbeeldingen` | entity_reference | Afbeeldingen | unlimited | target_type: media, target_bundles: [image] |
+| `field_files` | entity_reference | Bestandsbijlages | unlimited | target_type: media, target_bundles: [document] |
 | `field_background` | entity_reference | Achtergrond | 1 | target_type: media, target_bundles: [image] |
 | `field_huiswerk` | entity_reference | Huiswerk | unlimited | target_type: media, target_bundles: [document] |
 
@@ -151,7 +187,7 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 #### Gedeelde Velden Gebruikt:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_l_routelink` | link | Route | 1 | - |
+| `field_l_routelink` | link | Route | unlimited | title required |
 
 ---
 
@@ -193,14 +229,14 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 **Beschrijving:** Concertprogramma's en repertoirelijsten  
 **Machine Name:** `programma`  
 **Titel Label:** Titel  
-**Heeft Body:** Ja (Omschrijving)
+**Heeft Body:** Nee
 
-#### Content Type Specifieke Velden: Geen
-
-#### Gedeelde Velden Gebruikt:
+#### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_repertoire` | entity_reference | Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
+| `field_prog_type` | list_string | Type | 1 | **Opties:** `programma` (Programma onderdeel), `nummer` (Nummer) |
+
+#### Gedeelde Velden Gebruikt: Geen
 
 ---
 
@@ -208,18 +244,31 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 **Beschrijving:** Muziekstukken en liedjes  
 **Machine Name:** `repertoire`  
 **Titel Label:** Titel  
-**Heeft Body:** Ja (Omschrijving)
+**Heeft Body:** Nee
 
 #### Content Type Specifieke Velden:
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
-| `field_componist` | string | Componist | 1 | max_length: 255 |
-| `field_genre` | list_string | Genre | 1 | **Opties:** `pop`, `jazz`, `klassiek`, `gospels`, `modern`, `volkslied` |
-| `field_klapper` | boolean | Klapper | 1 | Actueel repertoire indicatie |
-| `field_stemverdeling` | string | Stemverdeling | 1 | max_length: 255 |
-| `field_toonsoort` | string | Toonsoort | 1 | max_length: 255 |
+| `field_klapper` | boolean | Actueel | 1 | Actueel repertoire indicatie |
+| `field_audio_nummer` | integer | Nummer | 1 | Audio nummer |
+| `field_audio_seizoen` | list_string | Seizoen | 1 | **Opties:** `regulier` (Regulier), `kerst` (Kerst) |
+| `field_rep_genre` | list_string | Genre | 1 | **Opties:** `pop` (Pop), `musical` (Musical / Film), `gospel` (Geestelijk / Gospel) |
+| `field_rep_componist` | string | Componist | 1 | max_length: 255 |
+| `field_rep_componist_jaar` | integer | Jaar compositie | 1 | - |
+| `field_rep_arr` | string | Arrangeur | 1 | max_length: 255 |
+| `field_rep_arr_jaar` | integer | Jaar arrangement | 1 | - |
+| `field_rep_uitv` | string | Uitvoerende | 1 | max_length: 255 |
+| `field_rep_uitv_jaar` | integer | Jaar uitvoering | 1 | - |
+| `field_rep_sinds` | integer | In repertoire sinds | 1 | - |
 
-**⚠️ BELANGRIJKE WIJZIGING: Partituren worden niet langer opgeslagen als directe velden op Repertoire, maar als aparte Document Media entiteiten met een reverse referentie.**
+#### Gedeelde Velden Gebruikt:
+| Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
+|-----------|-----------|-------|---------------|-------------------|
+| `field_partij_band` | entity_reference | Bandpartituur | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
+| `field_partij_koor_l` | entity_reference | Koorpartituur | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
+| `field_partij_tekst` | entity_reference | Tekst / koorregie | unlimited | target_type: media, target_bundles: [document] - gemigreerd naar document_soort = "partituur" |
+
+**⚠️ BELANGRIJKE WIJZIGING: Partituur bestanden worden gemigreerd naar Document Media entiteiten met reverse referenties.**
 
 ---
 
@@ -314,7 +363,8 @@ De D6 site gebruikt een **Profiel** content type, maar in D11 worden deze geconv
 | Veld Naam | Veld Type | Label | Kardinaliteit | Doel/Instellingen |
 |-----------|-----------|-------|---------------|-------------------|
 | `field_media_document` | file | Document | 1 | file_extensions: pdf doc docx txt |
-| `field_document_soort` | list_string | Document Soort | 1 | **Opties:** `partituur`, `huiswerk`, `algemeen` |
+| `field_document_soort` | list_string | Document Soort | 1 | **Opties:** `partituur`, `huiswerk`, `verslag`, `algemeen` |
+| `field_verslag_type` | list_string | Verslag Type | 1 | **Opties:** `bestuur`, `muziekcommissie`, `concerten`, `feest`, `koorregie`, `algemeen` (alleen zichtbaar als document_soort = verslag) |
 | `field_gerelateerd_repertoire` | entity_reference | Gerelateerd Repertoire | unlimited | target_type: node, target_bundles: [repertoire] |
 | `field_toegang` | entity_reference | Toegang | unlimited | target_type: taxonomy_term, target_bundles: [toegang] |
 
@@ -367,7 +417,7 @@ Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 ### Locatie Velden:
 | Veld Naam | Veld Type | Label | Gebruikt door Content Types |
 |-----------|-----------|-------|---------------------------|
-| `field_l_routelink` | link | Route | locatie |
+| `field_l_routelink` | link | Route | locatie (unlimited, title required) |
 
 ### Gebruiker Velden:
 | Veld Naam | Veld Type | Label | Gebruikt door Content Types |
@@ -377,7 +427,7 @@ Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 ### Media/Content Relatie Velden:
 | Veld Naam | Veld Type | Label | Gebruikt door Content Types |
 |-----------|-----------|-------|---------------------------|
-| `field_repertoire` | entity_reference | Repertoire | programma |
+| `field_repertoire` | entity_reference | Repertoire | audio, video (via media bundles) |
 | `field_audio_uitvoerende` | string | Uitvoerende | Gebruikt in media bundles |
 
 ---
@@ -393,18 +443,72 @@ Deze velden zijn beschikbaar voor gebruik door meerdere content types:
 
 ### **Data Transformatie Vereisten:**
 
-#### **D6 → D11 Partituur Migratie:**
-1. **D6 Repertoire → D11 Repertoire:** 
-   - `field_partij_band_fid` → Maak Document media entiteit aan
-   - `field_partij_koor_l_fid` → Maak Document media entiteit aan
-   - `field_partij_tekst_fid` → Maak Document media entiteit aan
+#### **D6 → D11 Document & Content Type Migratie:**
 
-2. **Nieuwe Document Media Entiteit Aanmaak:**
-   - Voor elke `field_partij_*` bestand in D6 repertoire
-   - Stel `field_document_soort` = "partituur" in
-   - Stel `field_gerelateerd_repertoire` → terug naar originele repertoire node
+**1. Partituur Bestanden (blijven gekoppeld aan Repertoire):**
+   - `field_partij_band_fid` → Document media met `document_soort = "partituur"`
+   - `field_partij_koor_l_fid` → Document media met `document_soort = "partituur"`
+   - `field_partij_tekst_fid` → Document media met `document_soort = "partituur"`
 
-### **Migratie Scripts Impact:**
+**2. VERSLAG Content Type → Document Media (VOLLEDIGE VERVANGING):**
+   - **D6 Verslag nodes worden NIET gemigreerd als content**
+   - **D6 Verslag data wordt getransformeerd naar Document media:**
+     - Verslag titel → Document media naam
+     - Verslag datum → Document media metadata
+     - Verslag bestanden → `document_soort = "verslag"` + `verslag_type` detectie
+     - Verslag body tekst → Document beschrijving of bijlage
+
+**3. Andere Document Bestanden:**
+   - `field_files_fid` (huiswerk context) → `document_soort = "huiswerk"`
+   - `field_files_fid` (andere context) → `document_soort = "algemeen"`
+
+### **🔧 Uitgebreide Document Soort Migratie Logica:**
+
+```
+D6 Bron → D11 Document Soort + Type
+=====================================
+
+field_partij_band_fid     → document_soort = "partituur"
+field_partij_koor_l_fid   → document_soort = "partituur"  
+field_partij_tekst_fid    → document_soort = "partituur"
+
+field_files_fid (verslag content) → document_soort = "verslag" + verslag_type detectie
+field_files_fid (huiswerk context) → document_soort = "huiswerk"
+field_files_fid (andere context)   → document_soort = "algemeen"
+```
+
+#### **Verslag Type Detectie Logica:**
+```php
+function detectVerslagType($verslag_node_title, $file_name) {
+  $title_lower = strtolower($verslag_node_title);
+  $file_lower = strtolower($file_name);
+  
+  // Check op bestuur keywords
+  if (strpos($title_lower, 'bestuur') !== false || 
+      strpos($file_lower, 'bestuur') !== false) {
+    return 'bestuur';
+  }
+  
+  // Check op commissie types
+  $commissie_types = [
+    'muziekcommissie' => 'muziekcommissie',
+    'mc' => 'muziekcommissie',
+    'concert' => 'concerten',
+    'feest' => 'feest',
+    'koorregie' => 'koorregie',
+    'regie' => 'koorregie'
+  ];
+  
+  foreach ($commissie_types as $keyword => $type) {
+    if (strpos($title_lower, $keyword) !== false || 
+        strpos($file_lower, $keyword) !== false) {
+      return $type;
+    }
+  }
+  
+  return 'algemeen';
+}
+```
 1. **Repertoire migratie mag NIET direct partituur bestanden migreren**
 2. **Aparte Document Media migratie** voor partituur bestanden
 3. **Reverse mapping logica:** D6 repertoire.field_partij_* → D11 document_media.field_gerelateerd_repertoire
@@ -445,6 +549,50 @@ User Profiles ←→ All Profile Fields (one-to-one)
 
 ---
 
+## 🔧 **Migratie Vereisten - Gebruiker Profiel Velden**
+
+### **Kritieke D6 → D11 Transformaties:**
+
+#### **Veld Type Conversies:**
+| D6 Veld Type | D6 Widget | D11 Veld Type | Opmerkingen |
+|--------------|-----------|---------------|-------------|
+| `text` (longtext) | `text_textfield` | `string` | max_length: 255 voor korte teksten |
+| `text` (longtext) | `optionwidgets_select` | `list_string` | Opties naar allowed_values |
+| `date` (varchar) | `date_select` | `datetime` | date only, geen tijd |
+| `text` (longtext) | `text_textarea` | `text_long` | Voor notities met formatting |
+
+#### **Optie Lijsten Mapping:**
+
+**Geslacht Opties:**
+- D6: `m|Man`, `v|Vrouw` → D11: `m` (Man), `v` (Vrouw)
+
+**Koor Functies:**
+- D6: `B|Bas`, `A|Tenor`, etc. → D11: `B` (Bas), `A` (Tenor), etc.
+
+**Positie Mapping (Uitgebreid):**
+- **Rij 4:** `101` (4x01) tot `116` (4x16)
+- **Rij 3:** `201` (3x01) tot `216` (3x16)  
+- **Rij 2:** `301` (2x01) tot `316` (2x16)
+- **Rij 1:** `401` (1x01) tot `416` (1x16)
+- **Band:** `501` (Band 1) tot `504` (Band 4)
+- **Speciaal:** `601` (Dirigent), `701` (Niet ingedeeld)
+
+**Commissie Functies (Alle):**
+- **Bestuur:** `1` (Voorzitter), `2` (Secretaris), `3` (Penningmeester), `4` (Bestuurslid)
+- **Muziekcommissie:** `1` (Bestuurslid), `10` (Voorzitter), `20` (Secretaris), `30` (Dirigent), `40` (Contactpersoon band), `90` (Lid)
+- **Overige Commissies:** `1` (Bestuurslid), `10` (Lid) + specifieke opties
+
+### **Database Migratie Volgorde:**
+1. **Eerst:** Migreer basis gebruiker accounts (uid, name, mail, etc.)
+2. **Daarna:** Voeg user profile velden toe vanuit `content_type_profiel` tabel
+3. **Daarna:** Voeg gedeelde veld data toe (bijv. `field_woonplaats` vanuit `content_field_woonplaats`)
+4. **Validatie:** Controleer of alle 32 profielvelden correct gemigreerd zijn
+
+### **Permissies Impact:**
+Alle D6 veld-niveau permissies (`view field_[veldnaam]`, `edit field_[veldnaam]`) moeten worden geconverteerd naar D11 gebruiker profiel veld permissies.
+
+---
+
 ## 📋 **Wijzigingslog**
 
 ### **Versie 1.2 (Augustus 2025) - VOLLEDIGE PROFIEL VELDEN:**
@@ -473,6 +621,34 @@ User Profiles ←→ All Profile Fields (one-to-one)
 - Basis gebruiker profiel velden systeem
 - Automatische EXIF datum extractie
 - Partituur architectuur herstructurering
+
+---
+
+## 🚀 **Implementatie Prioriteiten**
+
+### **Fase 1: Kritieke Migratie Voorbereiding**
+1. **User Profile Velden Creatie:** Maak alle 32 velden aan in D11
+2. **Permissie Mapping:** Converteer D6 veld permissies naar D11 profiel permissies
+3. **Optie Lijsten Validatie:** Controleer alle commissie en positie opties
+4. **Database Connectiviteit:** Test migratie van `content_type_profiel` tabel
+
+### **Fase 2: Content Type Implementatie**
+1. **Content Types:** Maak alle 8 content types aan
+2. **Media Bundles:** Configureer 4 media bundles
+3. **Gedeelde Velden:** Implementeer 13 gedeelde velden
+4. **Relatie Configuratie:** Stel entity references in
+
+### **Fase 3: Migratie Execution**
+1. **Gebruiker Migratie:** Migreer gebruikers met alle 32 profielvelden
+2. **Content Migratie:** Migreer alle 8 content types
+3. **Media Migratie:** Partituur transformatie naar Document media
+4. **Permissie Migratie:** Herstel alle veld-niveau rechten
+
+### **Fase 4: Validatie & Testing**
+1. **Data Integriteit:** Controleer alle gemigreerde data
+2. **Functionaliteit Test:** Test alle gebruiker workflows
+3. **Permissie Test:** Valideer toegangsniveaus per rol
+4. **Performance Test:** Optimaliseer query performance
 
 ---
 

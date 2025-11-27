@@ -1,0 +1,49 @@
+id: thirdwing_media_image
+label: 'Media: Image'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Media
+
+source:
+  plugin: d6_file
+  type: image
+  # Filter voor alleen image mimetypes
+  constants:
+    bundle: image
+  
+process:
+  mid: fid
+  bundle: constants/bundle
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  name: filename
+  
+  created: timestamp
+  changed: timestamp
+  status:
+    plugin: default_value
+    default_value: 1
+  
+  # Hoofd afbeelding veld
+  field_media_image/target_id:
+    plugin: migration_lookup
+    migration: thirdwing_file
+    source: fid
+  
+  field_media_image/alt: filename
+  field_media_image/title: filename
+
+destination:
+  plugin: entity:media
+  default_bundle: image
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_file
+  optional: []

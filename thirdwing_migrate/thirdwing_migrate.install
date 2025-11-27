@@ -1,0 +1,95 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the ThirdWing Migrate module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function thirdwing_migrate_install() {
+  \Drupal::messenger()->addStatus(t('ThirdWing Migrate module installed successfully.'));
+  \Drupal::messenger()->addStatus(t('Make sure to configure the Drupal 6 database connection in settings.php before running migrations.'));
+  \Drupal::messenger()->addStatus(t('See README.md for detailed installation instructions.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function thirdwing_migrate_uninstall() {
+  \Drupal::messenger()->addStatus(t('ThirdWing Migrate module uninstalled. Migration data has been preserved.'));
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function thirdwing_migrate_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    // Check if D6 database is configured
+    $databases = \Drupal\Core\Database\Database::getAllConnectionInfo();
+    
+    if (!isset($databases['drupal_6'])) {
+      $requirements['thirdwing_migrate_database'] = [
+        'title' => t('ThirdWing Migrate: D6 Database'),
+        'value' => t('Not configured'),
+        'description' => t('The Drupal 6 source database has not been configured. Add the database connection to your settings.php file.'),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+    else {
+      // Try to connect to verify configuration
+      try {
+        $connection = \Drupal\Core\Database\Database::getConnection('default', 'drupal_6');
+        $connection->query('SELECT 1')->execute();
+        
+        $requirements['thirdwing_migrate_database'] = [
+          'title' => t('ThirdWing Migrate: D6 Database'),
+          'value' => t('Configured and accessible'),
+          'severity' => REQUIREMENT_OK,
+        ];
+      }
+      catch (\Exception $e) {
+        $requirements['thirdwing_migrate_database'] = [
+          'title' => t('ThirdWing Migrate: D6 Database'),
+          'value' => t('Connection failed'),
+          'description' => t('Could not connect to the Drupal 6 database: @error', ['@error' => $e->getMessage()]),
+          'severity' => REQUIREMENT_ERROR,
+        ];
+      }
+    }
+
+    // Check if required modules are enabled
+    $moduleHandler = \Drupal::moduleHandler();
+    $required_modules = ['migrate', 'migrate_drupal', 'migrate_plus', 'migrate_tools'];
+    $missing_modules = [];
+
+    foreach ($required_modules as $module) {
+      if (!$moduleHandler->moduleExists($module)) {
+        $missing_modules[] = $module;
+      }
+    }
+
+    if (!empty($missing_modules)) {
+      $requirements['thirdwing_migrate_dependencies'] = [
+        'title' => t('ThirdWing Migrate: Dependencies'),
+        'value' => t('Missing modules'),
+        'description' => t('The following required modules are not enabled: @modules', [
+          '@modules' => implode(', ', $missing_modules),
+        ]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    else {
+      $requirements['thirdwing_migrate_dependencies'] = [
+        'title' => t('ThirdWing Migrate: Dependencies'),
+        'value' => t('All required modules enabled'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+  }
+
+  return $requirements;
+}

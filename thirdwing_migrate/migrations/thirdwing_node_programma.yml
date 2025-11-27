@@ -1,0 +1,64 @@
+id: thirdwing_node_programma
+label: 'Content: Programma'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Content
+
+source:
+  plugin: d6_node
+  node_type: programma
+  
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: programma
+  
+  langcode:
+    plugin: default_value
+    default_value: nl
+  
+  title: title
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  status: status
+  created: created
+  changed: changed
+  promote: promote
+  sticky: sticky
+  
+  # Programma type
+  field_programma_type: field_prog_type
+  
+  # Toegang taxonomy
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_taxonomy_toegang
+        source: tid
+
+destination:
+  plugin: entity:node
+  default_bundle: programma
+  overwrite_properties:
+    - title
+    - uid
+    - status
+    - created
+    - changed
+    - field_programma_type
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+  optional:
+    - thirdwing_taxonomy_toegang

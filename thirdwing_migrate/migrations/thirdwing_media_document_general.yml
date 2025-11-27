@@ -1,0 +1,59 @@
+id: thirdwing_media_document_general
+label: 'Media: Document - General (van field_files)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Media
+
+source:
+  plugin: d6_file
+  # Filter voor document mimetypes
+  schemes:
+    - public
+  
+process:
+  mid: fid
+  
+  bundle:
+    plugin: default_value
+    default_value: document
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  name: filename
+  
+  created: timestamp
+  changed: timestamp
+  status:
+    plugin: default_value
+    default_value: 1
+  
+  # Hoofd document veld
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: thirdwing_file
+    source: fid
+  
+  field_media_document/display:
+    plugin: default_value
+    default_value: 1
+  
+  field_media_document/description: filename
+  
+  # Document type: Overige (voor algemene bijlagen)
+  field_document_type:
+    plugin: default_value
+    default_value: overige
+
+destination:
+  plugin: entity:media
+  default_bundle: document
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_file
+  optional: []

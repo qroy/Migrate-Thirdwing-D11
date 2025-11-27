@@ -1,0 +1,99 @@
+id: thirdwing_media_document_koorpartituur
+label: 'Media: Document - Koorpartituur (van Repertoire)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Media
+
+source:
+  plugin: d6_node
+  node_type: repertoire
+  
+process:
+  mid:
+    plugin: concat
+    source:
+      - constants/prefix
+      - field_partij_koor_l/0/fid
+    delimiter: '_'
+  
+  bundle:
+    plugin: default_value
+    default_value: document
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  name:
+    plugin: concat
+    source:
+      - title
+      - constants/suffix
+    delimiter: ' - '
+  
+  created:
+    plugin: callback
+    callable: strtotime
+    source: field_partij_koor_l/0/timestamp
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: field_partij_koor_l/0/timestamp
+  status:
+    plugin: default_value
+    default_value: 1
+  
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: thirdwing_file
+    source: field_partij_koor_l/0/fid
+  
+  field_media_document/display:
+    plugin: default_value
+    default_value: 1
+  
+  field_media_document/description: title
+  
+  field_document_type:
+    plugin: default_value
+    default_value: koorpartituur
+  
+  field_datum: created
+  
+  field_repertoire:
+    plugin: default_value
+    source: nid
+  
+  # Toegang: Leden, Aspirant-Leden, Muziekcommissie
+  field_toegang:
+    plugin: default_value
+    default_value:
+      - leden
+      - aspirant_leden
+      - muziekcommissie
+
+destination:
+  plugin: entity:media
+  default_bundle: document
+  overwrite_properties:
+    - name
+    - field_media_document
+    - field_document_type
+    - field_datum
+    - field_repertoire
+    - field_toegang
+    - status
+    - changed
+
+constants:
+  prefix: 'kp'
+  suffix: 'Koorpartituur'
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_file
+    - thirdwing_node_repertoire
+  optional: []

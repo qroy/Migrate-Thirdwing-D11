@@ -1,0 +1,93 @@
+id: thirdwing_node_document
+label: 'Content: Document'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Content
+
+source:
+  plugin: d6_node
+  node_type: document
+  
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: document
+  
+  langcode:
+    plugin: default_value
+    default_value: nl
+  
+  title: title
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  status: status
+  created: created
+  changed: changed
+  promote: promote
+  sticky: sticky
+  
+  # Body veld
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: basic_html
+  body/summary: teaser
+  
+  # Document type taxonomy - pas aan op basis van je 6 document types
+  # field_document_type:
+  #   plugin: sub_process
+  #   source: field_document_type
+  #   process:
+  #     target_id:
+  #       plugin: migration_lookup
+  #       migration: thirdwing_taxonomy_document_type
+  #       source: tid
+  
+  # Toegang taxonomy
+  # field_toegang:
+  #   plugin: sub_process
+  #   source: taxonomy
+  #   process:
+  #     target_id:
+  #       plugin: migration_lookup
+  #       migration: thirdwing_taxonomy_toegang
+  #       source: tid
+  
+  # Document bestand (media reference)
+  # field_document_media:
+  #   plugin: sub_process
+  #   source: field_document_file
+  #   process:
+  #     target_id:
+  #       plugin: migration_lookup
+  #       migration: thirdwing_media_document
+  #       source: fid
+  
+  # Datum veld indien aanwezig
+  # field_document_date: field_document_date/0/value
+
+destination:
+  plugin: entity:node
+  default_bundle: document
+  overwrite_properties:
+    - title
+    - body
+    - uid
+    - status
+    - created
+    - changed
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+  optional:
+    - thirdwing_taxonomy_toegang
+    - thirdwing_taxonomy_document_type
+    - thirdwing_media_document

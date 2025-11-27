@@ -1,0 +1,171 @@
+id: thirdwing_node_activiteit
+label: 'Content: Activiteit'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Content
+
+source:
+  plugin: d6_node
+  node_type: activiteit
+  
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: activiteit
+  
+  langcode:
+    plugin: default_value
+    default_value: nl
+  
+  title: title
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  status: status
+  created: created
+  changed: changed
+  promote: promote
+  sticky: sticky
+  
+  # Body veld
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: basic_html
+  body/summary: teaser
+  
+  # Datum/tijd
+  field_datum:
+    plugin: sub_process
+    source: field_datum
+    process:
+      value:
+        plugin: format_date
+        source: value
+        from_format: 'Y-m-d H:i:s'
+        to_format: 'Y-m-d\TH:i:s'
+  
+  # Status en Soort activiteit
+  field_activiteit_status: field_activiteit_status
+  field_activiteit_soort: field_activiteit_soort
+  
+  # Ledeninformatie
+  field_ledeninfo/value: field_ledeninfo
+  field_ledeninfo/format:
+    plugin: default_value
+    default_value: basic_html
+  
+  # Huiswerk (Document media, type: Huiswerk)
+  field_huiswerk:
+    plugin: sub_process
+    source: field_huiswerk
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_document
+        source: fid
+  
+  # Afbeeldingen (Media Image)
+  field_afbeeldingen:
+    plugin: sub_process
+    source: field_afbeeldingen
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_image
+        source: fid
+  
+  # Achtergrond afbeelding
+  field_background:
+    plugin: sub_process
+    source: field_background
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_image
+        source: fid
+  
+  # Bestanden (Document media)
+  field_files:
+    plugin: sub_process
+    source: field_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_document
+        source: fid
+  
+  # Locatie (Entity reference naar Locatie node)
+  field_locatie:
+    plugin: migration_lookup
+    migration: thirdwing_node_locatie
+    source: field_locatie
+  
+  # Locatie bijzonderheden
+  field_locatie_bijzonderheden: field_l_bijzonderheden
+  
+  # Logistiek velden
+  field_tijd_aanwezig: field_tijd_aanwezig
+  field_sleepgroep: field_sleepgroep
+  field_sleepgroep_terug: field_sleepgroep_terug
+  field_vervoer: field_vervoer
+  field_sleepgroep_aanwezig: field_sleepgroep_aanwezig
+  
+  # Band velden
+  field_band: field_band
+  field_keyboard: field_keyboard
+  field_gitaar: field_gitaar
+  field_basgitaar: field_basgitaar
+  field_drums: field_drums
+  field_percussie: field_percussie
+  
+  # Bijzonderheden
+  field_bijzonderheden: field_bijzonderheden
+  field_kledingcode: field_kledingcode
+  
+  # Programma (Entity reference naar Programma node)
+  field_programma:
+    plugin: sub_process
+    source: field_programma2
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_node_programma
+        source: nid
+  
+  # Toegang taxonomy
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_taxonomy_toegang
+        source: tid
+
+destination:
+  plugin: entity:node
+  default_bundle: activiteit
+  overwrite_properties:
+    - title
+    - body
+    - uid
+    - status
+    - created
+    - changed
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_taxonomy_toegang
+  optional:
+    - thirdwing_media_image
+    - thirdwing_media_document
+    - thirdwing_node_locatie
+    - thirdwing_node_programma

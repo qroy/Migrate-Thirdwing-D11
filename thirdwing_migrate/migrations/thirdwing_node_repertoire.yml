@@ -1,0 +1,105 @@
+id: thirdwing_node_repertoire
+label: 'Content: Repertoire'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Content
+
+source:
+  plugin: d6_node
+  node_type: repertoire
+  
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: repertoire
+  
+  langcode:
+    plugin: default_value
+    default_value: nl
+  
+  title: title
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  status: status
+  created: created
+  changed: changed
+  promote: promote
+  sticky: sticky
+  
+  # Repertoire informatie
+  field_repertoire_nummer: field_audio_nummer
+  field_repertoire_seizoen: field_audio_seizoen
+  field_repertoire_genre: field_rep_genre
+  field_repertoire_actueel: field_klapper
+  field_repertoire_sinds: field_rep_sinds
+  
+  # Afbeeldingen
+  field_afbeeldingen:
+    plugin: sub_process
+    source: field_afbeeldingen
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_image
+        source: fid
+  
+  # Uitvoerende
+  field_repertoire_uitvoerende: field_rep_uitv
+  field_repertoire_uitvoering_jaar: field_rep_uitv_jaar
+  
+  # Componist
+  field_repertoire_componist: field_rep_componist
+  field_repertoire_compositie_jaar: field_rep_componist_jaar
+  
+  # Arrangeur
+  field_repertoire_arrangeur: field_rep_arr
+  field_repertoire_arrangement_jaar: field_rep_arr_jaar
+  
+  # Partituren - migreren naar Document media met terug-referenties
+  # Deze worden in aparte migraties afgehandeld omdat ze Document media moeten aanmaken
+  # met field_repertoire terug-verwijzing
+  
+  # Toegang taxonomy
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_taxonomy_toegang
+        source: tid
+
+destination:
+  plugin: entity:node
+  default_bundle: repertoire
+  overwrite_properties:
+    - title
+    - uid
+    - status
+    - created
+    - changed
+    - field_repertoire_nummer
+    - field_repertoire_seizoen
+    - field_repertoire_genre
+    - field_repertoire_actueel
+    - field_repertoire_sinds
+    - field_repertoire_uitvoerende
+    - field_repertoire_uitvoering_jaar
+    - field_repertoire_componist
+    - field_repertoire_compositie_jaar
+    - field_repertoire_arrangeur
+    - field_repertoire_arrangement_jaar
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_taxonomy_toegang
+  optional:
+    - thirdwing_media_image

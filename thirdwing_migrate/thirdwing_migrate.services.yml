@@ -1,0 +1,6 @@
+services:
+  thirdwing_migrate.commands:
+    class: \Drupal\thirdwing_migrate\Commands\ThirdWingMigrateCommands
+    arguments: ['@plugin.manager.migration']
+    tags:
+      - { name: drush.command }

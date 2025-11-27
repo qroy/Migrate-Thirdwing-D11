@@ -1,0 +1,41 @@
+id: thirdwing_taxonomy_toegang
+label: 'Taxonomy: Toegang'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Taxonomy
+
+source:
+  plugin: d6_taxonomy_term
+  bundle: toegang
+
+process:
+  tid: tid
+  vid:
+    plugin: default_value
+    default_value: toegang
+  name: name
+  description/value: description
+  description/format:
+    plugin: default_value
+    default_value: basic_html
+  weight: weight
+  parent_id:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: parent
+    -
+      plugin: migration_lookup
+      migration: thirdwing_taxonomy_toegang
+  parent:
+    plugin: default_value
+    default_value: 0
+
+destination:
+  plugin: entity:taxonomy_term
+  default_bundle: toegang
+
+migration_dependencies:
+  required: []
+  optional: []

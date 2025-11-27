@@ -1,0 +1,104 @@
+id: thirdwing_media_document_bandpartituur
+label: 'Media: Document - Bandpartituur (van Repertoire)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Media
+
+source:
+  plugin: d6_node
+  node_type: repertoire
+  
+process:
+  # Generate unique media ID based on file ID from field_partij_band
+  mid:
+    plugin: concat
+    source:
+      - constants/prefix
+      - field_partij_band/0/fid
+    delimiter: '_'
+  
+  bundle:
+    plugin: default_value
+    default_value: document
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  # Name based on repertoire title + "Bandpartituur"
+  name:
+    plugin: concat
+    source:
+      - title
+      - constants/suffix
+    delimiter: ' - '
+  
+  created:
+    plugin: callback
+    callable: strtotime
+    source: field_partij_band/0/timestamp
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: field_partij_band/0/timestamp
+  status:
+    plugin: default_value
+    default_value: 1
+  
+  # Hoofddocument veld
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: thirdwing_file
+    source: field_partij_band/0/fid
+  
+  field_media_document/display:
+    plugin: default_value
+    default_value: 1
+  
+  field_media_document/description: title
+  
+  # Document type
+  field_document_type:
+    plugin: default_value
+    default_value: bandpartituur
+  
+  # Datum - gebruik creation date of current
+  field_datum: created
+  
+  # Terug-referentie naar Repertoire node
+  field_repertoire:
+    plugin: default_value
+    source: nid
+  
+  # Toegang: Band, Muziekcommissie
+  field_toegang:
+    plugin: default_value
+    default_value:
+      - band
+      - muziekcommissie
+
+destination:
+  plugin: entity:media
+  default_bundle: document
+  overwrite_properties:
+    - name
+    - field_media_document
+    - field_document_type
+    - field_datum
+    - field_repertoire
+    - field_toegang
+    - status
+    - changed
+
+constants:
+  prefix: 'bp'
+  suffix: 'Bandpartituur'
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_file
+    - thirdwing_node_repertoire
+  optional: []

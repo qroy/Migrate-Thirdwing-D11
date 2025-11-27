@@ -1,0 +1,139 @@
+id: thirdwing_user
+label: 'Users with profile fields (was: Profiel content type)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - User
+
+source:
+  plugin: d6_user
+  
+process:
+  # Basis user velden
+  uid: uid
+  name: name
+  pass: pass
+  mail: mail
+  created: created
+  access: access
+  login: login
+  status: status
+  timezone: timezone
+  langcode:
+    plugin: default_value
+    default_value: nl
+  preferred_langcode:
+    plugin: default_value
+    default_value: nl
+  preferred_admin_langcode:
+    plugin: default_value
+    default_value: nl
+  init: init
+  
+  # Rollen
+  roles:
+    plugin: migration_lookup
+    migration: d6_user_role
+    source: roles
+  
+  # Profiel velden - van Content Profile module
+  # Deze komen uit de profiel nodes gelinkt aan de user
+  
+  # Persoonlijke gegevens
+  field_voornaam:
+    plugin: profile_field
+    source: uid
+    profile_field: field_voornaam
+  
+  field_achternaam_voorvoegsel:
+    plugin: profile_field
+    source: uid
+    profile_field: field_achternaam_voorvoegsel
+  
+  field_achternaam:
+    plugin: profile_field
+    source: uid
+    profile_field: field_achternaam
+  
+  field_adres:
+    plugin: profile_field
+    source: uid
+    profile_field: field_adres
+  
+  field_postcode:
+    plugin: profile_field
+    source: uid
+    profile_field: field_postcode
+  
+  field_woonplaats:
+    plugin: profile_field
+    source: uid
+    profile_field: field_woonplaats
+  
+  field_telefoon:
+    plugin: profile_field
+    source: uid
+    profile_field: field_telefoon
+  
+  field_mobiel:
+    plugin: profile_field
+    source: uid
+    profile_field: field_mobiel
+  
+  field_geslacht:
+    plugin: profile_field
+    source: uid
+    profile_field: field_geslacht
+  
+  field_geboortedatum:
+    plugin: profile_field
+    source: uid
+    profile_field: field_geboortedatum
+  
+  # Lidmaatschap
+  field_lidssinds:
+    plugin: profile_field
+    source: uid
+    profile_field: field_lidssinds
+  
+  field_lid_tot:
+    plugin: profile_field
+    source: uid
+    profile_field: field_lid_tot
+  
+  # Stemgroep
+  field_stemgroep:
+    plugin: profile_field
+    source: uid
+    profile_field: field_stemgroep
+  
+  # Instrumenten
+  field_instrument:
+    plugin: profile_field
+    source: uid
+    profile_field: field_instrument
+  
+  # Notities (admin only)
+  field_notes:
+    plugin: profile_field
+    source: uid
+    profile_field: field_notes
+  
+  field_emailbewaking:
+    plugin: profile_field
+    source: uid
+    profile_field: field_emailbewaking
+  
+  # User picture van profiel
+  user_picture:
+    plugin: profile_field_file
+    source: uid
+    profile_field: field_foto
+
+destination:
+  plugin: entity:user
+
+migration_dependencies:
+  required:
+    - d6_user_role
+  optional: []

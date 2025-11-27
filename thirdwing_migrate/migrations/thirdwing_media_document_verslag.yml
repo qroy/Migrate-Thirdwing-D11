@@ -1,0 +1,90 @@
+id: thirdwing_media_document_verslag
+label: 'Media: Document - Verslag (was: Verslag content type)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Media
+
+source:
+  # Van node type 'verslag' naar media
+  plugin: d6_node
+  node_type: verslag
+  
+process:
+  mid: nid
+  
+  bundle:
+    plugin: default_value
+    default_value: document
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  name: title
+  
+  created: created
+  changed: changed
+  status: status
+  
+  # Hoofd document veld - field_files bevat de verslag bestanden
+  field_media_document/target_id:
+    plugin: migration_lookup
+    migration: thirdwing_file
+    source: field_files/0/fid
+  
+  field_media_document/display:
+    plugin: default_value
+    default_value: 1
+  
+  field_media_document/description: title
+  
+  # Document type: Verslag
+  field_document_type:
+    plugin: default_value
+    default_value: verslag
+  
+  # Datum
+  field_datum:
+    plugin: sub_process
+    source: field_datum
+    process:
+      value:
+        plugin: format_date
+        source: value
+        from_format: 'Y-m-d H:i:s'
+        to_format: 'Y-m-d\TH:i:s'
+  
+  # Verslag type (alleen voor type: verslag)
+  # Dit zou uit taxonomy kunnen komen of uit een field
+  # field_verslag_type: taxonomy/0
+  
+  # Toegang - van taxonomy term
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_taxonomy_toegang
+        source: tid
+
+destination:
+  plugin: entity:media
+  default_bundle: document
+  overwrite_properties:
+    - name
+    - field_media_document
+    - field_document_type
+    - field_datum
+    - field_toegang
+    - status
+    - changed
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_file
+    - thirdwing_taxonomy_toegang
+  optional: []

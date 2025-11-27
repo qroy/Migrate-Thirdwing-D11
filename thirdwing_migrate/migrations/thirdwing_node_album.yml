@@ -1,0 +1,88 @@
+id: thirdwing_node_album
+label: 'Content: Album (was: Foto)'
+migration_group: thirdwing
+migration_tags:
+  - Drupal 6
+  - Content
+
+source:
+  plugin: d6_node
+  node_type: foto
+  
+process:
+  nid: nid
+  vid: vid
+  type:
+    plugin: default_value
+    default_value: album
+  
+  langcode:
+    plugin: default_value
+    default_value: nl
+  
+  title: title
+  
+  uid:
+    plugin: migration_lookup
+    migration: thirdwing_user
+    source: uid
+  
+  status: status
+  created: created
+  changed: changed
+  promote: promote
+  sticky: sticky
+  
+  # Body veld
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: basic_html
+  body/summary: teaser
+  
+  # Afbeeldingen (Media Image gallery)
+  field_afbeeldingen:
+    plugin: sub_process
+    source: field_afbeeldingen
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_image
+        source: fid
+  
+  # Referentie naar Activiteit
+  field_ref_activiteit:
+    plugin: migration_lookup
+    migration: thirdwing_node_activiteit
+    source: field_ref_activiteit
+  
+  # Toegang taxonomy
+  field_toegang:
+    plugin: sub_process
+    source: taxonomy
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_taxonomy_toegang
+        source: tid
+
+destination:
+  plugin: entity:node
+  default_bundle: album
+  overwrite_properties:
+    - title
+    - body
+    - uid
+    - status
+    - created
+    - changed
+    - field_afbeeldingen
+    - field_ref_activiteit
+
+migration_dependencies:
+  required:
+    - thirdwing_user
+    - thirdwing_taxonomy_toegang
+  optional:
+    - thirdwing_media_image
+    - thirdwing_node_activiteit

@@ -61,6 +61,22 @@ process:
         migration: thirdwing_media_image
         source: fid
   
+  # Bestanden
+  field_files:
+    plugin: sub_process
+    source: field_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_document_general
+        source: fid
+  
+  # Activiteit referentie
+  field_activiteit:
+    plugin: migration_lookup
+    migration: thirdwing_node_activiteit
+    source: field_ref_activiteit
+  
   # Toegang taxonomy
   field_toegang:
     plugin: sub_process
@@ -83,6 +99,8 @@ destination:
     - changed
     - field_datum
     - field_afbeeldingen
+    - field_files
+    - field_activiteit
 
 migration_dependencies:
   required:
@@ -90,3 +108,5 @@ migration_dependencies:
     - thirdwing_taxonomy_toegang
   optional:
     - thirdwing_media_image
+    - thirdwing_media_document_general
+    - thirdwing_node_activiteit

@@ -40,6 +40,26 @@ process:
     default_value: basic_html
   body/summary: teaser
   
+  # Afbeeldingen
+  field_afbeeldingen:
+    plugin: sub_process
+    source: field_afbeeldingen
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_image
+        source: fid
+  
+  # Bestanden
+  field_files:
+    plugin: sub_process
+    source: field_files
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: thirdwing_media_document_general
+        source: fid
+  
   # Toegang taxonomy
   # field_toegang:
   #   plugin: sub_process
@@ -83,3 +103,4 @@ migration_dependencies:
   optional:
     - thirdwing_taxonomy_toegang
     - thirdwing_media_image
+    - thirdwing_media_document_general

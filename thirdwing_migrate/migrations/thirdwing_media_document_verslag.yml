@@ -60,6 +60,12 @@ process:
   # Dit zou uit taxonomy kunnen komen of uit een field
   # field_verslag_type: taxonomy/0
   
+  # Repertoire referentie (voor partituren)
+  # field_repertoire blijft NULL voor verslag type
+  
+  # Activiteit referentie
+  # field_activiteit blijft NULL voor verslag type
+  
   # Toegang - van taxonomy term
   field_toegang:
     plugin: sub_process

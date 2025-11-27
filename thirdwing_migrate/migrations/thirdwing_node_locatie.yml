@@ -40,8 +40,11 @@ process:
     default_value: basic_html
   body/summary: teaser
   
-  # Locatie velden (uit chat history - mogelijk adres, postcode, plaats, land velden)
-  # Deze moeten nog aangevuld worden met de exacte field names uit D6
+  # Locatie velden (hernoemd van field_l_*)
+  field_locatie_adres: field_l_adres
+  field_locatie_postcode: field_l_postcode
+  field_locatie_plaats: field_l_plaats
+  field_locatie_routelink: field_l_routelink
   
   # Toegang taxonomy
   field_toegang:

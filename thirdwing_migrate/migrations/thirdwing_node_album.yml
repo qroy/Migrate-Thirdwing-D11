@@ -51,7 +51,7 @@ process:
         source: fid
   
   # Referentie naar Activiteit
-  field_ref_activiteit:
+  field_activiteit:
     plugin: migration_lookup
     migration: thirdwing_node_activiteit
     source: field_ref_activiteit
@@ -77,7 +77,7 @@ destination:
     - created
     - changed
     - field_afbeeldingen
-    - field_ref_activiteit
+    - field_activiteit
 
 migration_dependencies:
   required:

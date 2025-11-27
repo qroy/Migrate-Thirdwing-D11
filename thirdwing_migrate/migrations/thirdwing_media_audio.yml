@@ -46,9 +46,9 @@ process:
     migration: thirdwing_node_repertoire
     source: field_repertoire
   
-  field_audio_uitvoerende: field_audio_uitvoerende
+  field_media_uitvoerende: field_audio_uitvoerende
   
-  field_audio_type: field_audio_type
+  field_media_type: field_audio_type
   
   field_datum:
     plugin: sub_process
@@ -60,9 +60,9 @@ process:
         from_format: 'Y-m-d H:i:s'
         to_format: 'Y-m-d\TH:i:s'
   
-  field_audio_bijz: field_audio_bijz
+  field_media_bijzonderheden: field_audio_bijz
   
-  field_ref_activiteit:
+  field_activiteit:
     plugin: migration_lookup
     migration: thirdwing_node_activiteit
     source: field_ref_activiteit
@@ -84,11 +84,11 @@ destination:
     - name
     - field_media_audio_file
     - field_repertoire
-    - field_audio_uitvoerende
-    - field_audio_type
+    - field_media_uitvoerende
+    - field_media_type
     - field_datum
-    - field_audio_bijz
-    - field_ref_activiteit
+    - field_media_bijzonderheden
+    - field_activiteit
     - field_toegang
     - status
     - changed

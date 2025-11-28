@@ -33,6 +33,11 @@ process:
   promote: promote
   sticky: sticky
   
+  # Workflow state mapping (Workflow 3)
+  moderation_state:
+    plugin: workflow_state_mapper
+    source: workflow_stamp
+  
   # Body veld
   body/value: body
   body/format:
@@ -129,14 +134,15 @@ process:
   field_bijzonderheden: field_bijzonderheden
   field_kledingcode: field_kledingcode
   
-  # Programma (Entity reference naar Programma node)
+  # Programma (Entity reference naar Repertoire nodes, soort='Programma-onderdeel')
+  # Note: D6 Programma content type vervalt en wordt Repertoire
   field_programma:
     plugin: sub_process
     source: field_programma2
     process:
       target_id:
         plugin: migration_lookup
-        migration: thirdwing_node_programma
+        migration: thirdwing_node_programma_to_repertoire
         source: nid
   
   # Toegang taxonomy
@@ -166,6 +172,6 @@ migration_dependencies:
     - thirdwing_taxonomy_toegang
   optional:
     - thirdwing_media_image
-    - thirdwing_media_document
+    - thirdwing_media_document_general
     - thirdwing_node_locatie
-    - thirdwing_node_programma
+    - thirdwing_node_programma_to_repertoire

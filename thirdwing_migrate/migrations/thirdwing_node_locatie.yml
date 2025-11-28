@@ -33,6 +33,11 @@ process:
   promote: promote
   sticky: sticky
   
+  # Workflow state mapping (Workflow 4)
+  moderation_state:
+    plugin: workflow_state_mapper
+    source: workflow_stamp
+  
   # Body veld
   body/value: body
   body/format:

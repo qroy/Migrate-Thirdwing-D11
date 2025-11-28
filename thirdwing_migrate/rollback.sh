@@ -46,7 +46,7 @@ rollback_migration "thirdwing_node_activiteit" "Content - Activiteit"
 rollback_migration "thirdwing_node_pagina" "Content - Pagina"
 rollback_migration "thirdwing_node_nieuws" "Content - Nieuws"
 rollback_migration "thirdwing_node_repertoire" "Content - Repertoire"
-rollback_migration "thirdwing_node_programma" "Content - Programma"
+rollback_migration "thirdwing_node_programma_to_repertoire" "Content - Programma (→Repertoire)"
 rollback_migration "thirdwing_node_locatie" "Content - Locatie"
 
 echo "Stap 2: Partituren terugdraaien"

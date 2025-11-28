@@ -33,9 +33,14 @@ process:
   promote: promote
   sticky: sticky
   
+  # Workflow state mapping (Workflow 1)
+  moderation_state:
+    plugin: workflow_state_mapper
+    source: workflow_stamp
+  
   # Repertoire informatie
   field_repertoire_nummer: field_audio_nummer
-  field_repertoire_seizoen: field_audio_seizoen
+  field_repertoire_soort: field_audio_seizoen
   field_repertoire_genre: field_rep_genre
   field_repertoire_actueel: field_klapper
   field_repertoire_sinds: field_rep_sinds
@@ -52,7 +57,7 @@ process:
   
   # Uitvoerende
   field_repertoire_uitvoerende: field_rep_uitv
-  field_repertoire_uitvoering_jaar: field_rep_uitv_jaar
+  field_repertoire_uitvoerende_jaa: field_rep_uitv_jaar
   
   # Componist
   field_repertoire_componist: field_rep_componist
@@ -86,12 +91,12 @@ destination:
     - created
     - changed
     - field_repertoire_nummer
-    - field_repertoire_seizoen
+    - field_repertoire_soort
     - field_repertoire_genre
     - field_repertoire_actueel
     - field_repertoire_sinds
     - field_repertoire_uitvoerende
-    - field_repertoire_uitvoering_jaar
+    - field_repertoire_uitvoerende_jaa
     - field_repertoire_componist
     - field_repertoire_compositie_jaar
     - field_repertoire_arrangeur

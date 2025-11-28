@@ -1,5 +1,5 @@
-id: thirdwing_node_programma
-label: 'Content: Programma'
+id: thirdwing_node_programma_to_repertoire
+label: 'Content: Programma → Repertoire (VERVALT als apart type)'
 migration_group: thirdwing
 migration_tags:
   - Drupal 6
@@ -14,7 +14,7 @@ process:
   vid: vid
   type:
     plugin: default_value
-    default_value: programma
+    default_value: repertoire
   
   langcode:
     plugin: default_value
@@ -33,8 +33,22 @@ process:
   promote: promote
   sticky: sticky
   
-  # Programma type
-  field_programma_type: field_prog_type
+  # Workflow state mapping (was Workflow 4, now uses Repertoire workflow)
+  moderation_state:
+    plugin: workflow_state_mapper
+    source: workflow_stamp
+  
+  # Programma type → Repertoire soort mapping
+  field_repertoire_soort:
+    plugin: static_map
+    source: field_prog_type
+    map:
+      programma: 'Programma-onderdeel'
+      nummer: 'Overig'
+    default_value: 'Programma-onderdeel'
+  
+  # Andere Repertoire velden krijgen standaard/lege waarden
+  # zodat ze consistent zijn met echte Repertoire nodes
   
   # Toegang taxonomy
   field_toegang:
@@ -48,14 +62,15 @@ process:
 
 destination:
   plugin: entity:node
-  default_bundle: programma
+  default_bundle: repertoire
   overwrite_properties:
     - title
     - uid
     - status
     - created
     - changed
-    - field_programma_type
+    - field_repertoire_soort
+    - field_toegang
 
 migration_dependencies:
   required:

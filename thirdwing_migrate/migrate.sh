@@ -62,7 +62,7 @@ run_migration "thirdwing_media_video" "Media - Remote Video (was: Video content 
 echo "Stap 6: Content"
 echo "-------------------"
 run_migration "thirdwing_node_locatie" "Content - Locatie"
-run_migration "thirdwing_node_programma" "Content - Programma"
+run_migration "thirdwing_node_programma_to_repertoire" "Content - Programma (→Repertoire)"
 run_migration "thirdwing_node_repertoire" "Content - Repertoire"
 run_migration "thirdwing_node_nieuws" "Content - Nieuws"
 run_migration "thirdwing_node_pagina" "Content - Pagina"

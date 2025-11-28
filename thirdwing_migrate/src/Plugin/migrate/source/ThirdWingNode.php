@@ -105,6 +105,21 @@ class ThirdWingNode extends DrupalSqlBase {
       $row->setSourceProperty('taxonomy', $terms);
     }
 
+    // Haal workflow state op
+    $workflow = $this->select('workflow_node', 'wn')
+      ->fields('wn', ['sid', 'stamp', 'uid'])
+      ->condition('nid', $nid)
+      ->orderBy('stamp', 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchAssoc();
+    
+    if ($workflow) {
+      $row->setSourceProperty('workflow_sid', $workflow['sid']);
+      $row->setSourceProperty('workflow_stamp', $workflow['stamp']);
+      $row->setSourceProperty('workflow_uid', $workflow['uid']);
+    }
+
     // Haal CCK fields op (als je deze nog nodig hebt)
     // Dit is een voorbeeld - pas aan voor jouw specifieke fields
     $this->getFields($row, 'node', $nid, $vid);
